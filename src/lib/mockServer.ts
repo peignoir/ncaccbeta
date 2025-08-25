@@ -175,7 +175,8 @@ function delay<T>(value: T, ms = 250) {
 }
 
 export function installMockApi() {
-	if (import.meta.env.PROD) return
+	// Enable mock API in both dev and production for now
+	// TODO: Replace with real API endpoints later
 	const originalFetch = window.fetch
 
 	window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
