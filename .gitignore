@@ -1,5 +1,8 @@
 # Dependencies
 node_modules/
+
+# Keep sample.csv in public
+!public/sample.csv
 /.pnp
 .pnp.js
 

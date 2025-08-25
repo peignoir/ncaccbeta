@@ -54,27 +54,33 @@ async function loadStartups(): Promise<Startup[]> {
 }
 
 async function loadCsvText(): Promise<string> {
-	// 1) Try fetching sample.csv if served (e.g., placed in public/)
+	// Try fetching sample.csv from public folder (works on both dev and production)
 	try {
 		const res = await fetch('/sample.csv', { cache: 'no-cache' })
 		if (res.ok) {
 			const txt = await res.text()
 			if (txt && txt.length > 0) return txt
 		}
-	} catch {}
-	// 2) Try importing sample.csv from project root via Vite raw import
+	} catch (e) {
+		console.error('Failed to load /sample.csv:', e)
+	}
+	
+	// Fallback to bundled sample in public/data if sample.csv not found
 	try {
-		// @ts-ignore - Vite will inline the raw string during dev
-		const mod = await import('/sample.csv?raw')
-		if (typeof mod?.default === 'string' && mod.default.length > 0) return mod.default
-	} catch {}
-	// 3) Fallback to bundled sample in public/data
-	const res = await fetch('/data/startups.csv', { cache: 'no-cache' })
-	return await res.text()
+		const res = await fetch('/data/startups.csv', { cache: 'no-cache' })
+		if (res.ok) {
+			return await res.text()
+		}
+	} catch (e) {
+		console.error('Failed to load /data/startups.csv:', e)
+	}
+	
+	// Return empty CSV as last resort
+	return 'id,name,website,location,house,progress,founder'
 }
 
 function mapRowToStartup(r: any, idx: number): Startup {
-	// sample.csv columns: id, name (founder), house, current_progress (0..1), website, details (pseudo-JSON string)
+	// Map columns from the actual CSV structure
 	const normalizedHouse = normalizeHouse(r.house)
 	const details = parseDetails(r.details)
 	const startupName = r.startup_name || r.startup || details?.startup || r.name || `Startup ${idx + 1}`
@@ -102,7 +108,7 @@ function mapRowToStartup(r: any, idx: number): Startup {
 	const stealthFlag = String(r.stealth || '').toLowerCase().trim()
 	const stealth = stealthFlag === 'true' || stealthFlag === '1' || stealthFlag === 'yes'
 	const id = String(r.npid || r.id || `startup_${idx}`)
-	const loginCode = r.login_code || computeLoginCode(id)
+	const loginCode = r.login_code || r.loginCode || computeLoginCode(id)
 
 	return {
 		id,
