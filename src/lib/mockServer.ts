@@ -176,25 +176,15 @@ export function installMockApi() {
 				// route handling
 				if (url === '/api/auth/verify' && init?.method !== 'GET') {
 					const body = init?.body ? JSON.parse(init.body as string) : {}
-					
-					// For development: accept any code with 7+ characters as valid
-					const ok = typeof body.code === 'string' && body.code.length >= 7
+					const ok = typeof body.code === 'string' && body.code.length > 6
 					if (!ok) return json({ success: false }, 200)
-					
-					let user = {
-						id: 'user_generic',
-						name: 'NC/ACC Founder',
-						email: 'founder@example.com',
-						startup: { id: 'unknown', name: 'Your Startup', website: 'example.com', progress: 35, house: 'venture' },
-						house: 'venture',
-					} as any
 
 					// Try to match any startup login code: base64("login:" + startup.id)
 					try {
 						const startups = await loadStartups()
 						const matched = startups.find((s) => computeLoginCode(String(s.id)) === body.code || (s as any).login_code === body.code)
 						if (matched) {
-							user = {
+							const user = {
 								id: `user_${matched.id}`,
 								name: matched.founder || 'NC/ACC Founder',
 								email: matched.detailsObj?.email || 'founder@example.com',
@@ -203,7 +193,9 @@ export function installMockApi() {
 							}
 							return json(await delay({ success: true, user, token: 'mock-jwt-token' }, 200))
 						}
-					} catch {}
+					} catch (e) {
+						console.error('Error matching startup:', e)
+					}
 
 					// Special code mapping to Franck
 					if (body.code === 'dGVzdGtleTEyMw==') {
@@ -211,19 +203,20 @@ export function installMockApi() {
 							const startups = await loadStartups()
 							const me = startups.find((s) => (s.founder || '').toLowerCase().includes('franck')) || startups.find((s) => (s.website || '').includes('nocodebuilder'))
 							if (me) {
-								user = {
+								const user = {
 									id: 'user_franck',
 									name: 'Franck Nouyrigat',
 									email: 'franck@nocodeai.io',
 									startup: { id: me.id, name: me.name, website: me.website, progress: me.progress, house: me.house },
 									house: me.house || 'venture',
 								}
+								return json(await delay({ success: true, user, token: 'mock-jwt-token' }, 300))
 							}
 						} catch {}
 					}
 					
-					// For any other valid code, return a generic user
-					return json(await delay({ success: true, user, token: 'mock-jwt-token' }, 300))
+					// If no match found, return failure
+					return json({ success: false, message: 'Invalid access code' }, 200)
 				}
 
 				if (url === '/api/auth/refresh') {
