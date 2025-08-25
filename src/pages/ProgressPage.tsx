@@ -11,23 +11,38 @@ type Startup = {
 	founder?: string
 	founder_name?: string
 	founder_email?: string
+	founder_telegram?: string
+	founder_linkedin_url?: string
 	location?: string
+	founder_city?: string
+	founder_country?: string
 	house?: string
 	progress: number
 	current_progress?: number
 	stealth?: boolean | string
 	nocap_motivation?: string
-	pitch?: string
-	value_prop?: string
-	why_now?: string
-	github?: string
-	proof_of_traction?: string
-	telegram?: string
-	linkedin?: string
-	team_size?: string
-	funding_stage?: string
-	revenue?: string
-	customers?: string
+	bio?: string
+	motivation?: string
+	traction?: string
+	product?: string
+	long_pitch?: string
+	demo_video_url?: string
+	one_pager_url?: string
+	github_repos?: string
+	problem_statement?: string
+	customer?: string
+	product_job_to_be_done?: string
+	value_proposition?: string
+	current_workaround?: string
+	why_now_catalyst?: string
+	key_differentiator?: string
+	founder_time_commitment_pct?: string
+	competitors_urls?: string
+	Business_model_explained?: string
+	circle?: string
+	circle_name?: string
+	circle_description?: string
+	wave?: string
 }
 
 export default function ProgressPage() {
@@ -336,7 +351,7 @@ export default function ProgressPage() {
 			{/* Modal */}
 			{showModal && selectedStartup && (
 				<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-					<div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+					<div className="bg-white rounded-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
 						<div className="sticky top-0 bg-white border-b border-gray-200 px-8 py-6 flex items-center justify-between">
 							<h2 className="text-2xl font-bold text-gray-900">
 								{selectedStartup.name}
@@ -448,6 +463,33 @@ export default function ProgressPage() {
 								</div>
 							)}
 
+							{/* Overview Section */}
+							{(selectedStartup.bio || selectedStartup.motivation || selectedStartup.long_pitch) && (
+								<div className="border-t pt-6">
+									<h3 className="text-lg font-semibold text-gray-900 mb-4">Overview</h3>
+									<div className="space-y-4">
+										{selectedStartup.long_pitch && (
+											<div>
+												<span className="text-sm text-gray-500">Pitch</span>
+												<p className="text-gray-900 mt-1 whitespace-pre-wrap">{selectedStartup.long_pitch}</p>
+											</div>
+										)}
+										{selectedStartup.bio && (
+											<div>
+												<span className="text-sm text-gray-500">Founder Bio</span>
+												<p className="text-gray-900 mt-1">{selectedStartup.bio}</p>
+											</div>
+										)}
+										{selectedStartup.motivation && (
+											<div>
+												<span className="text-sm text-gray-500">Motivation</span>
+												<p className="text-gray-900 mt-1">{selectedStartup.motivation}</p>
+											</div>
+										)}
+									</div>
+								</div>
+							)}
+
 							{/* Founder Information */}
 							<div className="border-t pt-6">
 								<h3 className="text-lg font-semibold text-gray-900 mb-4">Founder Information</h3>
@@ -479,32 +521,38 @@ export default function ProgressPage() {
 											) : '-'}
 										</p>
 									</div>
-									{selectedStartup.telegram && (
+									{selectedStartup.founder_time_commitment_pct && (
+										<div>
+											<span className="text-sm text-gray-500">Time Commitment</span>
+											<p className="font-medium text-gray-900">{selectedStartup.founder_time_commitment_pct}%</p>
+										</div>
+									)}
+									{selectedStartup.founder_telegram && (
 										<div>
 											<span className="text-sm text-gray-500">Telegram</span>
 											<p>
 												<a
-													href={`https://t.me/${selectedStartup.telegram.replace('@', '')}`}
+													href={`https://t.me/${selectedStartup.founder_telegram.replace('@', '')}`}
 													target="_blank"
 													rel="noopener noreferrer"
 													className="text-blue-600 hover:text-blue-800"
 												>
-													{selectedStartup.telegram}
+													{selectedStartup.founder_telegram}
 												</a>
 											</p>
 										</div>
 									)}
-									{selectedStartup.linkedin && (
+									{selectedStartup.founder_linkedin_url && (
 										<div>
 											<span className="text-sm text-gray-500">LinkedIn</span>
 											<p>
 												<a
-													href={`https://linkedin.com/in/${selectedStartup.linkedin}`}
+													href={selectedStartup.founder_linkedin_url}
 													target="_blank"
 													rel="noopener noreferrer"
 													className="text-blue-600 hover:text-blue-800"
 												>
-													{selectedStartup.linkedin}
+													View Profile
 												</a>
 											</p>
 										</div>
@@ -512,10 +560,77 @@ export default function ProgressPage() {
 								</div>
 							</div>
 
-							{/* Startup Details */}
+							{/* Product & Business */}
 							<div className="border-t pt-6">
-								<h3 className="text-lg font-semibold text-gray-900 mb-4">Startup Details</h3>
+								<h3 className="text-lg font-semibold text-gray-900 mb-4">Product & Business</h3>
 								<div className="space-y-4">
+									{selectedStartup.product && (
+										<div>
+											<span className="text-sm text-gray-500">Product</span>
+											<p className="text-gray-900 mt-1">{selectedStartup.product}</p>
+										</div>
+									)}
+									{selectedStartup.problem_statement && (
+										<div>
+											<span className="text-sm text-gray-500">Problem Statement</span>
+											<p className="text-gray-900 mt-1">{selectedStartup.problem_statement}</p>
+										</div>
+									)}
+									{selectedStartup.customer && (
+										<div>
+											<span className="text-sm text-gray-500">Target Customer</span>
+											<p className="text-gray-900 mt-1">{selectedStartup.customer}</p>
+										</div>
+									)}
+									{selectedStartup.product_job_to_be_done && (
+										<div>
+											<span className="text-sm text-gray-500">Job to be Done</span>
+											<p className="text-gray-900 mt-1">{selectedStartup.product_job_to_be_done}</p>
+										</div>
+									)}
+									{selectedStartup.value_proposition && (
+										<div>
+											<span className="text-sm text-gray-500">Value Proposition</span>
+											<p className="text-gray-900 mt-1">{selectedStartup.value_proposition}</p>
+										</div>
+									)}
+									{selectedStartup.current_workaround && (
+										<div>
+											<span className="text-sm text-gray-500">Current Workaround</span>
+											<p className="text-gray-900 mt-1">{selectedStartup.current_workaround}</p>
+										</div>
+									)}
+									{selectedStartup.key_differentiator && (
+										<div>
+											<span className="text-sm text-gray-500">Key Differentiator</span>
+											<p className="text-gray-900 mt-1">{selectedStartup.key_differentiator}</p>
+										</div>
+									)}
+									{selectedStartup.why_now_catalyst && (
+										<div>
+											<span className="text-sm text-gray-500">Why Now?</span>
+											<p className="text-gray-900 mt-1">{selectedStartup.why_now_catalyst}</p>
+										</div>
+									)}
+									{selectedStartup.Business_model_explained && (
+										<div>
+											<span className="text-sm text-gray-500">Business Model</span>
+											<p className="text-gray-900 mt-1">{selectedStartup.Business_model_explained}</p>
+										</div>
+									)}
+								</div>
+							</div>
+
+							{/* Traction & Resources */}
+							<div className="border-t pt-6">
+								<h3 className="text-lg font-semibold text-gray-900 mb-4">Traction & Resources</h3>
+								<div className="space-y-4">
+									{selectedStartup.traction && (
+										<div>
+											<span className="text-sm text-gray-500">Traction</span>
+											<p className="text-gray-900 mt-1">{selectedStartup.traction}</p>
+										</div>
+									)}
 									{selectedStartup.website && (
 										<div>
 											<span className="text-sm text-gray-500">Website</span>
@@ -531,80 +646,75 @@ export default function ProgressPage() {
 											</p>
 										</div>
 									)}
-									{selectedStartup.pitch && (
+									{selectedStartup.demo_video_url && (
 										<div>
-											<span className="text-sm text-gray-500">Pitch</span>
-											<p className="text-gray-900 mt-1">{selectedStartup.pitch}</p>
-										</div>
-									)}
-									{selectedStartup.value_prop && (
-										<div>
-											<span className="text-sm text-gray-500">Value Proposition</span>
-											<p className="text-gray-900 mt-1">{selectedStartup.value_prop}</p>
-										</div>
-									)}
-									{selectedStartup.why_now && (
-										<div>
-											<span className="text-sm text-gray-500">Why Now?</span>
-											<p className="text-gray-900 mt-1">{selectedStartup.why_now}</p>
-										</div>
-									)}
-									<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-										{selectedStartup.team_size && (
-											<div>
-												<span className="text-sm text-gray-500">Team Size</span>
-												<p className="font-medium text-gray-900">{selectedStartup.team_size}</p>
-											</div>
-										)}
-										{selectedStartup.funding_stage && (
-											<div>
-												<span className="text-sm text-gray-500">Funding Stage</span>
-												<p className="font-medium text-gray-900">{selectedStartup.funding_stage}</p>
-											</div>
-										)}
-										{selectedStartup.revenue && (
-											<div>
-												<span className="text-sm text-gray-500">Revenue</span>
-												<p className="font-medium text-gray-900">{selectedStartup.revenue}</p>
-											</div>
-										)}
-										{selectedStartup.customers && (
-											<div>
-												<span className="text-sm text-gray-500">Customers</span>
-												<p className="font-medium text-gray-900">{selectedStartup.customers}</p>
-											</div>
-										)}
-									</div>
-								</div>
-							</div>
-
-							{/* Due Diligence */}
-							<div className="border-t pt-6">
-								<h3 className="text-lg font-semibold text-gray-900 mb-4">Due Diligence</h3>
-								<div className="space-y-4">
-									{selectedStartup.github && (
-										<div>
-											<span className="text-sm text-gray-500">GitHub</span>
+											<span className="text-sm text-gray-500">Demo Video</span>
 											<p>
 												<a
-													href={`https://github.com/${selectedStartup.github}`}
+													href={selectedStartup.demo_video_url}
 													target="_blank"
 													rel="noopener noreferrer"
-													className="text-gray-900 hover:text-gray-700 font-mono"
+													className="text-indigo-600 hover:text-indigo-800"
 												>
-													{selectedStartup.github}
+													Watch Demo
 												</a>
 											</p>
 										</div>
 									)}
-									{selectedStartup.proof_of_traction && (
+									{selectedStartup.one_pager_url && (
 										<div>
-											<span className="text-sm text-gray-500">Proof of Traction</span>
-											<p className="text-gray-900 mt-1">{selectedStartup.proof_of_traction}</p>
+											<span className="text-sm text-gray-500">One Pager</span>
+											<p>
+												<a
+													href={selectedStartup.one_pager_url}
+													target="_blank"
+													rel="noopener noreferrer"
+													className="text-indigo-600 hover:text-indigo-800"
+												>
+													View One Pager
+												</a>
+											</p>
+										</div>
+									)}
+									{selectedStartup.github_repos && (
+										<div>
+											<span className="text-sm text-gray-500">GitHub</span>
+											<p>
+												<a
+													href={selectedStartup.github_repos}
+													target="_blank"
+													rel="noopener noreferrer"
+													className="text-gray-900 hover:text-gray-700 font-mono"
+												>
+													View Repository
+												</a>
+											</p>
+										</div>
+									)}
+									{selectedStartup.competitors_urls && (
+										<div>
+											<span className="text-sm text-gray-500">Competitors</span>
+											<p className="text-gray-900 mt-1">{selectedStartup.competitors_urls}</p>
 										</div>
 									)}
 								</div>
 							</div>
+
+							{/* Circle Information */}
+							{selectedStartup.circle_name && (
+								<div className="border-t pt-6">
+									<h3 className="text-lg font-semibold text-gray-900 mb-4">Circle</h3>
+									<div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-4 border border-purple-200">
+										<h4 className="font-semibold text-purple-900">{selectedStartup.circle_name}</h4>
+										{selectedStartup.circle_description && (
+											<p className="text-purple-800 mt-2 text-sm">{selectedStartup.circle_description}</p>
+										)}
+										{selectedStartup.wave && (
+											<p className="text-purple-600 mt-2 text-sm">Wave: {selectedStartup.wave}</p>
+										)}
+									</div>
+								</div>
+							)}
 						</div>
 					</div>
 				</div>

@@ -50,8 +50,12 @@ export default function handler(req, res) {
         founder: row.founder_name || row.name,
         founder_name: row.founder_name,
         founder_email: row.founder_email,
+        founder_telegram: row.founder_telegram,
+        founder_linkedin_url: row.founder_linkedin_url,
         location: row.founder_city && row.founder_country ? 
           `${row.founder_city}, ${row.founder_country}` : undefined,
+        founder_city: row.founder_city,
+        founder_country: row.founder_country,
         house: row.house,
         progress,
         current_progress: row.current_progress,
@@ -62,7 +66,23 @@ export default function handler(req, res) {
         circle_description: row.circle_description,
         wave: row.wave,
         bio: row.bio,
-        motivation: row.motivation
+        motivation: row.motivation,
+        traction: row.traction,
+        product: row.product,
+        long_pitch: row.long_pitch,
+        demo_video_url: row.demo_video_url,
+        one_pager_url: row.one_pager_url,
+        github_repos: row.github_repos,
+        problem_statement: row.problem_statement,
+        customer: row.customer,
+        product_job_to_be_done: row.product_job_to_be_done,
+        value_proposition: row.value_proposition,
+        current_workaround: row.current_workaround,
+        why_now_catalyst: row.why_now_catalyst,
+        key_differentiator: row.key_differentiator,
+        founder_time_commitment_pct: row.founder_time_commitment_pct,
+        competitors_urls: row.competitors_urls,
+        Business_model_explained: row.Business_model_explained
       }
     })
 
