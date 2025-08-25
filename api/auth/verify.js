@@ -1,8 +1,4 @@
-const fs = require('fs')
-const path = require('path')
-const Papa = require('papaparse')
-
-module.exports = (req, res) => {
+export default function handler(req, res) {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Credentials', true)
   res.setHeader('Access-Control-Allow-Origin', '*')
@@ -22,6 +18,10 @@ module.exports = (req, res) => {
   }
 
   try {
+    const fs = require('fs')
+    const path = require('path')
+    const Papa = require('papaparse')
+    
     const { code } = req.body || {}
     console.log('Auth verify request with code:', code)
 
@@ -40,17 +40,8 @@ module.exports = (req, res) => {
       console.log('Loaded', csvData.length, 'startups from CSV')
     } catch (e) {
       console.error('Failed to read CSV:', e)
-      // Fallback data for testing
-      csvData = [{
-        npid: '1750',
-        login_code: 'bG9naW46MTc1MA==',
-        startup_name: 'NoCode AI Builder',
-        founder_name: 'Franck Nouyrigat',
-        founder_email: 'franck@nocodeai.io',
-        website: 'nocodebuilder.ai',
-        house: 'venture',
-        current_progress: 0.73
-      }]
+      // Return error instead of fallback
+      return res.status(200).json({ success: false, message: 'Unable to load data' })
     }
 
     // Find matching startup
