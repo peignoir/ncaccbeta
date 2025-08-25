@@ -1,4 +1,8 @@
-export default function handler(req, res) {
+const fs = require('fs')
+const path = require('path')
+const Papa = require('papaparse')
+
+module.exports = function handler(req, res) {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Credentials', true)
   res.setHeader('Access-Control-Allow-Origin', '*')
@@ -18,9 +22,6 @@ export default function handler(req, res) {
   }
 
   try {
-    const fs = require('fs')
-    const path = require('path')
-    const Papa = require('papaparse')
     
     // Read CSV data
     const csvPath = path.join(process.cwd(), 'public', 'sample.csv')

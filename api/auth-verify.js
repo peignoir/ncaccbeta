@@ -1,4 +1,7 @@
-export default function handler(req, res) {
+const fs = require('fs')
+const path = require('path')
+
+module.exports = function handler(req, res) {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Credentials', true)
   res.setHeader('Access-Control-Allow-Origin', '*')
@@ -18,8 +21,6 @@ export default function handler(req, res) {
   }
 
   try {
-    const fs = require('fs')
-    const path = require('path')
     const Papa = require('papaparse')
     
     const { code } = req.body || {}

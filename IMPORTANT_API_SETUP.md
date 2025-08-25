@@ -1,4 +1,9 @@
-# CRITICAL: API Setup for Vercel Deployment
+# CRITICAL: REST API Setup for Vercel Deployment
+
+## REST API Architecture
+The app uses a REST API pattern that will work with both:
+1. **Development**: CSV file as data source (current)
+2. **Production**: Real REST API backend (future)
 
 ## Problem
 The mock API using client-side fetch interceptors DOES NOT WORK on Vercel production.
