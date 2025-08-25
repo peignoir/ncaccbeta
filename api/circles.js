@@ -2,7 +2,7 @@ const fs = require('fs')
 const path = require('path')
 const Papa = require('papaparse')
 
-module.exports = function handler(req, res) {
+module.exports = (req, res) => {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Credentials', true)
   res.setHeader('Access-Control-Allow-Origin', '*')

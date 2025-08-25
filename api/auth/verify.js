@@ -1,7 +1,8 @@
 const fs = require('fs')
 const path = require('path')
+const Papa = require('papaparse')
 
-module.exports = function handler(req, res) {
+module.exports = (req, res) => {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Credentials', true)
   res.setHeader('Access-Control-Allow-Origin', '*')
@@ -21,8 +22,6 @@ module.exports = function handler(req, res) {
   }
 
   try {
-    const Papa = require('papaparse')
-    
     const { code } = req.body || {}
     console.log('Auth verify request with code:', code)
 
@@ -38,6 +37,7 @@ module.exports = function handler(req, res) {
       const csvText = fs.readFileSync(csvPath, 'utf-8')
       const parsed = Papa.parse(csvText, { header: true, skipEmptyLines: true })
       csvData = parsed.data || []
+      console.log('Loaded', csvData.length, 'startups from CSV')
     } catch (e) {
       console.error('Failed to read CSV:', e)
       // Fallback data for testing
@@ -75,6 +75,7 @@ module.exports = function handler(req, res) {
         house: matched.house || 'venture'
       }
       
+      console.log('Login successful for:', user.name)
       return res.status(200).json({
         success: true,
         user,
@@ -82,29 +83,7 @@ module.exports = function handler(req, res) {
       })
     }
 
-    // Special test code
-    if (code === 'dGVzdGtleTEyMw==') {
-      const user = {
-        id: 'user_test',
-        name: 'Test User',
-        email: 'test@example.com',
-        startup: {
-          id: 'test',
-          name: 'Test Startup',
-          website: 'test.com',
-          progress: 50,
-          house: 'venture'
-        },
-        house: 'venture'
-      }
-      
-      return res.status(200).json({
-        success: true,
-        user,
-        token: 'mock-jwt-token'
-      })
-    }
-
+    console.log('No match found for code:', code)
     return res.status(200).json({ success: false, message: 'Invalid access code' })
   } catch (error) {
     console.error('Auth error:', error)
