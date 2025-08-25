@@ -118,6 +118,8 @@ function mapRowToStartup(r: any, idx: number): Startup {
 		house: normalizedHouse || undefined,
 		progress: Number.isFinite(progress) ? Math.max(0, Math.min(100, progress)) : 0,
 		founder: r.founder_name || r.name,
+		founder_name: r.founder_name,
+		founder_email: r.founder_email,
 		detailsObj: details || undefined,
 		founderCity,
 		founderCountry,
@@ -125,6 +127,7 @@ function mapRowToStartup(r: any, idx: number): Startup {
 		founderMotivation,
 		stealth,
 		loginCode,
+		login_code: loginCode, // Include both formats
 		circle: r.circle,
 		circle_name: r.circle_name,
 		circle_description: r.circle_description,
@@ -182,46 +185,72 @@ export function installMockApi() {
 				// route handling
 				if (url === '/api/auth/verify' && init?.method !== 'GET') {
 					const body = init?.body ? JSON.parse(init.body as string) : {}
+					console.log('Auth verify request with code:', body.code)
+					
 					const ok = typeof body.code === 'string' && body.code.length > 6
-					if (!ok) return json({ success: false }, 200)
+					if (!ok) {
+						console.log('Code too short or invalid')
+						return json({ success: false, message: 'Code must be at least 7 characters' }, 200)
+					}
 
-					// Try to match any startup login code: base64("login:" + startup.id)
+					// Try to match any startup login code
 					try {
 						const startups = await loadStartups()
-						const matched = startups.find((s) => computeLoginCode(String(s.id)) === body.code || (s as any).login_code === body.code)
+						console.log(`Loaded ${startups.length} startups from CSV`)
+						
+						// Log first few startups for debugging
+						if (startups.length > 0) {
+							console.log('Sample startup:', {
+								id: startups[0].id,
+								loginCode: startups[0].loginCode,
+								name: startups[0].name
+							})
+						}
+						
+						// Find matching startup by login_code field or computed code
+						const matched = startups.find((s) => {
+							const computedCode = computeLoginCode(String(s.id))
+							const csvLoginCode = (s as any).login_code || (s as any).loginCode
+							const matches = csvLoginCode === body.code || computedCode === body.code
+							
+							if (s.id === '1750' || s.id === '1274') { // Debug first two entries
+								console.log(`Checking ${s.id}:`, {
+									csvLoginCode,
+									computedCode,
+									providedCode: body.code,
+									matches
+								})
+							}
+							
+							return matches
+						})
+						
 						if (matched) {
+							console.log('Matched startup:', matched.id, matched.name)
 							const user = {
 								id: `user_${matched.id}`,
-								name: matched.founder || 'NC/ACC Founder',
-								email: matched.detailsObj?.email || 'founder@example.com',
-								startup: { id: matched.id, name: matched.name, website: matched.website, progress: matched.progress, house: matched.house },
+								name: (matched as any).founder_name || matched.founder || 'NC/ACC Founder',
+								email: (matched as any).founder_email || matched.detailsObj?.email || 'founder@example.com',
+								startup: { 
+									id: matched.id, 
+									name: matched.name, 
+									website: matched.website, 
+									progress: matched.progress, 
+									house: matched.house 
+								},
 								house: matched.house || 'venture',
 							}
 							return json(await delay({ success: true, user, token: 'mock-jwt-token' }, 200))
+						} else {
+							console.log('No startup matched the provided code')
 						}
 					} catch (e) {
 						console.error('Error matching startup:', e)
-					}
-
-					// Special code mapping to Franck
-					if (body.code === 'dGVzdGtleTEyMw==') {
-						try {
-							const startups = await loadStartups()
-							const me = startups.find((s) => (s.founder || '').toLowerCase().includes('franck')) || startups.find((s) => (s.website || '').includes('nocodebuilder'))
-							if (me) {
-								const user = {
-									id: 'user_franck',
-									name: 'Franck Nouyrigat',
-									email: 'franck@nocodeai.io',
-									startup: { id: me.id, name: me.name, website: me.website, progress: me.progress, house: me.house },
-									house: me.house || 'venture',
-								}
-								return json(await delay({ success: true, user, token: 'mock-jwt-token' }, 300))
-							}
-						} catch {}
+						return json({ success: false, message: 'Server error during authentication' }, 500)
 					}
 					
 					// If no match found, return failure
+					console.log('Authentication failed - no match found')
 					return json({ success: false, message: 'Invalid access code' }, 200)
 				}
 
