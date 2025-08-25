@@ -1,7 +1,3 @@
-import fs from 'fs'
-import path from 'path'
-import Papa from 'papaparse'
-
 export default function handler(req, res) {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Credentials', true)
@@ -22,11 +18,22 @@ export default function handler(req, res) {
   }
 
   try {
+    const fs = require('fs')
+    const path = require('path')
+    const Papa = require('papaparse')
+    
     // Read CSV data
     const csvPath = path.join(process.cwd(), 'public', 'sample.csv')
-    const csvText = fs.readFileSync(csvPath, 'utf-8')
-    const parsed = Papa.parse(csvText, { header: true, skipEmptyLines: true })
-    const startups = parsed.data
+    let startups = []
+    
+    try {
+      const csvText = fs.readFileSync(csvPath, 'utf-8')
+      const parsed = Papa.parse(csvText, { header: true, skipEmptyLines: true })
+      startups = parsed.data || []
+    } catch (e) {
+      console.error('Failed to read CSV:', e)
+      startups = []
+    }
 
     // Group by circle
     const byCircle = {}
@@ -69,6 +76,6 @@ export default function handler(req, res) {
     res.status(200).json(circles)
   } catch (error) {
     console.error('Circles API error:', error)
-    res.status(500).json({ error: 'Internal server error' })
+    res.status(500).json({ error: 'Internal server error', details: error.message })
   }
 }

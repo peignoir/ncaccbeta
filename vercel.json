@@ -1,17 +1,12 @@
 {
-  "functions": {
-    "api/*.js": {
-      "maxDuration": 10
-    }
-  },
   "rewrites": [
     {
       "source": "/api/auth/verify",
-      "destination": "/api/auth/verify"
+      "destination": "/api/auth-verify"
     },
     {
-      "source": "/api/startups/update",
-      "destination": "/api/startups/update"
+      "source": "/api/startups/update", 
+      "destination": "/api/startups-update"
     },
     {
       "source": "/api/startups",
@@ -23,7 +18,7 @@
     },
     {
       "source": "/(.*)",
-      "destination": "/index.html"
+      "destination": "/"
     }
   ]
 }

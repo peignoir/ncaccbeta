@@ -1,7 +1,3 @@
-import fs from 'fs'
-import path from 'path'
-import Papa from 'papaparse'
-
 export default function handler(req, res) {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Credentials', true)
@@ -22,7 +18,7 @@ export default function handler(req, res) {
   }
 
   try {
-    const { id, updates } = req.body
+    const { id, updates } = req.body || {}
     
     if (!id) {
       return res.status(400).json({ ok: false, message: 'Missing id' })

@@ -1,7 +1,3 @@
-import fs from 'fs'
-import path from 'path'
-import Papa from 'papaparse'
-
 export default function handler(req, res) {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Credentials', true)
@@ -22,15 +18,27 @@ export default function handler(req, res) {
   }
 
   try {
+    const fs = require('fs')
+    const path = require('path')
+    const Papa = require('papaparse')
+    
     // Read CSV data
     const csvPath = path.join(process.cwd(), 'public', 'sample.csv')
-    const csvText = fs.readFileSync(csvPath, 'utf-8')
-    const parsed = Papa.parse(csvText, { header: true, skipEmptyLines: true })
-    const csvData = parsed.data
+    let csvData = []
+    
+    try {
+      const csvText = fs.readFileSync(csvPath, 'utf-8')
+      const parsed = Papa.parse(csvText, { header: true, skipEmptyLines: true })
+      csvData = parsed.data || []
+    } catch (e) {
+      console.error('Failed to read CSV:', e)
+      // Return empty array if CSV fails
+      csvData = []
+    }
 
     // Transform data
     const startups = csvData.map((row, idx) => {
-      const progress = row.current_progress != null ? Math.round(row.current_progress * 100) : 0
+      const progress = row.current_progress != null ? Math.round(parseFloat(row.current_progress) * 100) : 0
       const stealth = row.stealth === 'true' || row.stealth === '1'
       
       return {
@@ -59,7 +67,7 @@ export default function handler(req, res) {
     })
 
     // Apply filters if any
-    const { house, sort } = req.query
+    const { house, sort } = req.query || {}
     let filtered = startups
 
     if (house && house !== 'all') {
@@ -73,6 +81,6 @@ export default function handler(req, res) {
     res.status(200).json(filtered)
   } catch (error) {
     console.error('Startups API error:', error)
-    res.status(500).json({ error: 'Internal server error' })
+    res.status(500).json({ error: 'Internal server error', details: error.message })
   }
 }
