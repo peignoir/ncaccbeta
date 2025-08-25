@@ -1,0 +1,13 @@
+id,name,website,location,house,progress,founder
+startup_001,NoCode AI Builder,nocodebuilder.ai,Paris,adventure,73,Julia Husieva
+startup_002,ShipFast.io,shipfast.io,San Francisco,adventure,85,Bruno Simon
+startup_003,SideHustle CRM,sidehustlecrm.com,London,side,60,Alex Doe
+startup_004,Lifestyle Coach,lifestylecoach.app,Austin,lifestyle,40,Sam Lee
+startup_005,KarmaHub,karmahub.org,Berlin,karma,55,Kim Park
+startup_006,DevTools Cloud,devtools.cloud,NYC,adventure,92,Pat Renee
+startup_007,ShopStack,shopstack.dev,Chicago,side,48,Lin Chan
+startup_008,RevenuePilot,revenuepilot.co,Remote,lifestyle,33,Ada Fox
+startup_009,OpenKarma,openkarma.dev,Remote,karma,77,Mo Halim
+startup_010,Promptly,promptly.ai,Remote,adventure,68,Irene K
+
+
