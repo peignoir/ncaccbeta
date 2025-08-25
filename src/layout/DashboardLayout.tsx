@@ -16,7 +16,7 @@ export default function DashboardLayout() {
 				<div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
 					<div className="flex items-center gap-3">
 						<div className="text-xl font-bold">NC/ACC</div>
-						<span className="text-gray-500 hidden sm:inline">Startup Dashboard</span>
+						<span className="text-gray-500 hidden sm:inline">Startups Dashboard</span>
 					</div>
 					<div className="flex items-center gap-3">
 						<div className="text-right hidden sm:block">
@@ -33,9 +33,8 @@ export default function DashboardLayout() {
 				</div>
 				<nav className="bg-white">
 					<div className="max-w-6xl mx-auto px-4 flex gap-4">
-						<Tab to="/progress" label="Progress" />
+						<Tab to="/progress" label="Your Startup" />
 						<Tab to="/circles" label="Circles" />
-						<Tab to="/tasks" label="Tasks" />
 					</div>
 				</nav>
 			</header>

@@ -4,7 +4,6 @@ import LoginPage from './auth/LoginPage'
 import DashboardLayout from './layout/DashboardLayout'
 import ProgressPage from './pages/ProgressPage'
 import CirclesPage from './pages/CirclesPage'
-import TasksPage from './pages/TasksPage'
 
 function ProtectedRoute({ children }: { children: JSX.Element }) {
 	const { isAuthenticated } = useAuth()
@@ -28,7 +27,6 @@ export default function App() {
 					<Route index element={<ProgressPage />} />
 					<Route path="progress" element={<ProgressPage />} />
 					<Route path="circles" element={<CirclesPage />} />
-					<Route path="tasks" element={<TasksPage />} />
 				</Route>
 				<Route path="*" element={<Navigate to="/" replace />} />
 			</Routes>

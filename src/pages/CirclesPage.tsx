@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../auth/AuthContext'
-import { api } from '../lib/api'
+import api from '../lib/api'
 
-type CircleMember = {
+type Member = {
 	id: string
 	name: string
 	startup: string
@@ -10,268 +10,216 @@ type CircleMember = {
 	telegram?: string
 	bio?: string
 	house?: string
-	wave?: string
 }
 
 type Circle = {
 	id: string
 	name: string
 	description: string
-	members: CircleMember[]
-	insights: string[]
-}
-
-const houseLabels: Record<string, string> = {
-	venture: 'Venture 🚀',
-	side: 'Side Hustle 💼',
-	lifestyle: 'Lifestyle 💰',
-	karma: 'Karma 🧘',
+	members: Member[]
+	insights?: string[]
 }
 
 export default function CirclesPage() {
 	const { user } = useAuth()
 	const [circles, setCircles] = useState<Circle[]>([])
 	const [loading, setLoading] = useState(true)
-	const [error, setError] = useState<string | null>(null)
-	const [selectedMember, setSelectedMember] = useState<CircleMember | null>(null)
-	const [isEditing, setIsEditing] = useState(false)
-	const [form, setForm] = useState<Record<string, any>>({})
+	const [myCircle, setMyCircle] = useState<Circle | null>(null)
 
 	useEffect(() => {
-		let active = true
-		setLoading(true)
-		api
-			.get<Circle[]>('/api/circles')
-			.then((res) => {
-				if (!active) return
-				setCircles(res)
-			})
-			.catch((e) => setError(e.message || 'Failed to load'))
-			.finally(() => active && setLoading(false))
-		return () => {
-			active = false
-		}
+		loadCircles()
 	}, [])
 
-	useEffect(() => {
-		if (selectedMember) {
-			document.body.style.overflow = 'hidden'
-		} else {
-			document.body.style.overflow = 'unset'
-		}
-		return () => {
-			document.body.style.overflow = 'unset'
-		}
-	}, [selectedMember])
-
-	useEffect(() => {
-		if (!selectedMember) return
-		setForm({
-			bio: selectedMember.bio || '',
-			telegram: selectedMember.telegram || '',
-		})
-		setIsEditing(false)
-	}, [selectedMember])
-
-	const isOwnProfile = Boolean(selectedMember && user?.name && user.name === selectedMember.name)
-
-	const onSave = async () => {
-		if (!selectedMember || !isOwnProfile) return
+	const loadCircles = async () => {
 		try {
-			const { updated } = await api.post('/api/startups/update', { 
-				id: user?.startup?.id, 
-				updates: form 
-			})
-			const updatedMember = { ...selectedMember, ...form }
-			setSelectedMember(updatedMember)
-			setCircles(prev => prev.map(circle => ({
-				...circle,
-				members: circle.members.map(m => 
-					m.id === selectedMember.id ? updatedMember : m
+			const data = await api.get('/api/circles')
+			setCircles(data)
+			
+			// Find user's circle
+			const userCircle = data.find((circle: Circle) => 
+				circle.members.some((member: Member) => 
+					member.name === user?.name || 
+					member.startup === user?.startup?.name
 				)
-			})))
-			setIsEditing(false)
-		} catch (e: any) {
-			alert(e?.message || 'Failed to save')
+			)
+			if (userCircle) {
+				setMyCircle(userCircle)
+			}
+		} catch (error) {
+			console.error('Failed to load circles:', error)
+		} finally {
+			setLoading(false)
 		}
 	}
 
-	if (loading) return <div className="p-6 text-gray-500">Loading circles...</div>
-	if (error) return <div className="p-6 text-red-600">{error}</div>
+	if (loading) {
+		return (
+			<div className="flex items-center justify-center min-h-[400px]">
+				<div className="text-gray-500">Loading circles...</div>
+			</div>
+		)
+	}
+
+	const otherCircles = circles.filter(c => c.id !== myCircle?.id)
 
 	return (
-		<div className="space-y-6">
-			<section className="bg-white rounded-md shadow-sm p-6">
-				<h1 className="text-2xl font-semibold mb-2">Peer Circles</h1>
-				<p className="text-gray-600">Connect with founders in your circle for peer-to-peer mentoring and accountability.</p>
-			</section>
-
-			{circles.map((circle) => (
-				<section key={circle.id} className="bg-white rounded-md shadow-sm">
-					<div className="px-6 py-4 border-b">
-						<h2 className="font-medium text-lg">{circle.name}</h2>
-						<p className="text-sm text-gray-600 mt-1">{circle.description}</p>
+		<div className="space-y-8">
+			{/* My Circle Section */}
+			{myCircle && (
+				<div className="bg-gradient-to-br from-purple-50 to-pink-100 rounded-2xl p-8 shadow-lg">
+					<div className="mb-6">
+						<h2 className="text-3xl font-bold text-gray-900 mb-2">Your Circle</h2>
+						<p className="text-lg text-purple-700 font-medium">
+							🤝 Help each other succeed - Your wins are their wins!
+						</p>
 					</div>
-					<div className="p-6">
-						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-							{circle.members.map((member) => (
-								<div
-									key={member.id}
-									className="border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
-									onClick={() => setSelectedMember(member)}
-								>
-									<div className="flex items-start justify-between">
-										<div className="flex-1">
-											<div className="font-medium">{member.name}</div>
-											<div className="text-sm text-gray-600">{member.startup}</div>
-											{member.house && (
-												<span className="inline-block mt-2 px-2 py-0.5 text-xs rounded-full border">
-													{houseLabels[member.house] || member.house}
-												</span>
-											)}
-											{member.wave && (
-												<span className="inline-block mt-1 ml-1 px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-700">
-													{member.wave === 'wave1' ? 'Wave 1' : member.wave}
-												</span>
-											)}
-										</div>
-										{member.website && (
-											<a
-												href={member.website.startsWith('http') ? member.website : `https://${member.website}`}
-												target="_blank"
-												rel="noreferrer"
-												className="text-sm text-primary hover:underline"
-												onClick={(e) => e.stopPropagation()}
-											>
-												🔗
-											</a>
-										)}
-									</div>
-									{member.bio && (
-										<p className="text-sm text-gray-600 mt-2 line-clamp-2">{member.bio}</p>
-									)}
-								</div>
-							))}
-						</div>
-					</div>
-				</section>
-			))}
-
-			{selectedMember && (
-				<div className="fixed inset-0 z-20 overflow-y-auto">
-					<div className="fixed inset-0 bg-black/30" onClick={() => setSelectedMember(null)} />
-					<div className="relative min-h-screen flex items-start justify-center py-10">
-						<div className="relative w-[92vw] max-w-2xl bg-white rounded-lg shadow-xl p-6 my-auto">
-							<div className="flex items-start justify-between gap-3 mb-4">
-								<div>
-									<div className="text-xl font-semibold">{selectedMember.name}</div>
-									<div className="text-sm text-gray-600">{selectedMember.startup}</div>
-									<div className="flex items-center gap-2 mt-2">
-										{selectedMember.house && (
-											<span className="px-2 py-0.5 text-xs rounded-full border">
-												{houseLabels[selectedMember.house] || selectedMember.house}
-											</span>
-										)}
-										{selectedMember.wave && (
-											<span className="px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-700">
-												{selectedMember.wave === 'wave1' ? 'Wave 1' : selectedMember.wave}
-											</span>
-										)}
-									</div>
-								</div>
-								<button
-									onClick={() => setSelectedMember(null)}
-									className="text-sm px-2 py-1 rounded-md border"
-								>
-									Close
-								</button>
+					
+					<div className="bg-white rounded-xl p-6 shadow-sm">
+						<div className="mb-6">
+							<h3 className="text-2xl font-semibold text-gray-900 mb-2">{myCircle.name}</h3>
+							<p className="text-gray-600">{myCircle.description}</p>
+							<div className="mt-4 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg border border-indigo-200">
+								<p className="text-indigo-900 font-medium">
+									💡 Remember: Share your challenges openly, celebrate wins together, and offer help whenever you can. 
+									Your circle is your support system!
+								</p>
 							</div>
+						</div>
 
-							<div className="space-y-4">
-								{selectedMember.bio && (
-									<div>
-										<div className="text-sm font-medium text-gray-700 mb-1">Bio</div>
-										<p className="text-gray-800 whitespace-pre-wrap">{selectedMember.bio}</p>
-									</div>
-								)}
-
-								{selectedMember.website && (
-									<div>
-										<div className="text-sm font-medium text-gray-700 mb-1">Website</div>
-										<a
-											href={selectedMember.website.startsWith('http') ? selectedMember.website : `https://${selectedMember.website}`}
-											target="_blank"
-											rel="noreferrer"
-											className="text-primary hover:underline"
-										>
-											{selectedMember.website}
-										</a>
-									</div>
-								)}
-
-								{selectedMember.telegram && (
-									<div>
-										<div className="text-sm font-medium text-gray-700 mb-1">Telegram</div>
-										<a
-											href={selectedMember.telegram.startsWith('http') ? selectedMember.telegram : `https://t.me/${selectedMember.telegram.replace('@', '')}`}
-											target="_blank"
-											rel="noreferrer"
-											className="text-primary hover:underline"
-										>
-											{selectedMember.telegram}
-										</a>
-									</div>
-								)}
-
-								{isOwnProfile && (
-									<div className="mt-6 border-t pt-4">
-										<div className="flex items-center justify-between mb-3">
-											<div className="font-medium">Edit your profile</div>
-											<div className="flex gap-2">
-												<button
-													className="px-2 py-1 border rounded-md text-sm"
-													onClick={() => setIsEditing((v) => !v)}
-												>
-													{isEditing ? 'Cancel' : 'Edit'}
-												</button>
-												{isEditing && (
-													<button
-														className="px-3 py-1 bg-primary text-white rounded-md text-sm"
-														onClick={onSave}
+						<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+							{myCircle.members.map((member) => {
+								const isMe = member.name === user?.name || member.startup === user?.startup?.name
+								
+								return (
+									<div
+										key={member.id}
+										className={`p-4 rounded-lg border-2 transition-all hover:shadow-md ${
+											isMe 
+												? 'border-purple-300 bg-gradient-to-br from-purple-50 to-pink-50' 
+												: 'border-gray-200 bg-white hover:border-purple-200'
+										}`}
+									>
+										<div className="space-y-2">
+											<div className="flex items-start justify-between">
+												<div className="flex-1">
+													<h4 className="font-semibold text-gray-900">
+														{member.name}
+														{isMe && <span className="ml-2 text-purple-600">(You)</span>}
+													</h4>
+													<p className="text-sm text-gray-600">{member.startup}</p>
+												</div>
+												{member.house && (
+													<span className={`text-xs px-2 py-1 rounded-full ${
+														member.house === 'venture' ? 'bg-purple-100 text-purple-700' :
+														member.house === 'lifestyle' ? 'bg-green-100 text-green-700' :
+														member.house === 'side' ? 'bg-blue-100 text-blue-700' :
+														'bg-orange-100 text-orange-700'
+													}`}>
+														{member.house}
+													</span>
+												)}
+											</div>
+											
+											{member.bio && (
+												<p className="text-xs text-gray-500 line-clamp-2">{member.bio}</p>
+											)}
+											
+											<div className="flex gap-3 pt-2">
+												{member.website && (
+													<a
+														href={`https://${member.website}`}
+														target="_blank"
+														rel="noopener noreferrer"
+														className="text-xs text-indigo-600 hover:text-indigo-800"
 													>
-														Save
-													</button>
+														Website →
+													</a>
+												)}
+												{member.telegram && (
+													<a
+														href={`https://t.me/${member.telegram.replace('@', '')}`}
+														target="_blank"
+														rel="noopener noreferrer"
+														className="text-xs text-blue-600 hover:text-blue-800"
+													>
+														Telegram →
+													</a>
 												)}
 											</div>
 										</div>
-										{isEditing && (
-											<div className="space-y-3">
-												<label className="block text-sm">
-													<div className="text-gray-600 mb-1">Bio</div>
-													<textarea
-														className="w-full border rounded-md px-2 py-1 min-h-[100px]"
-														value={form.bio ?? ''}
-														onChange={(e) => setForm((f) => ({ ...f, bio: e.target.value }))}
-														placeholder="Tell your circle about yourself, your background, and what you're building..."
-													/>
-												</label>
-												<label className="block text-sm">
-													<div className="text-gray-600 mb-1">Telegram</div>
-													<input
-														type="text"
-														className="w-full border rounded-md px-2 py-1"
-														value={form.telegram ?? ''}
-														onChange={(e) => setForm((f) => ({ ...f, telegram: e.target.value }))}
-														placeholder="@username or https://t.me/username"
-													/>
-												</label>
-											</div>
-										)}
 									</div>
-								)}
-							</div>
+								)
+							})}
+						</div>
+
+						<div className="mt-6 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+							<p className="text-yellow-900 text-sm font-medium">
+								🎯 Weekly Challenge: Reach out to at least 2 circle members this week. 
+								Share what you're working on and ask how you can help them!
+							</p>
 						</div>
 					</div>
+				</div>
+			)}
+
+			{/* Other Circles Section */}
+			{otherCircles.length > 0 && (
+				<div className="bg-white rounded-2xl p-8 shadow-lg">
+					<h2 className="text-2xl font-bold text-gray-900 mb-6">Other Circles</h2>
+					
+					<div className="grid gap-6 md:grid-cols-2">
+						{otherCircles.map((circle) => (
+							<div
+								key={circle.id}
+								className="p-6 rounded-xl border border-gray-200 hover:border-gray-300 transition-all hover:shadow-md"
+							>
+								<h3 className="text-xl font-semibold text-gray-900 mb-2">{circle.name}</h3>
+								<p className="text-gray-600 mb-4">{circle.description}</p>
+								
+								<div className="space-y-3">
+									<div className="flex items-center justify-between text-sm">
+										<span className="text-gray-500">Members</span>
+										<span className="font-semibold">{circle.members.length} founders</span>
+									</div>
+									
+									{circle.insights && circle.insights.length > 0 && (
+										<div className="pt-3 border-t">
+											<p className="text-xs text-gray-500 mb-2">Circle Focus:</p>
+											{circle.insights.map((insight, idx) => (
+												<p key={idx} className="text-sm text-gray-700">• {insight}</p>
+											))}
+										</div>
+									)}
+									
+									<div className="pt-3">
+										<div className="flex flex-wrap gap-2">
+											{circle.members.slice(0, 5).map((member, idx) => (
+												<span
+													key={idx}
+													className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded-full"
+												>
+													{member.name.split(' ')[0]}
+												</span>
+											))}
+											{circle.members.length > 5 && (
+												<span className="text-xs px-2 py-1 bg-gray-100 text-gray-500 rounded-full">
+													+{circle.members.length - 5} more
+												</span>
+											)}
+										</div>
+									</div>
+								</div>
+							</div>
+						))}
+					</div>
+				</div>
+			)}
+
+			{/* Empty State */}
+			{!myCircle && circles.length === 0 && (
+				<div className="bg-white rounded-2xl p-12 shadow-lg text-center">
+					<p className="text-gray-500 text-lg">No circles available yet.</p>
+					<p className="text-gray-400 mt-2">Check back soon!</p>
 				</div>
 			)}
 		</div>
