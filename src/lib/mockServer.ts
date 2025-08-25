@@ -176,8 +176,11 @@ export function installMockApi() {
 				// route handling
 				if (url === '/api/auth/verify' && init?.method !== 'GET') {
 					const body = init?.body ? JSON.parse(init.body as string) : {}
-					const ok = typeof body.code === 'string' && body.code.length > 6
+					
+					// For development: accept any code with 7+ characters as valid
+					const ok = typeof body.code === 'string' && body.code.length >= 7
 					if (!ok) return json({ success: false }, 200)
+					
 					let user = {
 						id: 'user_generic',
 						name: 'NC/ACC Founder',
@@ -218,6 +221,8 @@ export function installMockApi() {
 							}
 						} catch {}
 					}
+					
+					// For any other valid code, return a generic user
 					return json(await delay({ success: true, user, token: 'mock-jwt-token' }, 300))
 				}
 
