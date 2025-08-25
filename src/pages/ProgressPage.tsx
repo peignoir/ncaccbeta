@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../auth/AuthContext'
-import api from '../lib/api'
+import { api } from '../lib/api'
 
 type Startup = {
 	id: string
