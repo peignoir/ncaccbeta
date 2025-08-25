@@ -3,15 +3,19 @@ import { getAuthToken } from './authToken'
 type GetOptions = { params?: Record<string, any> }
 
 async function handleResponse<T>(res: Response): Promise<T> {
+	console.log('API Response:', res.status, res.url)
 	if (res.status === 401) {
 		window.location.href = '/login'
 		throw new Error('Unauthorized')
 	}
 	if (!res.ok) {
 		const text = await res.text().catch(() => '')
+		console.error('API Error:', res.status, text)
 		throw new Error(text || `HTTP ${res.status}`)
 	}
-	return (await res.json()) as T
+	const data = await res.json()
+	console.log('API Data:', data)
+	return data as T
 }
 
 export const api = {

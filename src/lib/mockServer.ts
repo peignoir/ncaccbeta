@@ -177,11 +177,15 @@ function delay<T>(value: T, ms = 250) {
 export function installMockApi() {
 	// Enable mock API in both dev and production for now
 	// TODO: Replace with real API endpoints later
+	console.log('Installing mock API...')
 	const originalFetch = window.fetch
 
 	window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
 		const url = typeof input === 'string' ? input : input.toString()
+		console.log('Fetch intercepted:', url, init?.method || 'GET')
+		
 		if (url.startsWith('/api/')) {
+			console.log('Handling API call:', url)
 			try {
 				// route handling
 				if (url === '/api/auth/verify' && init?.method !== 'GET') {
@@ -368,6 +372,10 @@ export function installMockApi() {
 		}
 		return originalFetch(input as any, init)
 	}
+	
+	// Set a flag to confirm mock API is installed
+	;(window as any).__mockApiInstalled = true
+	console.log('Mock API installed successfully!')
 }
 
 function json(data: any, status = 200) {
