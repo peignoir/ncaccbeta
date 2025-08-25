@@ -11,13 +11,7 @@ npm run dev
 ```
 
 ### Login
-Use one of these access codes based on the CSV data:
-- `bG9naW46c3RhcnR1cF8wMDE=` (Julia Husieva - NoCode AI Builder)
-- `bG9naW46c3RhcnR1cF8wMDI=` (Bruno Simon - ShipFast.io)
-- `bG9naW46c3RhcnR1cF8wMDM=` (Alex Doe - SideHustle CRM)
-- Or use `dGVzdGtleTEyMw==` for test access
-
-The codes are generated as base64("login:" + startup_id)
+Contact the administrator for your access code.
 
 ### Deployment
 Deploy to Vercel by connecting your GitHub repository at https://vercel.com
