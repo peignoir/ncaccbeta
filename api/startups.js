@@ -82,7 +82,9 @@ export default function handler(req, res) {
         key_differentiator: row.key_differentiator,
         founder_time_commitment_pct: row.founder_time_commitment_pct,
         competitors_urls: row.competitors_urls,
-        Business_model_explained: row.Business_model_explained
+        Business_model_explained: row.Business_model_explained,
+        proof_of_concept: row.proof_of_concept,
+        dataroom_url: row.dataroom_url
       }
     })
 

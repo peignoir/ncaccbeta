@@ -39,6 +39,8 @@ type Startup = {
 	founder_time_commitment_pct?: string
 	competitors_urls?: string
 	Business_model_explained?: string
+	proof_of_concept?: string
+	dataroom_url?: string
 	circle?: string
 	circle_name?: string
 	circle_description?: string
@@ -621,14 +623,44 @@ export default function ProgressPage() {
 								</div>
 							</div>
 
-							{/* Traction & Resources */}
+							{/* Due Diligence */}
 							<div className="border-t pt-6">
-								<h3 className="text-lg font-semibold text-gray-900 mb-4">Traction & Resources</h3>
+								<h3 className="text-lg font-semibold text-gray-900 mb-4">Due Diligence & Resources</h3>
 								<div className="space-y-4">
 									{selectedStartup.traction && (
 										<div>
 											<span className="text-sm text-gray-500">Traction</span>
 											<p className="text-gray-900 mt-1">{selectedStartup.traction}</p>
+										</div>
+									)}
+									{selectedStartup.proof_of_concept && (
+										<div>
+											<span className="text-sm text-gray-500">Proof of Concept</span>
+											<p>
+												<a
+													href={selectedStartup.proof_of_concept}
+													target="_blank"
+													rel="noopener noreferrer"
+													className="text-indigo-600 hover:text-indigo-800 font-mono"
+												>
+													View GitHub Proof
+												</a>
+											</p>
+										</div>
+									)}
+									{selectedStartup.dataroom_url && (
+										<div>
+											<span className="text-sm text-gray-500">Data Room</span>
+											<p>
+												<a
+													href={selectedStartup.dataroom_url}
+													target="_blank"
+													rel="noopener noreferrer"
+													className="text-indigo-600 hover:text-indigo-800"
+												>
+													Access Data Room
+												</a>
+											</p>
 										</div>
 									)}
 									{selectedStartup.website && (
@@ -678,7 +710,7 @@ export default function ProgressPage() {
 									)}
 									{selectedStartup.github_repos && (
 										<div>
-											<span className="text-sm text-gray-500">GitHub</span>
+											<span className="text-sm text-gray-500">GitHub Repository</span>
 											<p>
 												<a
 													href={selectedStartup.github_repos}
