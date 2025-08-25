@@ -1,5 +1,26 @@
 {
+  "functions": {
+    "api/*.js": {
+      "maxDuration": 10
+    }
+  },
   "rewrites": [
+    {
+      "source": "/api/auth/verify",
+      "destination": "/api/auth/verify"
+    },
+    {
+      "source": "/api/startups/update",
+      "destination": "/api/startups/update"
+    },
+    {
+      "source": "/api/startups",
+      "destination": "/api/startups"
+    },
+    {
+      "source": "/api/circles",
+      "destination": "/api/circles"
+    },
     {
       "source": "/(.*)",
       "destination": "/index.html"
