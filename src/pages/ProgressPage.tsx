@@ -167,7 +167,10 @@ export default function ProgressPage() {
 			// Revert on error
 			await loadStartups()
 		}
-		setEditingField(null)
+		// Don't close edit mode when saving 'all' - that's handled by the Save button
+		if (field !== 'all') {
+			setEditingField(null)
+		}
 	}
 
 	const openModal = (startup: Startup) => {
@@ -448,7 +451,7 @@ export default function ProgressPage() {
 													onClick={() => {
 														const newContactMe = !editValues.contact_me
 														setEditValues({ ...editValues, contact_me: newContactMe })
-														handleSave('contact_me')
+														// Don't auto-save when in edit mode
 													}}
 													className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
 														editValues.contact_me ? 'bg-green-600' : 'bg-gray-200'
@@ -467,7 +470,7 @@ export default function ProgressPage() {
 													onClick={() => {
 														const newStealth = !editValues.stealth
 														setEditValues({ ...editValues, stealth: newStealth })
-														handleSave('stealth')
+														// Don't auto-save when in edit mode
 													}}
 													className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
 														editValues.stealth ? 'bg-indigo-600' : 'bg-gray-200'
