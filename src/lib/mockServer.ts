@@ -105,12 +105,30 @@ function mapRowToStartup(r: any, idx: number): Startup {
 		? r.motivation
 		: (typeof r.classification_reason === 'string' && r.classification_reason.trim().length > 0 ? r.classification_reason : (details?.motivation || ''))
 
-	const stealthFlag = String(r.stealth || '').toLowerCase().trim()
-	const stealth = stealthFlag === 'true' || stealthFlag === '1' || stealthFlag === 'yes'
+	// Process stealth - check for boolean first (from overrides), then string values
+	let stealth = false
+	if (typeof r.stealth === 'boolean') {
+		stealth = r.stealth
+	} else if (r.stealth !== undefined && r.stealth !== null) {
+		const stealthFlag = String(r.stealth).toLowerCase().trim()
+		stealth = stealthFlag === 'true' || stealthFlag === '1' || stealthFlag === 'yes'
+	}
+	
+	// Process contact_me - default to true if not specified
+	let contact_me = true
+	if (typeof r.contact_me === 'boolean') {
+		contact_me = r.contact_me
+	} else if (r.contact_me !== undefined && r.contact_me !== null && r.contact_me !== '') {
+		const contactFlag = String(r.contact_me).toLowerCase().trim()
+		contact_me = contactFlag === 'true' || contactFlag === '1' || contactFlag === 'yes'
+	}
+	
 	const id = String(r.npid || r.id || `startup_${idx}`)
 	const loginCode = r.login_code || r.loginCode || computeLoginCode(id)
 
-	return {
+	// Build the startup object with spread FIRST, then our processed values
+	const result = {
+		...r, // Spread first to include all CSV fields
 		id,
 		name: String(stealth ? 'Stealth Startup' : startupName),
 		website: website ? String(website) : undefined,
@@ -125,15 +143,17 @@ function mapRowToStartup(r: any, idx: number): Startup {
 		founderCountry,
 		founderBio,
 		founderMotivation,
-		stealth,
+		stealth, // Override with our processed value
+		contact_me, // Override with our processed value
 		loginCode,
-		login_code: loginCode, // Include both formats
+		login_code: loginCode,
 		circle: r.circle,
 		circle_name: r.circle_name,
 		circle_description: r.circle_description,
 		wave: r.wave,
-		...r,
 	}
+	
+	return result
 }
 
 function normalizeHouse(raw: any): string {
