@@ -129,6 +129,7 @@ export default function ProgressPage() {
 
 	const openModal = (startup: Startup) => {
 		if (startup.stealth && startup.id !== myStartup?.id) return
+		console.log('Opening modal for startup:', startup.name, 'pitch_video_url:', startup.pitch_video_url, 'demo_video_url:', startup.demo_video_url)
 		setSelectedStartup(startup)
 		setEditValues({
 			progress: startup.progress,
@@ -245,8 +246,7 @@ export default function ProgressPage() {
 							onChange={(e) => setStealthFilter(e.target.value as 'all' | 'show' | 'hide')}
 							className="px-3 py-1 border rounded-lg text-sm"
 						>
-							<option value="all">All Stealth</option>
-							<option value="show">Stealth Only</option>
+							<option value="all">All Startups</option>
 							<option value="hide">Non-Stealth</option>
 						</select>
 						<select
@@ -767,17 +767,26 @@ export default function ProgressPage() {
 								</div>
 							</div>
 
-							{/* Circle Information */}
-							{selectedStartup.circle_name && (
+							{/* Wave Information */}
+							{selectedStartup.wave && (
 								<div className="border-t pt-6">
-									<h3 className="text-lg font-semibold text-gray-900 mb-4">Circle</h3>
-									<div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-4 border border-purple-200">
-										<h4 className="font-semibold text-purple-900">{selectedStartup.circle_name}</h4>
-										{selectedStartup.circle_description && (
-											<p className="text-purple-800 mt-2 text-sm">{selectedStartup.circle_description}</p>
-										)}
-										{selectedStartup.wave && (
-											<p className="text-purple-600 mt-2 text-sm">Wave: {selectedStartup.wave}</p>
+									<h3 className="text-lg font-semibold text-gray-900 mb-4">Wave</h3>
+									<div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-200">
+										<div className="flex items-center justify-between">
+											<h4 className="font-semibold text-blue-900">
+												{selectedStartup.wave === 'wave1' ? 'Wave 1' : selectedStartup.wave}
+											</h4>
+											<span className="text-blue-700 text-sm font-medium">
+												{selectedStartup.wave === 'wave1' ? 'Sept 13, 2025' : ''}
+											</span>
+										</div>
+										{selectedStartup.circle_name && (
+											<div className="mt-3">
+												<p className="text-blue-800 font-medium">{selectedStartup.circle_name}</p>
+												{selectedStartup.circle_description && (
+													<p className="text-blue-700 mt-1 text-sm">{selectedStartup.circle_description}</p>
+												)}
+											</div>
 										)}
 									</div>
 								</div>
