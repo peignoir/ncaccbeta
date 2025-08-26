@@ -2,6 +2,7 @@
 // This runs only in development to simulate endpoints using CSV/JSON in public/
 
 import Papa from 'papaparse'
+import { mockPersistence } from './mockPersistence'
 
 type Startup = {
 	id: string
@@ -45,12 +46,24 @@ async function loadStartups(): Promise<Startup[]> {
 	const text = await loadCsvText()
 	const parsed = Papa.parse(text, { header: true, skipEmptyLines: true })
 	const rows = (parsed.data as any[]).filter(Boolean)
-	const overrides = getOverrides()
-	const withOverrides = rows.map((r: any) => {
+	
+	// Apply persisted data from our new persistence layer
+	const withPersistence = rows.map((r: any) => {
 		const id = String(r.npid || r.id || '')
-		return id && overrides[id] ? { ...r, ...overrides[id] } : r
+		if (!id) return r
+		
+		// Check if we have persisted data for this startup
+		const persisted = mockPersistence.getStartup(id)
+		if (persisted) {
+			console.log(`[MockServer] Applying persisted data for ${id}:`, persisted)
+			// Return the persisted data, which completely replaces the CSV row
+			return persisted
+		}
+		
+		return r
 	})
-	return withOverrides.map((r, idx) => mapRowToStartup(r, idx))
+	
+	return withPersistence.map((r, idx) => mapRowToStartup(r, idx))
 }
 
 async function loadCsvText(): Promise<string> {
@@ -198,6 +211,22 @@ export function installMockApi() {
 	// Enable mock API in both dev and production for now
 	// TODO: Replace with real API endpoints later
 	console.log('Installing mock API...')
+	
+	// Add debug commands to window
+	if (typeof window !== 'undefined') {
+		(window as any).clearMockData = () => {
+			mockPersistence.clear()
+			localStorage.removeItem('mockCsvOverrides')
+			console.log('Cleared all mock data - refresh page to reload from CSV')
+		}
+		(window as any).showMockData = () => {
+			const all = mockPersistence.getAllStartups()
+			console.log('Stored startups:', all)
+			return all
+		}
+		console.log('Debug commands available: window.clearMockData(), window.showMockData()')
+	}
+	
 	const originalFetch = window.fetch
 
 	window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
@@ -291,23 +320,34 @@ export function installMockApi() {
 							const id = String(body.id || '')
 							if (!id) return json({ success: false, message: 'Missing id' }, 400)
 							
-							// Save updates to localStorage overrides
-							const overrides = getOverrides()
-							const updates = { ...body }
-							delete updates.id // Remove id from updates
+							console.log('[MockServer] Updating startup', id, 'with:', body)
 							
-							const next = { 
-								...overrides, 
-								[id]: { 
-									...(overrides[id] || {}), 
-									...updates 
-								} 
+							// Get the current data from CSV or persistence
+							const startups = await loadStartups()
+							const current = startups.find(s => s.id === id)
+							
+							if (!current) {
+								return json({ success: false, message: 'Startup not found' }, 404)
 							}
-							saveOverrides(next)
 							
-							return json({ success: true, message: 'Startup updated' })
+							// Create a complete copy of the startup with updates applied
+							const updated = { ...current }
+							
+							// Apply all updates from the body (except id)
+							Object.keys(body).forEach(key => {
+								if (key !== 'id') {
+									updated[key] = body[key]
+								}
+							})
+							
+							// Save the complete updated startup to persistence
+							mockPersistence.saveStartup(id, updated)
+							
+							console.log('[MockServer] Saved startup', id, 'to persistence')
+							
+							return json({ success: true, message: 'Startup updated', data: updated })
 						} catch (e: any) {
-							console.error('Update error:', e)
+							console.error('[MockServer] Update error:', e)
 							return json({ success: false, message: e?.message || 'Update failed' }, 500)
 						}
 					}
