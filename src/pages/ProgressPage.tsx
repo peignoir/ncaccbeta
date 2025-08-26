@@ -739,7 +739,7 @@ export default function ProgressPage() {
 													className="mt-1 w-full px-2 py-1 border rounded text-gray-900"
 													placeholder="@username"
 												/>
-											) : (
+											) : selectedStartup.founder_telegram ? (
 												<p>
 													<a
 														href={`https://t.me/${selectedStartup.founder_telegram.replace('@', '')}`}
@@ -750,7 +750,7 @@ export default function ProgressPage() {
 														{selectedStartup.founder_telegram}
 													</a>
 												</p>
-											)}
+											) : null}
 										</div>
 									)}
 									{selectedStartup.founder_linkedin_url && selectedStartup.contact_me !== false && (
