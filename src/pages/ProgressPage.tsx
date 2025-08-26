@@ -103,6 +103,10 @@ export default function ProgressPage() {
 	const handleSave = async (field: string) => {
 		if (!myStartup) return
 		
+		console.log('🔵 [ProgressPage] handleSave called with field:', field)
+		console.log('🔵 [ProgressPage] Current editValues:', editValues)
+		console.log('🔵 [ProgressPage] My startup ID:', myStartup.id)
+		
 		try {
 			const updates: Record<string, any> = {}
 			
@@ -161,14 +165,20 @@ export default function ProgressPage() {
 				setSelectedStartup(updatedStartup)
 			}
 			
+			console.log('🔵 [ProgressPage] Sending updates to backend:', updates)
+			
 			// Save to backend
-			await api.post('/api/startups', { 
+			const response = await api.post('/api/startups', { 
 				id: myStartup.npid || myStartup.id, 
 				...updates 
 			})
 			
+			console.log('🔵 [ProgressPage] Backend response:', response)
+			
 			// Reload data to get the latest from CSV
+			console.log('🔵 [ProgressPage] Reloading startups...')
 			await loadStartups()
+			console.log('🔵 [ProgressPage] Startups reloaded')
 		} catch (error) {
 			console.error('Failed to save:', error)
 			// Revert on error
@@ -184,12 +194,20 @@ export default function ProgressPage() {
 		if (startup.stealth && startup.id !== myStartup?.id) return
 		// Always use the latest startup data
 		const latestStartup = startups.find(s => s.id === startup.id) || startup
+		
+		console.log('🟢 [ProgressPage] Opening modal for startup:', latestStartup.id)
+		console.log('🟢 [ProgressPage] Latest startup data:', latestStartup)
+		console.log('🟢 [ProgressPage] Stealth value:', latestStartup.stealth, 'Type:', typeof latestStartup.stealth)
+		console.log('🟢 [ProgressPage] Contact_me value:', latestStartup.contact_me, 'Type:', typeof latestStartup.contact_me)
+		
 		setSelectedStartup(latestStartup)
-		setEditValues({
+		const initialEditValues = {
 			progress: latestStartup.progress,
 			stealth: latestStartup.stealth === true || latestStartup.stealth === 'true' || latestStartup.stealth === '1',
 			contact_me: latestStartup.contact_me !== false
-		})
+		}
+		console.log('🟢 [ProgressPage] Setting initial editValues:', initialEditValues)
+		setEditValues(initialEditValues)
 		setShowModal(true)
 	}
 
@@ -536,11 +554,13 @@ export default function ProgressPage() {
 									{selectedStartup.id === myStartup?.id && editingField !== 'modal' && (
 										<button
 											onClick={() => {
+												console.log('🟡 [ProgressPage] Edit Details clicked')
 												setEditingField('modal')
 												// Get the latest startup data
 												const latestStartup = startups.find(s => s.id === selectedStartup.id) || selectedStartup
+												console.log('🟡 [ProgressPage] Latest startup for editing:', latestStartup)
 												// Initialize edit values with current startup data
-												setEditValues({
+												const fullEditValues = {
 													progress: latestStartup.progress,
 													stealth: latestStartup.stealth === true || latestStartup.stealth === 'true' || latestStartup.stealth === '1',
 													contact_me: latestStartup.contact_me !== false,
@@ -560,7 +580,9 @@ export default function ProgressPage() {
 													founder_time_commitment_pct: latestStartup.founder_time_commitment_pct || '',
 													proof_of_concept: latestStartup.proof_of_concept || '',
 													dataroom_url: latestStartup.dataroom_url || ''
-												})
+												}
+												console.log('🟡 [ProgressPage] Setting full edit values:', fullEditValues)
+												setEditValues(fullEditValues)
 											}}
 											className="px-3 py-1 text-sm bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition"
 										>

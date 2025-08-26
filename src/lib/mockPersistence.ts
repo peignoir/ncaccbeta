@@ -44,9 +44,13 @@ class MockPersistence {
     this.init()
     const stored = this.cache.get(id)
     if (stored) {
-      this.log('Retrieved startup', id, 'from cache:', stored.data)
+      this.log('✅ Retrieved startup', id, 'from cache:')
+      this.log('  Stealth:', stored.data.stealth, 'Type:', typeof stored.data.stealth)
+      this.log('  Contact_me:', stored.data.contact_me, 'Type:', typeof stored.data.contact_me)
+      this.log('  Full data:', stored.data)
       return stored.data
     }
+    this.log('❌ No cached data for startup', id)
     return null
   }
 
@@ -61,7 +65,10 @@ class MockPersistence {
     }
     
     this.cache.set(id, startup)
-    this.log('Saving startup', id, 'with data:', data)
+    this.log('💾 Saving startup', id)
+    this.log('  Stealth:', data.stealth, 'Type:', typeof data.stealth)
+    this.log('  Contact_me:', data.contact_me, 'Type:', typeof data.contact_me)
+    this.log('  Full data being saved:', data)
     
     // Persist to localStorage
     this.persist()
