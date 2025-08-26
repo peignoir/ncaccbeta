@@ -125,6 +125,7 @@ export default function ProgressPage() {
 				updates.founder_linkedin_url = editValues.founder_linkedin_url
 				updates.long_pitch = editValues.long_pitch
 				updates.traction = editValues.traction
+				updates.pitch_video_url = editValues.pitch_video_url
 			}
 			
 			// Update local state immediately for instant UI feedback
@@ -436,12 +437,27 @@ export default function ProgressPage() {
 			{/* Modal */}
 			{showModal && selectedStartup && (
 				<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-					<div className="bg-white rounded-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-						<div className="sticky top-0 bg-white border-b border-gray-200 px-8 py-6">
+					<div className={`rounded-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto shadow-2xl transition-all ${
+						editingField === 'modal' && selectedStartup.id === myStartup?.id 
+							? 'bg-yellow-50 ring-4 ring-yellow-400' 
+							: 'bg-white'
+					}`}>
+						<div className={`sticky top-0 border-b px-8 py-6 transition-all ${
+							editingField === 'modal' && selectedStartup.id === myStartup?.id
+								? 'bg-yellow-100 border-yellow-300'
+								: 'bg-white border-gray-200'
+						}`}>
 							<div className="flex items-center justify-between">
-								<h2 className="text-2xl font-bold text-gray-900">
-									{selectedStartup.name}
-								</h2>
+								<div>
+									<h2 className="text-2xl font-bold text-gray-900">
+										{selectedStartup.name}
+									</h2>
+									{editingField === 'modal' && selectedStartup.id === myStartup?.id && (
+										<p className="text-sm text-yellow-700 mt-1">
+											✏️ Edit Mode - Make changes and click Save when done
+										</p>
+									)}
+								</div>
 								<div className="flex items-center gap-4">
 									{selectedStartup.id === myStartup?.id && editingField === 'modal' && (
 										<>
@@ -525,7 +541,8 @@ export default function ProgressPage() {
 													founder_telegram: selectedStartup.founder_telegram || '',
 													founder_linkedin_url: selectedStartup.founder_linkedin_url || '',
 													long_pitch: selectedStartup.long_pitch || '',
-													traction: selectedStartup.traction || ''
+													traction: selectedStartup.traction || '',
+													pitch_video_url: selectedStartup.pitch_video_url || selectedStartup.demo_video_url || ''
 												})
 											}}
 											className="px-3 py-1 text-sm bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition"
@@ -546,36 +563,57 @@ export default function ProgressPage() {
 						<div className="px-8 py-6 space-y-8">
 							{/* Pitch Video at Top */}
 							{(() => {
-								const videoUrl = selectedStartup.pitch_video_url || selectedStartup.demo_video_url
-								if (!videoUrl) return null
+								const isEditing = editingField === 'modal' && selectedStartup.id === myStartup?.id
+								const videoUrl = isEditing 
+									? editValues.pitch_video_url 
+									: (selectedStartup.pitch_video_url || selectedStartup.demo_video_url)
 								
 								// Extract video ID from YouTube URL
 								let videoId = ''
-								if (videoUrl.includes('youtube.com/watch?v=')) {
-									videoId = videoUrl.split('v=')[1]?.split('&')[0]
-								} else if (videoUrl.includes('youtu.be/')) {
-									videoId = videoUrl.split('youtu.be/')[1]?.split('?')[0]
-								} else {
-									// Assume it's already a video ID
-									videoId = videoUrl
+								if (videoUrl) {
+									if (videoUrl.includes('youtube.com/watch?v=')) {
+										videoId = videoUrl.split('v=')[1]?.split('&')[0]
+									} else if (videoUrl.includes('youtu.be/')) {
+										videoId = videoUrl.split('youtu.be/')[1]?.split('?')[0]
+									} else {
+										// Assume it's already a video ID
+										videoId = videoUrl
+									}
 								}
 								
-								if (!videoId) return null
+								if (!videoUrl && !isEditing) return null
 								
 								return (
 									<div className="bg-gray-50 rounded-xl p-4">
 										<h3 className="text-center text-lg font-semibold text-gray-900 mb-3">My 90s presentation (who i am, what i build, why now...)</h3>
-										<div className="max-w-2xl mx-auto">
-											<div className="relative w-full" style={{ paddingBottom: '42%' }}>
-												<iframe
-													className="absolute top-0 left-0 w-full h-full rounded-lg shadow-lg"
-													src={`https://www.youtube.com/embed/${videoId}`}
-													title="My 90s presentation"
-													allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-													allowFullScreen
+										{isEditing && (
+											<div className="mb-4 max-w-2xl mx-auto">
+												<label className="text-sm text-gray-500">YouTube Video URL</label>
+												<input
+													type="text"
+													value={editValues.pitch_video_url || ''}
+													onChange={(e) => setEditValues({ ...editValues, pitch_video_url: e.target.value })}
+													className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg"
+													placeholder="https://www.youtube.com/watch?v=xvFZjo5PgG0"
 												/>
+												{!videoId && (
+													<p className="text-sm text-gray-500 mt-2">Enter a YouTube URL to preview the video</p>
+												)}
 											</div>
-										</div>
+										)}
+										{videoId && (
+											<div className="max-w-2xl mx-auto">
+												<div className="relative w-full" style={{ paddingBottom: '42%' }}>
+													<iframe
+														className="absolute top-0 left-0 w-full h-full rounded-lg shadow-lg"
+														src={`https://www.youtube.com/embed/${videoId}`}
+														title="My 90s presentation"
+														allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+														allowFullScreen
+													/>
+												</div>
+											</div>
+										)}
 									</div>
 								)
 							})()}
