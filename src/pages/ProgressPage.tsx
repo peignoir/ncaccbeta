@@ -391,12 +391,13 @@ export default function ProgressPage() {
 							{/* Pitch Video at Top */}
 							{(selectedStartup.pitch_video_url || selectedStartup.demo_video_url) && (
 								<div className="bg-gray-50 rounded-xl p-4">
+									<h3 className="text-center text-lg font-semibold text-gray-900 mb-3">My 90s presentation (who i am, what i build, why now...)</h3>
 									<div className="max-w-2xl mx-auto">
 										<div className="relative w-full" style={{ paddingBottom: '42%' }}>
 											<iframe
 												className="absolute top-0 left-0 w-full h-full rounded-lg shadow-lg"
 												src={`https://www.youtube.com/embed/${(selectedStartup.pitch_video_url || selectedStartup.demo_video_url || '').split('v=')[1]?.split('&')[0]}`}
-												title="Startup Pitch Video"
+												title="My 90s presentation"
 												allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
 												allowFullScreen
 											/>
