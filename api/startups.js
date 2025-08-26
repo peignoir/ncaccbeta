@@ -88,7 +88,7 @@ export default function handler(req, res) {
     // Transform data
     const startups = csvData.map((row, idx) => {
       const progress = row.current_progress != null ? Math.round(parseFloat(row.current_progress) * 100) : 0
-      const stealth = row.stealth === 'true' || row.stealth === '1'
+      const stealth = row.stealth === 'true' || row.stealth === true || row.stealth === '1'
       
       return {
         id: row.npid || row.id || `startup_${idx}`,
@@ -135,7 +135,7 @@ export default function handler(req, res) {
         proof_of_concept: row.proof_of_concept,
         dataroom_url: row.dataroom_url,
         pitch_video_url: row.pitch_video_url,
-        contact_me: row.contact_me === 'true' || row.contact_me === true || row.contact_me === '1'
+        contact_me: row.contact_me === '' || row.contact_me === undefined || row.contact_me === null ? true : (row.contact_me === 'true' || row.contact_me === true || row.contact_me === '1')
       }
     })
 
