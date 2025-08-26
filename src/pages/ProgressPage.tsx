@@ -41,6 +41,7 @@ type Startup = {
 	Business_model_explained?: string
 	proof_of_concept?: string
 	dataroom_url?: string
+	pitch_video_url?: string
 	circle?: string
 	circle_name?: string
 	circle_description?: string
@@ -53,7 +54,8 @@ export default function ProgressPage() {
 	const [loading, setLoading] = useState(true)
 	const [editingField, setEditingField] = useState<string | null>(null)
 	const [editValues, setEditValues] = useState<Record<string, any>>({})
-	const [progressFilter, setProgressFilter] = useState<number>(0)
+	const [houseFilter, setHouseFilter] = useState<string>('all')
+	const [stealthFilter, setStealthFilter] = useState<'all' | 'show' | 'hide'>('all')
 	const [sortBy, setSortBy] = useState<'progress' | 'name'>('progress')
 	const [myStartup, setMyStartup] = useState<Startup | null>(null)
 	const [selectedStartup, setSelectedStartup] = useState<Startup | null>(null)
@@ -142,7 +144,13 @@ export default function ProgressPage() {
 	}
 
 	const filteredStartups = startups
-		.filter(s => s.progress >= progressFilter)
+		.filter(s => {
+			const houseMatch = houseFilter === 'all' || s.house === houseFilter
+			const stealthMatch = stealthFilter === 'all' || 
+				(stealthFilter === 'show' && s.stealth === true) ||
+				(stealthFilter === 'hide' && s.stealth !== true)
+			return houseMatch && stealthMatch
+		})
 		.sort((a, b) => {
 			if (sortBy === 'progress') return b.progress - a.progress
 			return (a.name || '').localeCompare(b.name || '')
@@ -198,13 +206,11 @@ export default function ProgressPage() {
 								)}
 							</div>
 						</div>
-						{myStartup.nocap_motivation && (
-							<div className="mt-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-3 border border-purple-200">
-								<p className="text-purple-900 font-medium italic text-sm">
-									💪 {myStartup.nocap_motivation}
-								</p>
-							</div>
-						)}
+					</div>
+					<div className="mt-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg p-4 border border-indigo-200">
+						<p className="text-indigo-900 font-semibold italic">
+							🚀 "The distance between your dreams and reality is called action. You're at {myStartup.progress}% - keep pushing forward!"
+						</p>
 					</div>
 				</div>
 			)}
@@ -214,19 +220,26 @@ export default function ProgressPage() {
 				<div className="flex items-center justify-between mb-6">
 					<h2 className="text-2xl font-bold text-gray-900">All Startups</h2>
 					<div className="flex items-center gap-4">
-						<div className="flex items-center gap-2">
-							<label className="text-sm text-gray-600">Min Progress:</label>
-							<input
-								type="range"
-								min="0"
-								max="100"
-								step="10"
-								value={progressFilter}
-								onChange={(e) => setProgressFilter(parseInt(e.target.value))}
-								className="w-24"
-							/>
-							<span className="text-sm font-semibold w-12">{progressFilter}%</span>
-						</div>
+						<select
+							value={houseFilter}
+							onChange={(e) => setHouseFilter(e.target.value)}
+							className="px-3 py-1 border rounded-lg text-sm"
+						>
+							<option value="all">All Houses</option>
+							<option value="venture">Venture</option>
+							<option value="lifestyle">Lifestyle</option>
+							<option value="side">Side</option>
+							<option value="karma">Karma</option>
+						</select>
+						<select
+							value={stealthFilter}
+							onChange={(e) => setStealthFilter(e.target.value as 'all' | 'show' | 'hide')}
+							className="px-3 py-1 border rounded-lg text-sm"
+						>
+							<option value="all">All Stealth</option>
+							<option value="show">Stealth Only</option>
+							<option value="hide">Non-Stealth</option>
+						</select>
 						<select
 							value={sortBy}
 							onChange={(e) => setSortBy(e.target.value as 'progress' | 'name')}
@@ -294,7 +307,7 @@ export default function ProgressPage() {
 											{isStealthed && !isMyStartup ? '-' : startup.founder_name}
 										</td>
 										<td className="py-4 px-4">
-											{startup.house && !isStealthed ? (
+											{startup.house ? (
 												<span className={`px-2 py-1 rounded-full text-xs font-medium ${
 													startup.house === 'venture' ? 'bg-purple-100 text-purple-700' :
 													startup.house === 'lifestyle' ? 'bg-green-100 text-green-700' :
@@ -466,10 +479,24 @@ export default function ProgressPage() {
 							)}
 
 							{/* Overview Section */}
-							{(selectedStartup.bio || selectedStartup.motivation || selectedStartup.long_pitch) && (
+							{(selectedStartup.bio || selectedStartup.motivation || selectedStartup.long_pitch || selectedStartup.pitch_video_url) && (
 								<div className="border-t pt-6">
 									<h3 className="text-lg font-semibold text-gray-900 mb-4">Overview</h3>
 									<div className="space-y-4">
+										{selectedStartup.pitch_video_url && (
+											<div>
+												<span className="text-sm text-gray-500 block mb-2">Pitch Video</span>
+												<div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+													<iframe
+														className="absolute top-0 left-0 w-full h-full rounded-lg"
+														src={`https://www.youtube.com/embed/${selectedStartup.pitch_video_url.split('v=')[1]?.split('&')[0]}`}
+														title="Startup Pitch Video"
+														allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+														allowFullScreen
+													/>
+												</div>
+											</div>
+										)}
 										{selectedStartup.long_pitch && (
 											<div>
 												<span className="text-sm text-gray-500">Pitch</span>
@@ -680,17 +707,16 @@ export default function ProgressPage() {
 									)}
 									{selectedStartup.demo_video_url && (
 										<div>
-											<span className="text-sm text-gray-500">Demo Video</span>
-											<p>
-												<a
-													href={selectedStartup.demo_video_url}
-													target="_blank"
-													rel="noopener noreferrer"
-													className="text-indigo-600 hover:text-indigo-800"
-												>
-													Watch Demo
-												</a>
-											</p>
+											<span className="text-sm text-gray-500 block mb-2">Demo Video</span>
+											<div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+												<iframe
+													className="absolute top-0 left-0 w-full h-full rounded-lg"
+													src={`https://www.youtube.com/embed/${selectedStartup.demo_video_url.split('v=')[1]?.split('&')[0]}`}
+													title="Startup Demo Video"
+													allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+													allowFullScreen
+												/>
+											</div>
 										</div>
 									)}
 									{selectedStartup.one_pager_url && (

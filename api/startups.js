@@ -84,7 +84,8 @@ export default function handler(req, res) {
         competitors_urls: row.competitors_urls,
         Business_model_explained: row.Business_model_explained,
         proof_of_concept: row.proof_of_concept,
-        dataroom_url: row.dataroom_url
+        dataroom_url: row.dataroom_url,
+        pitch_video_url: row.pitch_video_url
       }
     })
 
