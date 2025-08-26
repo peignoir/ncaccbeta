@@ -110,22 +110,45 @@ export default function ProgressPage() {
 				updates.current_progress = editValues.progress / 100
 			} else if (field === 'stealth') {
 				updates.stealth = editValues.stealth
+			} else if (field === 'contact_me') {
+				updates.contact_me = editValues.contact_me
 			}
 			
+			// Update local state immediately for instant UI feedback
+			const updatedStartup = {
+				...myStartup,
+				stealth: field === 'stealth' ? editValues.stealth : myStartup.stealth,
+				contact_me: field === 'contact_me' ? editValues.contact_me : myStartup.contact_me,
+				progress: field === 'progress' ? editValues.progress : myStartup.progress
+			}
+			
+			// Update my startup immediately
+			setMyStartup(updatedStartup)
+			
+			// Update in the startups list immediately
+			setStartups(prev => prev.map(s => 
+				s.id === myStartup.id ? updatedStartup : s
+			))
+			
+			// Update selected startup if it's the same
+			if (selectedStartup?.id === myStartup.id) {
+				setSelectedStartup(updatedStartup)
+			}
+			
+			// Save to backend
 			const response = await api.post('/api/startups/update', { 
 				id: myStartup.npid || myStartup.id, 
 				updates 
 			})
 			
-			if (response.ok) {
+			if (!response.ok) {
+				// Revert on failure
 				await loadStartups()
-				if (selectedStartup?.id === myStartup.id) {
-					const updated = startups.find(s => s.id === myStartup.id)
-					if (updated) setSelectedStartup(updated)
-				}
 			}
 		} catch (error) {
 			console.error('Failed to save:', error)
+			// Revert on error
+			await loadStartups()
 		}
 		setEditingField(null)
 	}
@@ -316,7 +339,9 @@ export default function ProgressPage() {
 											</div>
 										</td>
 										<td className="py-4 px-4 text-gray-600">
-											{isStealthed && !isMyStartup ? '-' : startup.founder_name}
+											{isStealthed && !isMyStartup ? '-' : 
+												(startup.contact_me === false && !isMyStartup ? 'Contact Hidden' : startup.founder_name)
+											}
 										</td>
 										<td className="py-4 px-4">
 											{startup.house ? (
@@ -385,7 +410,7 @@ export default function ProgressPage() {
 									{selectedStartup.name}
 								</h2>
 								<div className="flex items-center gap-4">
-									{selectedStartup.id === myStartup?.id && (
+									{selectedStartup.id === myStartup?.id && editingField === 'modal' && (
 										<>
 											<div className="flex items-center gap-2">
 												<span className="text-sm text-gray-600">Contact Me:</span>
@@ -427,6 +452,14 @@ export default function ProgressPage() {
 											</div>
 										</>
 									)}
+									{selectedStartup.id === myStartup?.id && editingField !== 'modal' && (
+										<button
+											onClick={() => setEditingField('modal')}
+											className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition"
+										>
+											Edit Settings
+										</button>
+									)}
 									<button
 										onClick={closeModal}
 										className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
@@ -439,22 +472,40 @@ export default function ProgressPage() {
 
 						<div className="px-8 py-6 space-y-8">
 							{/* Pitch Video at Top */}
-							{(selectedStartup.pitch_video_url || selectedStartup.demo_video_url) && (
-								<div className="bg-gray-50 rounded-xl p-4">
-									<h3 className="text-center text-lg font-semibold text-gray-900 mb-3">My 90s presentation (who i am, what i build, why now...)</h3>
-									<div className="max-w-2xl mx-auto">
-										<div className="relative w-full" style={{ paddingBottom: '42%' }}>
-											<iframe
-												className="absolute top-0 left-0 w-full h-full rounded-lg shadow-lg"
-												src={`https://www.youtube.com/embed/${(selectedStartup.pitch_video_url || selectedStartup.demo_video_url || '').split('v=')[1]?.split('&')[0]}`}
-												title="My 90s presentation"
-												allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-												allowFullScreen
-											/>
+							{(() => {
+								const videoUrl = selectedStartup.pitch_video_url || selectedStartup.demo_video_url
+								if (!videoUrl) return null
+								
+								// Extract video ID from YouTube URL
+								let videoId = ''
+								if (videoUrl.includes('youtube.com/watch?v=')) {
+									videoId = videoUrl.split('v=')[1]?.split('&')[0]
+								} else if (videoUrl.includes('youtu.be/')) {
+									videoId = videoUrl.split('youtu.be/')[1]?.split('?')[0]
+								} else {
+									// Assume it's already a video ID
+									videoId = videoUrl
+								}
+								
+								if (!videoId) return null
+								
+								return (
+									<div className="bg-gray-50 rounded-xl p-4">
+										<h3 className="text-center text-lg font-semibold text-gray-900 mb-3">My 90s presentation (who i am, what i build, why now...)</h3>
+										<div className="max-w-2xl mx-auto">
+											<div className="relative w-full" style={{ paddingBottom: '42%' }}>
+												<iframe
+													className="absolute top-0 left-0 w-full h-full rounded-lg shadow-lg"
+													src={`https://www.youtube.com/embed/${videoId}`}
+													title="My 90s presentation"
+													allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+													allowFullScreen
+												/>
+											</div>
 										</div>
 									</div>
-								</div>
-							)}
+								)
+							})()}
 
 							{/* Progress Display - Show for user's startup */}
 							{selectedStartup.id === myStartup?.id && (
