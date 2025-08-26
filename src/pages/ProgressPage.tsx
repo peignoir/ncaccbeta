@@ -129,7 +129,6 @@ export default function ProgressPage() {
 
 	const openModal = (startup: Startup) => {
 		if (startup.stealth && startup.id !== myStartup?.id) return
-		console.log('Opening modal for startup:', startup.name, 'pitch_video_url:', startup.pitch_video_url, 'demo_video_url:', startup.demo_video_url)
 		setSelectedStartup(startup)
 		setEditValues({
 			progress: startup.progress,
@@ -389,6 +388,23 @@ export default function ProgressPage() {
 						</div>
 
 						<div className="px-8 py-6 space-y-8">
+							{/* Pitch Video at Top */}
+							{(selectedStartup.pitch_video_url || selectedStartup.demo_video_url) && (
+								<div className="bg-gray-50 rounded-xl p-4">
+									<div className="max-w-2xl mx-auto">
+										<div className="relative w-full" style={{ paddingBottom: '42%' }}>
+											<iframe
+												className="absolute top-0 left-0 w-full h-full rounded-lg shadow-lg"
+												src={`https://www.youtube.com/embed/${(selectedStartup.pitch_video_url || selectedStartup.demo_video_url || '').split('v=')[1]?.split('&')[0]}`}
+												title="Startup Pitch Video"
+												allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+												allowFullScreen
+											/>
+										</div>
+									</div>
+								</div>
+							)}
+
 							{/* Progress Section - Only editable for user's startup */}
 							{selectedStartup.id === myStartup?.id && (
 								<div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-6 border border-indigo-200">
@@ -488,24 +504,10 @@ export default function ProgressPage() {
 							)}
 
 							{/* Overview Section */}
-							{(selectedStartup.bio || selectedStartup.motivation || selectedStartup.long_pitch || selectedStartup.pitch_video_url) && (
+							{(selectedStartup.bio || selectedStartup.motivation || selectedStartup.long_pitch) && (
 								<div className="border-t pt-6">
 									<h3 className="text-lg font-semibold text-gray-900 mb-4">Overview</h3>
 									<div className="space-y-4">
-										{selectedStartup.pitch_video_url && (
-											<div>
-												<span className="text-sm text-gray-500 block mb-2">Pitch Video</span>
-												<div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
-													<iframe
-														className="absolute top-0 left-0 w-full h-full rounded-lg"
-														src={`https://www.youtube.com/embed/${selectedStartup.pitch_video_url.split('v=')[1]?.split('&')[0]}`}
-														title="Startup Pitch Video"
-														allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-														allowFullScreen
-													/>
-												</div>
-											</div>
-										)}
 										{selectedStartup.long_pitch && (
 											<div>
 												<span className="text-sm text-gray-500">Pitch</span>
@@ -712,20 +714,6 @@ export default function ProgressPage() {
 													{selectedStartup.website}
 												</a>
 											</p>
-										</div>
-									)}
-									{selectedStartup.demo_video_url && (
-										<div>
-											<span className="text-sm text-gray-500 block mb-2">Demo Video</span>
-											<div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
-												<iframe
-													className="absolute top-0 left-0 w-full h-full rounded-lg"
-													src={`https://www.youtube.com/embed/${selectedStartup.demo_video_url.split('v=')[1]?.split('&')[0]}`}
-													title="Startup Demo Video"
-													allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-													allowFullScreen
-												/>
-											</div>
 										</div>
 									)}
 									{selectedStartup.one_pager_url && (
