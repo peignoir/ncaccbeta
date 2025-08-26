@@ -378,14 +378,28 @@ export function installMockApi() {
 								description: s.circle_description || 'A supportive peer group for collaborative learning and accountability.'
 							}
 						}
+						
+						// Get persisted data if available
+						const persisted = mockPersistence.getStartup(s.id)
+						const contactMe = persisted?.contact_me !== undefined ? persisted.contact_me : s.contact_me !== false
+						
 						byCircle[circleId].push({ 
 							id: `m_${s.id}`, 
 							name: s.founder || s.name, 
 							startup: s.name, 
-							website: s.website, 
-							telegram: (s as any).founder_telegram || undefined,
-							bio: s.founderBio || s.bio,
+							website: s.website,
+							// Include contact info based on contact_me flag
+							email: contactMe ? (s.detailsObj?.email || (s as any).founder_email || undefined) : undefined,
+							telegram: contactMe ? ((s as any).founder_telegram || undefined) : undefined,
+							linkedin: contactMe ? ((s as any).founder_linkedin || undefined) : undefined,
+							// Always include non-contact info
+							bio: s.founderBio || s.bio || s.detailsObj?.bio || undefined,
 							house: s.house || 'venture',
+							city: (s as any).founder_city || s.city || undefined,
+							country: (s as any).founder_country || s.country || undefined,
+							traction: s.detailsObj?.traction || (s as any).traction || undefined,
+							motivation: s.detailsObj?.motivation || (s as any).motivation || undefined,
+							contact_me: contactMe,
 							wave: s.wave || 'wave1'
 						})
 					}

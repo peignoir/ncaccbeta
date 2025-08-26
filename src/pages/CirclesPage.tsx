@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../auth/AuthContext'
 import { api } from '../lib/api'
+import CircleMemberModal from '../components/CircleMemberModal'
 
 type Member = {
 	id: string
@@ -8,8 +9,15 @@ type Member = {
 	startup: string
 	website?: string
 	telegram?: string
+	email?: string
+	linkedin?: string
 	bio?: string
 	house?: string
+	city?: string
+	country?: string
+	traction?: string
+	motivation?: string
+	contact_me?: boolean
 }
 
 type Circle = {
@@ -20,11 +28,32 @@ type Circle = {
 	insights?: string[]
 }
 
+// Generate a deterministic meeting link based on circle ID
+const generateMeetingLink = (circleId: string, type: 'weekly' | 'emergency' = 'weekly') => {
+	const baseUrl = 'https://meet.google.com/'
+	// Create a simple hash from circle ID for consistent links
+	const hash = circleId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
+	const meetingCode = type === 'weekly' 
+		? `ncacc-${hash}-weekly`
+		: `ncacc-${hash}-help`
+	return baseUrl + meetingCode
+}
+
+const MENTORING_TIPS = [
+	"🎯 Weekly 30min check-ins: Share wins, blockers, and next week's goals",
+	"💡 Be specific: 'I need help with pricing' beats 'I need advice'", 
+	"🤝 Give first: Share resources, intros, or feedback before asking",
+	"⏰ Respect time: Come prepared with specific questions",
+	"🔒 Keep it confidential: What's shared in circle stays in circle"
+]
+
 export default function CirclesPage() {
 	const { user } = useAuth()
 	const [circles, setCircles] = useState<Circle[]>([])
 	const [loading, setLoading] = useState(true)
 	const [myCircle, setMyCircle] = useState<Circle | null>(null)
+	const [selectedMember, setSelectedMember] = useState<Member | null>(null)
+	const [showMemberModal, setShowMemberModal] = useState(false)
 
 	useEffect(() => {
 		loadCircles()
@@ -52,162 +81,110 @@ export default function CirclesPage() {
 		}
 	}
 
+	const openMemberProfile = (member: Member) => {
+		setSelectedMember(member)
+		setShowMemberModal(true)
+	}
+
+	const closeMemberModal = () => {
+		setShowMemberModal(false)
+		setSelectedMember(null)
+	}
+
 	if (loading) {
 		return (
-			<div className="flex items-center justify-center min-h-[400px]">
-				<div className="text-gray-500">Loading circles...</div>
+			<div className="flex justify-center items-center h-64">
+				<div className="animate-pulse text-gray-500">Loading circles...</div>
 			</div>
 		)
 	}
 
-	const otherCircles = circles.filter(c => c.id !== myCircle?.id)
-
 	return (
-		<div className="space-y-8">
-			{/* My Circle Section */}
-			{myCircle && (
-				<div className="bg-gradient-to-br from-purple-50 to-pink-100 rounded-2xl p-8 shadow-lg">
-					<div className="mb-6">
-						<h2 className="text-3xl font-bold text-gray-900 mb-2">Your Circle</h2>
-						<p className="text-lg text-purple-700 font-medium">
-							🤝 Help each other succeed - Your wins are their wins!
-						</p>
-					</div>
-					
-					<div className="bg-white rounded-xl p-6 shadow-sm">
-						<div className="mb-6">
-							<h3 className="text-2xl font-semibold text-gray-900 mb-2">{myCircle.name}</h3>
-							<p className="text-gray-600">{myCircle.description}</p>
-							<div className="mt-4 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg border border-indigo-200">
-								<p className="text-indigo-900 font-medium">
-									💡 Remember: Share your challenges openly, celebrate wins together, and offer help whenever you can. 
-									Your circle is your support system!
-								</p>
-							</div>
-						</div>
+		<div className="max-w-6xl mx-auto p-4 space-y-8">
+			{/* Header */}
+			<div className="text-center">
+				<h1 className="text-4xl font-bold text-gray-900 mb-4">Peer Mentoring Circles</h1>
+				<p className="text-gray-600 max-w-3xl mx-auto">
+					Small groups of 4-7 founders in similar timezones. Meet weekly, share openly, help each other win.
+				</p>
+			</div>
 
-						<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-							{myCircle.members.map((member) => {
-								const isMe = member.name === user?.name || member.startup === user?.startup?.name
-								
-								return (
-									<div
-										key={member.id}
-										className={`p-4 rounded-lg border-2 transition-all hover:shadow-md ${
-											isMe 
-												? 'border-purple-300 bg-gradient-to-br from-purple-50 to-pink-50' 
-												: 'border-gray-200 bg-white hover:border-purple-200'
-										}`}
-									>
-										<div className="space-y-2">
-											<div className="flex items-start justify-between">
-												<div className="flex-1">
-													<h4 className="font-semibold text-gray-900">
-														{member.name}
-														{isMe && <span className="ml-2 text-purple-600">(You)</span>}
-													</h4>
-													<p className="text-sm text-gray-600">{member.startup}</p>
-												</div>
-												{member.house && (
-													<span className={`text-xs px-2 py-1 rounded-full ${
-														member.house === 'venture' ? 'bg-purple-100 text-purple-700' :
-														member.house === 'lifestyle' ? 'bg-green-100 text-green-700' :
-														member.house === 'side' ? 'bg-blue-100 text-blue-700' :
-														'bg-orange-100 text-orange-700'
-													}`}>
-														{member.house}
-													</span>
-												)}
-											</div>
-											
-											{member.bio && (
-												<p className="text-xs text-gray-500 line-clamp-2">{member.bio}</p>
-											)}
-											
-											<div className="flex gap-3 pt-2">
-												{member.website && (
-													<a
-														href={`https://${member.website}`}
-														target="_blank"
-														rel="noopener noreferrer"
-														className="text-xs text-indigo-600 hover:text-indigo-800"
-													>
-														Website →
-													</a>
-												)}
-												{member.telegram && (
-													<a
-														href={`https://t.me/${member.telegram.replace('@', '')}`}
-														target="_blank"
-														rel="noopener noreferrer"
-														className="text-xs text-blue-600 hover:text-blue-800"
-													>
-														Telegram →
-													</a>
-												)}
-											</div>
-										</div>
-									</div>
-								)
-							})}
+			{/* Mentoring Best Practices */}
+			<div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-6 border border-indigo-200">
+				<h2 className="text-lg font-semibold text-indigo-900 mb-3">Circle Best Practices</h2>
+				<div className="grid md:grid-cols-2 gap-3">
+					{MENTORING_TIPS.map((tip, idx) => (
+						<div key={idx} className="text-sm text-indigo-800">
+							{tip}
 						</div>
-
-						<div className="mt-6 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-							<p className="text-yellow-900 text-sm font-medium">
-								🎯 Weekly Challenge: Reach out to at least 2 circle members this week. 
-								Share what you're working on and ask how you can help them!
-							</p>
-						</div>
-					</div>
+					))}
 				</div>
-			)}
+			</div>
 
-			{/* Other Circles Section */}
-			{otherCircles.length > 0 && (
-				<div className="bg-white rounded-2xl p-8 shadow-lg">
-					<h2 className="text-2xl font-bold text-gray-900 mb-6">Other Circles</h2>
-					
-					<div className="grid gap-6 md:grid-cols-2">
-						{otherCircles.map((circle) => (
-							<div
-								key={circle.id}
-								className="p-6 rounded-xl border border-gray-200 hover:border-gray-300 transition-all hover:shadow-md"
+			{/* My Circle */}
+			{myCircle && (
+				<div className="bg-white rounded-xl shadow-lg p-6 border-2 border-indigo-500">
+					<div className="flex justify-between items-start mb-6">
+						<div>
+							<h2 className="text-2xl font-bold text-gray-900">{myCircle.name}</h2>
+							<span className="inline-block px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm font-medium mt-2">
+								Your Circle
+							</span>
+						</div>
+						<div className="text-right space-y-2">
+							<a
+								href={generateMeetingLink(myCircle.id, 'weekly')}
+								target="_blank"
+								rel="noopener noreferrer"
+								className="block px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition text-sm"
 							>
-								<h3 className="text-xl font-semibold text-gray-900 mb-2">{circle.name}</h3>
-								<p className="text-gray-600 mb-4">{circle.description}</p>
-								
-								<div className="space-y-3">
-									<div className="flex items-center justify-between text-sm">
-										<span className="text-gray-500">Members</span>
-										<span className="font-semibold">{circle.members.length} founders</span>
+								📅 Join Weekly Meeting
+							</a>
+							<a
+								href={generateMeetingLink(myCircle.id, 'emergency')}
+								target="_blank"
+								rel="noopener noreferrer"
+								className="block px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition text-sm"
+							>
+								🆘 Emergency Help Room
+							</a>
+						</div>
+					</div>
+					
+					<p className="text-gray-600 mb-6">{myCircle.description}</p>
+					
+					{/* Meeting Schedule */}
+					<div className="bg-indigo-50 rounded-lg p-4 mb-6">
+						<h3 className="font-semibold text-indigo-900 mb-2">Suggested Schedule</h3>
+						<div className="space-y-2 text-sm text-indigo-800">
+							<div>📅 <strong>Weekly Standup:</strong> Mondays 10am (your timezone)</div>
+							<div>🎯 <strong>Format:</strong> 5min each - Last week wins, this week goals, blockers</div>
+							<div>🆘 <strong>Emergency Room:</strong> Always open for urgent help</div>
+						</div>
+					</div>
+					
+					{/* Members Grid */}
+					<h3 className="font-semibold text-gray-900 mb-4">Members ({myCircle.members.length})</h3>
+					<div className="grid md:grid-cols-2 gap-4">
+						{myCircle.members.map((member) => (
+							<div 
+								key={member.id} 
+								className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition cursor-pointer"
+								onClick={() => openMemberProfile(member)}
+							>
+								<div className="flex justify-between items-start">
+									<div>
+										<p className="font-semibold text-gray-900">{member.name}</p>
+										<p className="text-sm text-gray-600">{member.startup}</p>
+										{member.house && (
+											<span className="inline-block mt-1 px-2 py-1 bg-white text-xs text-gray-600 rounded">
+												{member.house}
+											</span>
+										)}
 									</div>
-									
-									{circle.insights && circle.insights.length > 0 && (
-										<div className="pt-3 border-t">
-											<p className="text-xs text-gray-500 mb-2">Circle Focus:</p>
-											{circle.insights.map((insight, idx) => (
-												<p key={idx} className="text-sm text-gray-700">• {insight}</p>
-											))}
-										</div>
-									)}
-									
-									<div className="pt-3">
-										<div className="flex flex-wrap gap-2">
-											{circle.members.slice(0, 5).map((member, idx) => (
-												<span
-													key={idx}
-													className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded-full"
-												>
-													{member.name.split(' ')[0]}
-												</span>
-											))}
-											{circle.members.length > 5 && (
-												<span className="text-xs px-2 py-1 bg-gray-100 text-gray-500 rounded-full">
-													+{circle.members.length - 5} more
-												</span>
-											)}
-										</div>
-									</div>
+									<button className="text-indigo-600 hover:text-indigo-800 text-sm">
+										View Profile →
+									</button>
 								</div>
 							</div>
 						))}
@@ -215,13 +192,67 @@ export default function CirclesPage() {
 				</div>
 			)}
 
-			{/* Empty State */}
-			{!myCircle && circles.length === 0 && (
-				<div className="bg-white rounded-2xl p-12 shadow-lg text-center">
-					<p className="text-gray-500 text-lg">No circles available yet.</p>
-					<p className="text-gray-400 mt-2">Check back soon!</p>
+			{/* Other Circles */}
+			<div>
+				<h2 className="text-2xl font-bold text-gray-900 mb-6">Other Circles</h2>
+				<div className="grid md:grid-cols-2 gap-6">
+					{circles.filter(c => c.id !== myCircle?.id).map((circle) => (
+						<div key={circle.id} className="bg-white rounded-xl shadow-md p-6">
+							<h3 className="text-xl font-semibold text-gray-900 mb-2">{circle.name}</h3>
+							<p className="text-gray-600 text-sm mb-4">{circle.description}</p>
+							
+							<div className="space-y-3">
+								<div className="flex items-center justify-between text-sm">
+									<span className="text-gray-500">Members</span>
+									<span className="font-medium">{circle.members.length} founders</span>
+								</div>
+								
+								{/* Circle Focus */}
+								{circle.insights && (
+									<div className="pt-3 border-t border-gray-200">
+										<p className="text-xs font-medium text-gray-500 mb-2">Circle Focus:</p>
+										<ul className="space-y-1">
+											{circle.insights.slice(0, 2).map((insight, idx) => (
+												<li key={idx} className="text-sm text-gray-600">
+													• {insight}
+												</li>
+											))}
+										</ul>
+									</div>
+								)}
+
+								{/* Sample Members */}
+								<div className="pt-3 border-t border-gray-200">
+									<p className="text-xs font-medium text-gray-500 mb-2">Members:</p>
+									<div className="flex flex-wrap gap-2">
+										{circle.members.slice(0, 3).map((member) => (
+											<span 
+												key={member.id} 
+												className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded cursor-pointer hover:bg-gray-200"
+												onClick={() => openMemberProfile(member)}
+											>
+												{member.name.split(' ')[0]}
+											</span>
+										))}
+										{circle.members.length > 3 && (
+											<span className="text-xs text-gray-500">
+												+{circle.members.length - 3} more
+											</span>
+										)}
+									</div>
+								</div>
+							</div>
+						</div>
+					))}
 				</div>
-			)}
+			</div>
+
+			{/* Member Profile Modal */}
+			<CircleMemberModal
+				member={selectedMember}
+				isOpen={showMemberModal}
+				onClose={closeMemberModal}
+			/>
 		</div>
 	)
 }
