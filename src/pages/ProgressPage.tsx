@@ -587,14 +587,17 @@ export default function ProgressPage() {
 								
 								// Extract video ID from YouTube URL
 								let videoId = ''
-								if (videoUrl) {
-									if (videoUrl.includes('youtube.com/watch?v=')) {
-										videoId = videoUrl.split('v=')[1]?.split('&')[0]
-									} else if (videoUrl.includes('youtu.be/')) {
-										videoId = videoUrl.split('youtu.be/')[1]?.split('?')[0]
-									} else {
-										// Assume it's already a video ID
-										videoId = videoUrl
+								if (videoUrl && typeof videoUrl === 'string') {
+									const url = videoUrl.trim()
+									if (url.includes('youtube.com/watch?v=')) {
+										videoId = url.split('v=')[1]?.split('&')[0] || ''
+									} else if (url.includes('youtu.be/')) {
+										videoId = url.split('youtu.be/')[1]?.split('?')[0] || ''
+									} else if (url.includes('youtube.com/embed/')) {
+										videoId = url.split('youtube.com/embed/')[1]?.split('?')[0] || ''
+									} else if (url.match(/^[a-zA-Z0-9_-]{11}$/)) {
+										// Looks like a YouTube video ID (11 characters)
+										videoId = url
 									}
 								}
 								
@@ -623,10 +626,11 @@ export default function ProgressPage() {
 												<div className="relative w-full" style={{ paddingBottom: '42%' }}>
 													<iframe
 														className="absolute top-0 left-0 w-full h-full rounded-lg shadow-lg"
-														src={`https://www.youtube.com/embed/${videoId}`}
+														src={`https://www.youtube.com/embed/${videoId}?rel=0`}
 														title="My 90s presentation"
-														allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+														allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
 														allowFullScreen
+														loading="lazy"
 													/>
 												</div>
 											</div>

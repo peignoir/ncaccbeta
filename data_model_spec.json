@@ -1,0 +1,136 @@
+{
+  "api_endpoints": {
+    "GET /api/founders": {
+      "description": "Returns array of founder objects",
+      "response": [
+        {
+          "npid": "string (unique identifier)",
+          "founder_name": "string",
+          "founder_email": "string",
+          "founder_telegram": "string (optional)",
+          "founder_linkedin_url": "string (optional)",
+          "founder_city": "string",
+          "founder_country": "string",
+          "bio": "string (founder background)",
+          "motivation": "string (personal mission)",
+          "founder_time_commitment_pct": "number (0-100)",
+          "contact_me": "boolean (allows contact)",
+          "login_code": "string (base64 encoded)"
+        }
+      ]
+    },
+    "GET /api/startups": {
+      "description": "Returns array of startup objects",
+      "response": [
+        {
+          "npid": "string (foreign key to founder)",
+          "startup_name": "string",
+          "website": "string (optional)",
+          "house": "enum ['venture', 'karma', 'lifestyle', 'side']",
+          "current_progress": "number (0.0-1.0)",
+          "stealth": "boolean",
+          "product": "string (short description)",
+          "traction": "string (metrics/milestones)",
+          "long_pitch": "string (detailed pitch)",
+          "problem_statement": "string",
+          "customer": "string (target customer)",
+          "product_job_to_be_done": "string",
+          "value_proposition": "string",
+          "current_workaround": "string",
+          "why_now_catalyst": "string",
+          "key_differentiator": "string",
+          "competitors_urls": "string (comma-separated)",
+          "business_model_explained": "string",
+          "proof_of_concept": "string (URL)",
+          "demo_video_url": "string (URL)",
+          "pitch_video_url": "string (URL)",
+          "one_pager_url": "string (URL)",
+          "github_repos": "string (URL)",
+          "dataroom_url": "string (URL)",
+          "circle": "number (circle ID)",
+          "circle_name": "string",
+          "circle_description": "string",
+          "wave": "string (cohort identifier)"
+        }
+      ]
+    }
+  },
+  "data_types": {
+    "npid": {
+      "type": "string",
+      "description": "Unique identifier for founder/startup",
+      "example": "1750"
+    },
+    "current_progress": {
+      "type": "float",
+      "description": "Progress percentage as decimal",
+      "range": "0.0 to 1.0",
+      "example": 0.73
+    },
+    "stealth": {
+      "type": "boolean",
+      "description": "Hide startup details from public view",
+      "default": false
+    },
+    "contact_me": {
+      "type": "boolean",
+      "description": "Allow other founders to contact",
+      "default": true
+    },
+    "house": {
+      "type": "enum",
+      "values": ["venture", "karma", "lifestyle", "side"],
+      "description": "Startup category/track"
+    },
+    "circle": {
+      "type": "integer",
+      "description": "Peer mentoring group ID",
+      "range": "1-10"
+    }
+  },
+  "business_rules": {
+    "stealth_mode": "When stealth=true, hide all startup details except name shows as 'Stealth Startup'",
+    "contact_privacy": "When contact_me=false, hide founder_email, founder_telegram, founder_linkedin_url",
+    "circle_size": "Each circle should have 3-7 members (except demo circles)",
+    "progress_display": "current_progress * 100 = percentage shown in UI",
+    "authentication": "login_code is base64 encoded 'login:{npid}'"
+  },
+  "sample_data": {
+    "founder": {
+      "npid": "1750",
+      "founder_name": "Franck Nouyrigat",
+      "founder_email": "franck@nocodeai.io",
+      "founder_telegram": "@peignoir2",
+      "founder_linkedin_url": "https://www.linkedin.com/in/francknouyrigat",
+      "founder_city": "Paris",
+      "founder_country": "France",
+      "bio": "Former Startup Weekend co-founder...",
+      "motivation": "Democratize AI creation for solo founders.",
+      "founder_time_commitment_pct": 100,
+      "contact_me": true,
+      "login_code": "bG9naW46MTc1MA=="
+    },
+    "startup": {
+      "npid": "1750",
+      "startup_name": "NoCode AI Builder",
+      "website": "nocodebuilder.ai",
+      "house": "venture",
+      "current_progress": 0.73,
+      "stealth": false,
+      "product": "Visual AI workflow builder",
+      "traction": "150 on waitlist, 18 active beta testers",
+      "long_pitch": "Non-technical founders waste months...",
+      "problem_statement": "Non-technical founders cannot ship AI products fast enough.",
+      "customer": "Solo founders building AI tools",
+      "product_job_to_be_done": "Create working AI apps without code",
+      "value_proposition": "Ship in hours not months with safe building blocks",
+      "current_workaround": "Spreadsheets; freelancers; Zapier chains",
+      "why_now_catalyst": "AI components and infra matured",
+      "key_differentiator": "Visual builder + safety rails + instant deploy",
+      "circle": 1,
+      "circle_name": "The Wizard's Guild",
+      "circle_description": "AI magicians and no-code sorcerers...",
+      "wave": "wave1"
+    }
+  }
+}

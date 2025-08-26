@@ -264,6 +264,35 @@ export function installMockApi() {
 				}
 
 				if (url.startsWith('/api/startups')) {
+					// Handle POST for updates
+					if (init?.method === 'POST' || init?.method === 'PUT') {
+						try {
+							const body = init?.body ? JSON.parse(init.body as string) : {}
+							const id = String(body.id || '')
+							if (!id) return json({ success: false, message: 'Missing id' }, 400)
+							
+							// Save updates to localStorage overrides
+							const overrides = getOverrides()
+							const updates = { ...body }
+							delete updates.id // Remove id from updates
+							
+							const next = { 
+								...overrides, 
+								[id]: { 
+									...(overrides[id] || {}), 
+									...updates 
+								} 
+							}
+							saveOverrides(next)
+							
+							return json({ success: true, message: 'Startup updated' })
+						} catch (e: any) {
+							console.error('Update error:', e)
+							return json({ success: false, message: e?.message || 'Update failed' }, 500)
+						}
+					}
+					
+					// Handle GET
 					const data = await loadStartups()
 					const u = new URL(url, location.origin)
 					const house = u.searchParams.get('house')?.toLowerCase()
