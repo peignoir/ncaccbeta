@@ -48,7 +48,6 @@ async function loadStartups(): Promise<Startup[]> {
 	const rows = (parsed.data as any[]).filter(Boolean)
 	
 	// Apply persisted data from our new persistence layer
-	console.log('🔄 [MockServer] Loading startups, checking persistence for', rows.length, 'rows')
 	const withPersistence = rows.map((r: any) => {
 		const id = String(r.npid || r.id || '')
 		if (!id) return r
@@ -56,7 +55,6 @@ async function loadStartups(): Promise<Startup[]> {
 		// Check if we have persisted data for this startup
 		const persisted = mockPersistence.getStartup(id)
 		if (persisted) {
-			console.log(`🔄 [MockServer] Found persisted data for ${id}, replacing CSV data`)
 			// Return the persisted data, which completely replaces the CSV row
 			return persisted
 		}
@@ -321,8 +319,6 @@ export function installMockApi() {
 							const id = String(body.id || '')
 							if (!id) return json({ success: false, message: 'Missing id' }, 400)
 							
-							console.log('[MockServer] Updating startup', id, 'with:', body)
-							
 							// Get the current data from CSV or persistence
 							const startups = await loadStartups()
 							const current = startups.find(s => s.id === id)
@@ -343,8 +339,6 @@ export function installMockApi() {
 							
 							// Save the complete updated startup to persistence
 							mockPersistence.saveStartup(id, updated)
-							
-							console.log('[MockServer] Saved startup', id, 'to persistence')
 							
 							return json({ success: true, message: 'Startup updated', data: updated })
 						} catch (e: any) {

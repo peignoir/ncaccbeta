@@ -2,7 +2,7 @@
 // Instead of partial overrides, we maintain complete startup records
 
 const STORAGE_KEY = 'mockapi_startups_v2'
-const DEBUG = true // Enable debug logging
+const DEBUG = false // Disable verbose logging now that it's working
 
 export interface StoredStartup {
   id: string
