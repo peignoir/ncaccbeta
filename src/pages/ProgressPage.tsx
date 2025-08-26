@@ -126,6 +126,13 @@ export default function ProgressPage() {
 				updates.long_pitch = editValues.long_pitch
 				updates.traction = editValues.traction
 				updates.pitch_video_url = editValues.pitch_video_url
+				updates.bio = editValues.bio
+				updates.motivation = editValues.motivation
+				updates.founder_city = editValues.founder_city
+				updates.founder_country = editValues.founder_country
+				updates.founder_time_commitment_pct = editValues.founder_time_commitment_pct
+				updates.proof_of_concept = editValues.proof_of_concept
+				updates.dataroom_url = editValues.dataroom_url
 			}
 			
 			// Update local state immediately for instant UI feedback
@@ -328,6 +335,7 @@ export default function ProgressPage() {
 								<th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Founder</th>
 								<th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">House</th>
 								<th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Progress</th>
+								<th className="text-center py-3 px-4 text-sm font-semibold text-gray-600">Reachable</th>
 								<th className="text-center py-3 px-4 text-sm font-semibold text-gray-600">Actions</th>
 							</tr>
 						</thead>
@@ -351,7 +359,7 @@ export default function ProgressPage() {
 											<div className="flex items-center gap-2">
 												<div>
 													<div className="font-medium text-gray-900">
-														{isStealthed && !isMyStartup ? 'Stealth Startup' : startup.name}
+														{isStealthed ? 'Stealth Startup' : startup.name}
 													</div>
 													{!isStealthed && startup.website && (
 														<a
@@ -373,7 +381,7 @@ export default function ProgressPage() {
 											</div>
 										</td>
 										<td className="py-4 px-4 text-gray-600">
-											{isStealthed && !isMyStartup ? '-' : 
+											{isStealthed ? '-' : 
 												(startup.contact_me === false && !isMyStartup ? 'Contact Hidden' : startup.founder_name)
 											}
 										</td>
@@ -410,6 +418,15 @@ export default function ProgressPage() {
 													{startup.progress}%
 												</span>
 											</div>
+										</td>
+										<td className="py-4 px-4 text-center">
+											{!isStealthed && startup.contact_me !== false && (startup.founder_email || startup.founder_telegram) ? (
+												<span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
+													✓ Yes
+												</span>
+											) : (
+												<span className="text-gray-400 text-xs">-</span>
+											)}
 										</td>
 										<td className="py-4 px-4 text-center">
 											{canViewDetails ? (
@@ -542,7 +559,14 @@ export default function ProgressPage() {
 													founder_linkedin_url: selectedStartup.founder_linkedin_url || '',
 													long_pitch: selectedStartup.long_pitch || '',
 													traction: selectedStartup.traction || '',
-													pitch_video_url: selectedStartup.pitch_video_url || selectedStartup.demo_video_url || ''
+													pitch_video_url: selectedStartup.pitch_video_url || selectedStartup.demo_video_url || '',
+													bio: selectedStartup.bio || '',
+													motivation: selectedStartup.motivation || '',
+													founder_city: selectedStartup.founder_city || '',
+													founder_country: selectedStartup.founder_country || '',
+													founder_time_commitment_pct: selectedStartup.founder_time_commitment_pct || '',
+													proof_of_concept: selectedStartup.proof_of_concept || '',
+													dataroom_url: selectedStartup.dataroom_url || ''
 												})
 											}}
 											className="px-3 py-1 text-sm bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition"
@@ -696,16 +720,34 @@ export default function ProgressPage() {
 												)}
 											</div>
 										)}
-										{selectedStartup.bio && (
+										{(selectedStartup.bio || editingField === 'modal') && (
 											<div>
 												<span className="text-sm text-gray-500">Founder Bio</span>
-												<p className="text-gray-900 mt-1">{selectedStartup.bio}</p>
+												{editingField === 'modal' && selectedStartup.id === myStartup?.id ? (
+													<textarea
+														value={editValues.bio || ''}
+														onChange={(e) => setEditValues({ ...editValues, bio: e.target.value })}
+														className="mt-1 w-full px-2 py-1 border rounded text-gray-900"
+														rows={3}
+													/>
+												) : (
+													<p className="text-gray-900 mt-1">{selectedStartup.bio}</p>
+												)}
 											</div>
 										)}
-										{selectedStartup.motivation && (
+										{(selectedStartup.motivation || editingField === 'modal') && (
 											<div>
 												<span className="text-sm text-gray-500">Motivation</span>
-												<p className="text-gray-900 mt-1">{selectedStartup.motivation}</p>
+												{editingField === 'modal' && selectedStartup.id === myStartup?.id ? (
+													<input
+														type="text"
+														value={editValues.motivation || ''}
+														onChange={(e) => setEditValues({ ...editValues, motivation: e.target.value })}
+														className="mt-1 w-full px-2 py-1 border rounded text-gray-900"
+													/>
+												) : (
+													<p className="text-gray-900 mt-1">{selectedStartup.motivation}</p>
+												)}
 											</div>
 										)}
 									</div>
@@ -746,7 +788,26 @@ export default function ProgressPage() {
 									)}
 									<div>
 										<span className="text-sm text-gray-500">Location</span>
-										<p className="font-medium text-gray-900">{selectedStartup.location || '-'}</p>
+										{editingField === 'modal' && selectedStartup.id === myStartup?.id ? (
+											<div className="flex gap-2">
+												<input
+													type="text"
+													value={editValues.founder_city || ''}
+													onChange={(e) => setEditValues({ ...editValues, founder_city: e.target.value })}
+													className="mt-1 flex-1 px-2 py-1 border rounded text-gray-900"
+													placeholder="City"
+												/>
+												<input
+													type="text"
+													value={editValues.founder_country || ''}
+													onChange={(e) => setEditValues({ ...editValues, founder_country: e.target.value })}
+													className="mt-1 flex-1 px-2 py-1 border rounded text-gray-900"
+													placeholder="Country"
+												/>
+											</div>
+										) : (
+											<p className="font-medium text-gray-900">{selectedStartup.location || '-'}</p>
+										)}
 									</div>
 									<div>
 										<span className="text-sm text-gray-500">House</span>
@@ -763,10 +824,22 @@ export default function ProgressPage() {
 											) : '-'}
 										</p>
 									</div>
-									{selectedStartup.founder_time_commitment_pct && (
+									{(selectedStartup.founder_time_commitment_pct || editingField === 'modal') && (
 										<div>
-											<span className="text-sm text-gray-500">Time Commitment</span>
-											<p className="font-medium text-gray-900">{selectedStartup.founder_time_commitment_pct}%</p>
+											<span className="text-sm text-gray-500">Time Commitment (%)</span>
+											{editingField === 'modal' && selectedStartup.id === myStartup?.id ? (
+												<input
+													type="number"
+													value={editValues.founder_time_commitment_pct || ''}
+													onChange={(e) => setEditValues({ ...editValues, founder_time_commitment_pct: e.target.value })}
+													className="mt-1 w-full px-2 py-1 border rounded text-gray-900"
+													placeholder="100"
+													min="0"
+													max="100"
+												/>
+											) : (
+												<p className="font-medium text-gray-900">{selectedStartup.founder_time_commitment_pct}%</p>
+											)}
 										</div>
 									)}
 									{(selectedStartup.founder_telegram || editingField === 'modal') && selectedStartup.contact_me !== false && (
@@ -794,19 +867,29 @@ export default function ProgressPage() {
 											) : null}
 										</div>
 									)}
-									{selectedStartup.founder_linkedin_url && selectedStartup.contact_me !== false && (
+									{(selectedStartup.founder_linkedin_url || editingField === 'modal') && selectedStartup.contact_me !== false && (
 										<div>
-											<span className="text-sm text-gray-500">LinkedIn</span>
-											<p>
-												<a
-													href={selectedStartup.founder_linkedin_url}
-													target="_blank"
-													rel="noopener noreferrer"
-													className="text-blue-600 hover:text-blue-800"
-												>
-													View Profile
-												</a>
-											</p>
+											<span className="text-sm text-gray-500">LinkedIn URL</span>
+											{editingField === 'modal' && selectedStartup.id === myStartup?.id ? (
+												<input
+													type="text"
+													value={editValues.founder_linkedin_url || ''}
+													onChange={(e) => setEditValues({ ...editValues, founder_linkedin_url: e.target.value })}
+													className="mt-1 w-full px-2 py-1 border rounded text-gray-900"
+													placeholder="https://linkedin.com/in/username"
+												/>
+											) : (
+												<p>
+													<a
+														href={selectedStartup.founder_linkedin_url}
+														target="_blank"
+														rel="noopener noreferrer"
+														className="text-blue-600 hover:text-blue-800"
+													>
+														View Profile
+													</a>
+												</p>
+											)}
 										</div>
 									)}
 								</div>
@@ -892,34 +975,54 @@ export default function ProgressPage() {
 											)}
 										</div>
 									)}
-									{selectedStartup.proof_of_concept && (
+									{(selectedStartup.proof_of_concept || editingField === 'modal') && (
 										<div>
-											<span className="text-sm text-gray-500">Proof of Concept</span>
-											<p>
-												<a
-													href={selectedStartup.proof_of_concept}
-													target="_blank"
-													rel="noopener noreferrer"
-													className="text-indigo-600 hover:text-indigo-800 font-mono"
-												>
-													View GitHub Proof
-												</a>
-											</p>
+											<span className="text-sm text-gray-500">Source Code URL</span>
+											{editingField === 'modal' && selectedStartup.id === myStartup?.id ? (
+												<input
+													type="text"
+													value={editValues.proof_of_concept || ''}
+													onChange={(e) => setEditValues({ ...editValues, proof_of_concept: e.target.value })}
+													className="mt-1 w-full px-2 py-1 border rounded text-gray-900"
+													placeholder="https://github.com/username/repo"
+												/>
+											) : (
+												<p>
+													<a
+														href={selectedStartup.proof_of_concept}
+														target="_blank"
+														rel="noopener noreferrer"
+														className="text-indigo-600 hover:text-indigo-800 font-mono"
+													>
+														View Source Code
+													</a>
+												</p>
+											)}
 										</div>
 									)}
-									{selectedStartup.dataroom_url && (
+									{(selectedStartup.dataroom_url || editingField === 'modal') && (
 										<div>
-											<span className="text-sm text-gray-500">Data Room</span>
-											<p>
-												<a
-													href={selectedStartup.dataroom_url}
-													target="_blank"
-													rel="noopener noreferrer"
-													className="text-indigo-600 hover:text-indigo-800"
-												>
-													Access Data Room
-												</a>
-											</p>
+											<span className="text-sm text-gray-500">Data Room URL</span>
+											{editingField === 'modal' && selectedStartup.id === myStartup?.id ? (
+												<input
+													type="text"
+													value={editValues.dataroom_url || ''}
+													onChange={(e) => setEditValues({ ...editValues, dataroom_url: e.target.value })}
+													className="mt-1 w-full px-2 py-1 border rounded text-gray-900"
+													placeholder="https://dataroom.example.com"
+												/>
+											) : (
+												<p>
+													<a
+														href={selectedStartup.dataroom_url}
+														target="_blank"
+														rel="noopener noreferrer"
+														className="text-indigo-600 hover:text-indigo-800"
+													>
+														Access Data Room
+													</a>
+												</p>
+											)}
 										</div>
 									)}
 									{selectedStartup.website && (
