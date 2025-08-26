@@ -58,7 +58,6 @@ export default function ProgressPage() {
 	const [houseFilter, setHouseFilter] = useState<string>('all')
 	const [stealthFilter, setStealthFilter] = useState<'all' | 'show' | 'hide'>('all')
 	const [sortBy, setSortBy] = useState<'progress' | 'name'>('progress')
-	const [contactFilter, setContactFilter] = useState<boolean>(false)
 	const [myStartup, setMyStartup] = useState<Startup | null>(null)
 	const [selectedStartup, setSelectedStartup] = useState<Startup | null>(null)
 	const [showModal, setShowModal] = useState(false)
@@ -206,9 +205,7 @@ export default function ProgressPage() {
 			const stealthMatch = stealthFilter === 'all' || 
 				(stealthFilter === 'show' && s.stealth === true) ||
 				(stealthFilter === 'hide' && s.stealth !== true)
-			const contactMatch = !contactFilter || 
-				(s.contact_me !== false && (s.founder_email || s.founder_telegram))
-			return houseMatch && stealthMatch && contactMatch
+			return houseMatch && stealthMatch
 		})
 		.sort((a, b) => {
 			if (sortBy === 'progress') return b.progress - a.progress
@@ -316,16 +313,6 @@ export default function ProgressPage() {
 							<option value="progress">Sort by Progress</option>
 							<option value="name">Sort by Name</option>
 						</select>
-						<button
-							onClick={() => setContactFilter(!contactFilter)}
-							className={`px-3 py-1 rounded-lg text-sm transition ${
-								contactFilter 
-									? 'bg-green-600 text-white border border-green-600' 
-									: 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-							}`}
-						>
-							{contactFilter ? '✓ ' : ''}It's OK to contact me
-						</button>
 					</div>
 				</div>
 
@@ -344,7 +331,7 @@ export default function ProgressPage() {
 						<tbody className="divide-y divide-gray-100">
 							{filteredStartups.map((startup) => {
 								const isMyStartup = startup.id === myStartup?.id
-								const isStealthed = startup.stealth === true || startup.stealth === 'true'
+								const isStealthed = startup.stealth === true || startup.stealth === 'true' || startup.stealth === '1'
 								const canViewDetails = !isStealthed || isMyStartup
 								
 								return (
