@@ -139,7 +139,9 @@ export default function ProgressPage() {
 			const updatedStartup = field === 'all' ? {
 				...myStartup,
 				...editValues,
-				name: editValues.startup_name || myStartup.name
+				name: editValues.startup_name || myStartup.name,
+				stealth: editValues.stealth,
+				contact_me: editValues.contact_me
 			} : {
 				...myStartup,
 				stealth: field === 'stealth' ? editValues.stealth : myStartup.stealth,
