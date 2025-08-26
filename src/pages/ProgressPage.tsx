@@ -42,6 +42,7 @@ type Startup = {
 	proof_of_concept?: string
 	dataroom_url?: string
 	pitch_video_url?: string
+	contact_me?: boolean | string
 	circle?: string
 	circle_name?: string
 	circle_description?: string
@@ -72,6 +73,7 @@ export default function ProgressPage() {
 				...s,
 				progress: s.current_progress != null ? Math.round(s.current_progress * 100) : (s.progress || 0),
 				stealth: s.stealth === true || s.stealth === 'true' || s.stealth === '1',
+				contact_me: s.contact_me !== false && s.contact_me !== 'false' && s.contact_me !== '0',
 				name: s.startup_name || s.name || 'Unknown Startup',
 				founder_name: s.founder_name || s.founder || s.name || 'Unknown Founder'
 			}))
@@ -87,7 +89,8 @@ export default function ProgressPage() {
 				setMyStartup(userStartup)
 				setEditValues({
 					progress: userStartup.progress,
-					stealth: userStartup.stealth
+					stealth: userStartup.stealth,
+					contact_me: userStartup.contact_me !== false
 				})
 			}
 		} catch (error) {
@@ -132,7 +135,8 @@ export default function ProgressPage() {
 		setSelectedStartup(startup)
 		setEditValues({
 			progress: startup.progress,
-			stealth: startup.stealth
+			stealth: startup.stealth,
+			contact_me: startup.contact_me !== false
 		})
 		setShowModal(true)
 	}
@@ -375,16 +379,62 @@ export default function ProgressPage() {
 			{showModal && selectedStartup && (
 				<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
 					<div className="bg-white rounded-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-						<div className="sticky top-0 bg-white border-b border-gray-200 px-8 py-6 flex items-center justify-between">
-							<h2 className="text-2xl font-bold text-gray-900">
-								{selectedStartup.name}
-							</h2>
-							<button
-								onClick={closeModal}
-								className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
-							>
-								×
-							</button>
+						<div className="sticky top-0 bg-white border-b border-gray-200 px-8 py-6">
+							<div className="flex items-center justify-between">
+								<h2 className="text-2xl font-bold text-gray-900">
+									{selectedStartup.name}
+								</h2>
+								<div className="flex items-center gap-4">
+									{selectedStartup.id === myStartup?.id && (
+										<>
+											<div className="flex items-center gap-2">
+												<span className="text-sm text-gray-600">Contact Me:</span>
+												<button
+													onClick={() => {
+														const newContactMe = !editValues.contact_me
+														setEditValues({ ...editValues, contact_me: newContactMe })
+														handleSave('contact_me')
+													}}
+													className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+														editValues.contact_me ? 'bg-green-600' : 'bg-gray-200'
+													}`}
+												>
+													<span
+														className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+															editValues.contact_me ? 'translate-x-6' : 'translate-x-1'
+														}`}
+													/>
+												</button>
+											</div>
+											<div className="flex items-center gap-2">
+												<span className="text-sm text-gray-600">Stealth Mode:</span>
+												<button
+													onClick={() => {
+														const newStealth = !editValues.stealth
+														setEditValues({ ...editValues, stealth: newStealth })
+														handleSave('stealth')
+													}}
+													className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+														editValues.stealth ? 'bg-indigo-600' : 'bg-gray-200'
+													}`}
+												>
+													<span
+														className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+															editValues.stealth ? 'translate-x-6' : 'translate-x-1'
+														}`}
+													/>
+												</button>
+											</div>
+										</>
+									)}
+									<button
+										onClick={closeModal}
+										className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
+									>
+										×
+									</button>
+								</div>
+							</div>
 						</div>
 
 						<div className="px-8 py-6 space-y-8">
@@ -406,92 +456,27 @@ export default function ProgressPage() {
 								</div>
 							)}
 
-							{/* Progress Section - Only editable for user's startup */}
+							{/* Progress Display - Show for user's startup */}
 							{selectedStartup.id === myStartup?.id && (
 								<div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-6 border border-indigo-200">
-									<div className="flex items-center justify-between mb-4">
+									<div className="mb-4">
 										<h3 className="text-lg font-semibold text-gray-900">Your Progress</h3>
-										<div className="flex items-center gap-2">
-											<span className="text-sm text-gray-600">Stealth Mode:</span>
-											<button
-												onClick={() => {
-													const newStealth = !editValues.stealth
-													setEditValues({ ...editValues, stealth: newStealth })
-													handleSave('stealth')
-												}}
-												className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-													editValues.stealth ? 'bg-indigo-600' : 'bg-gray-200'
-												}`}
-											>
-												<span
-													className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-														editValues.stealth ? 'translate-x-6' : 'translate-x-1'
-													}`}
-												/>
-											</button>
-										</div>
 									</div>
 									
 									<div className="space-y-3">
-										{editingField === 'progress' ? (
-											<div className="space-y-2">
-												<div className="flex items-center gap-3">
-													<input
-														type="range"
-														min="0"
-														max="100"
-														value={editValues.progress || 0}
-														onChange={(e) => setEditValues({ ...editValues, progress: parseInt(e.target.value) })}
-														className="flex-1"
+										<div className="flex items-center gap-3">
+											<div className="flex-1">
+												<div className="w-full bg-gray-200 rounded-full h-4">
+													<div
+														className="bg-gradient-to-r from-indigo-500 to-purple-600 h-4 rounded-full transition-all"
+														style={{ width: `${selectedStartup.progress}%` }}
 													/>
-													<span className="text-xl font-bold text-indigo-600 w-16 text-right">
-														{editValues.progress}%
-													</span>
-												</div>
-												<div className="flex gap-2">
-													<button
-														onClick={() => handleSave('progress')}
-														className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-													>
-														Save Progress
-													</button>
-													<button
-														onClick={() => {
-															setEditingField(null)
-															setEditValues({ ...editValues, progress: selectedStartup.progress })
-														}}
-														className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
-													>
-														Cancel
-													</button>
 												</div>
 											</div>
-										) : (
-											<div className="space-y-2">
-												<div className="flex items-center gap-3">
-													<div className="flex-1">
-														<div className="w-full bg-gray-200 rounded-full h-4">
-															<div
-																className="bg-gradient-to-r from-indigo-500 to-purple-600 h-4 rounded-full transition-all"
-																style={{ width: `${selectedStartup.progress}%` }}
-															/>
-														</div>
-													</div>
-													<span className="text-xl font-bold text-indigo-600">
-														{selectedStartup.progress}%
-													</span>
-													<button
-														onClick={() => {
-															setEditingField('progress')
-															setEditValues({ ...editValues, progress: selectedStartup.progress })
-														}}
-														className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded hover:bg-indigo-200"
-													>
-														Edit
-													</button>
-												</div>
-											</div>
-										)}
+											<span className="text-xl font-bold text-indigo-600">
+												{selectedStartup.progress}%
+											</span>
+										</div>
 									</div>
 
 									{selectedStartup.nocap_motivation && (
@@ -539,10 +524,12 @@ export default function ProgressPage() {
 										<span className="text-sm text-gray-500">Name</span>
 										<p className="font-medium text-gray-900">{selectedStartup.founder_name || '-'}</p>
 									</div>
-									<div>
-										<span className="text-sm text-gray-500">Email</span>
-										<p className="font-medium text-gray-900">{selectedStartup.founder_email || '-'}</p>
-									</div>
+									{selectedStartup.contact_me !== false && (
+										<div>
+											<span className="text-sm text-gray-500">Email</span>
+											<p className="font-medium text-gray-900">{selectedStartup.founder_email || '-'}</p>
+										</div>
+									)}
 									<div>
 										<span className="text-sm text-gray-500">Location</span>
 										<p className="font-medium text-gray-900">{selectedStartup.location || '-'}</p>
@@ -568,7 +555,7 @@ export default function ProgressPage() {
 											<p className="font-medium text-gray-900">{selectedStartup.founder_time_commitment_pct}%</p>
 										</div>
 									)}
-									{selectedStartup.founder_telegram && (
+									{selectedStartup.founder_telegram && selectedStartup.contact_me !== false && (
 										<div>
 											<span className="text-sm text-gray-500">Telegram</span>
 											<p>
@@ -583,7 +570,7 @@ export default function ProgressPage() {
 											</p>
 										</div>
 									)}
-									{selectedStartup.founder_linkedin_url && (
+									{selectedStartup.founder_linkedin_url && selectedStartup.contact_me !== false && (
 										<div>
 											<span className="text-sm text-gray-500">LinkedIn</span>
 											<p>

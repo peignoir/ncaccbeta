@@ -85,7 +85,8 @@ export default function handler(req, res) {
         Business_model_explained: row.Business_model_explained,
         proof_of_concept: row.proof_of_concept,
         dataroom_url: row.dataroom_url,
-        pitch_video_url: row.pitch_video_url
+        pitch_video_url: row.pitch_video_url,
+        contact_me: row.contact_me === 'true' || row.contact_me === true || row.contact_me === '1'
       }
     })
 
