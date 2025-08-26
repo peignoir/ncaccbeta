@@ -58,6 +58,7 @@ export default function ProgressPage() {
 	const [houseFilter, setHouseFilter] = useState<string>('all')
 	const [stealthFilter, setStealthFilter] = useState<'all' | 'show' | 'hide'>('all')
 	const [sortBy, setSortBy] = useState<'progress' | 'name'>('progress')
+	const [contactFilter, setContactFilter] = useState<boolean>(false)
 	const [myStartup, setMyStartup] = useState<Startup | null>(null)
 	const [selectedStartup, setSelectedStartup] = useState<Startup | null>(null)
 	const [showModal, setShowModal] = useState(false)
@@ -112,10 +113,26 @@ export default function ProgressPage() {
 				updates.stealth = editValues.stealth
 			} else if (field === 'contact_me') {
 				updates.contact_me = editValues.contact_me
+			} else if (field === 'all') {
+				// Save all edited fields
+				updates.stealth = editValues.stealth
+				updates.contact_me = editValues.contact_me
+				updates.startup_name = editValues.startup_name
+				updates.website = editValues.website
+				updates.founder_name = editValues.founder_name
+				updates.founder_email = editValues.founder_email
+				updates.founder_telegram = editValues.founder_telegram
+				updates.founder_linkedin_url = editValues.founder_linkedin_url
+				updates.long_pitch = editValues.long_pitch
+				updates.traction = editValues.traction
 			}
 			
 			// Update local state immediately for instant UI feedback
-			const updatedStartup = {
+			const updatedStartup = field === 'all' ? {
+				...myStartup,
+				...editValues,
+				name: editValues.startup_name || myStartup.name
+			} : {
 				...myStartup,
 				stealth: field === 'stealth' ? editValues.stealth : myStartup.stealth,
 				contact_me: field === 'contact_me' ? editValues.contact_me : myStartup.contact_me,
@@ -176,7 +193,9 @@ export default function ProgressPage() {
 			const stealthMatch = stealthFilter === 'all' || 
 				(stealthFilter === 'show' && s.stealth === true) ||
 				(stealthFilter === 'hide' && s.stealth !== true)
-			return houseMatch && stealthMatch
+			const contactMatch = !contactFilter || 
+				(s.contact_me !== false && (s.founder_email || s.founder_telegram))
+			return houseMatch && stealthMatch && contactMatch
 		})
 		.sort((a, b) => {
 			if (sortBy === 'progress') return b.progress - a.progress
@@ -274,6 +293,7 @@ export default function ProgressPage() {
 						>
 							<option value="all">All Startups</option>
 							<option value="hide">Non-Stealth</option>
+							<option value="show">Stealth Only</option>
 						</select>
 						<select
 							value={sortBy}
@@ -283,6 +303,16 @@ export default function ProgressPage() {
 							<option value="progress">Sort by Progress</option>
 							<option value="name">Sort by Name</option>
 						</select>
+						<button
+							onClick={() => setContactFilter(!contactFilter)}
+							className={`px-3 py-1 rounded-lg text-sm transition ${
+								contactFilter 
+									? 'bg-green-600 text-white border border-green-600' 
+									: 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+							}`}
+						>
+							{contactFilter ? '✓ ' : ''}It's OK to contact me
+						</button>
 					</div>
 				</div>
 
@@ -450,14 +480,54 @@ export default function ProgressPage() {
 													/>
 												</button>
 											</div>
+											<button
+												onClick={() => {
+													// Save all changes
+													handleSave('all')
+													setEditingField(null)
+												}}
+												className="px-4 py-1 text-sm bg-green-600 hover:bg-green-700 text-white rounded-lg transition"
+											>
+												Save Changes
+											</button>
+											<button
+												onClick={() => {
+													setEditingField(null)
+													// Reset edit values
+													setEditValues({
+														progress: selectedStartup.progress,
+														stealth: selectedStartup.stealth,
+														contact_me: selectedStartup.contact_me !== false
+													})
+												}}
+												className="px-4 py-1 text-sm bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-lg transition"
+											>
+												Cancel
+											</button>
 										</>
 									)}
 									{selectedStartup.id === myStartup?.id && editingField !== 'modal' && (
 										<button
-											onClick={() => setEditingField('modal')}
-											className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition"
+											onClick={() => {
+												setEditingField('modal')
+												// Initialize edit values with current startup data
+												setEditValues({
+													progress: selectedStartup.progress,
+													stealth: selectedStartup.stealth,
+													contact_me: selectedStartup.contact_me !== false,
+													startup_name: selectedStartup.startup_name || selectedStartup.name,
+													website: selectedStartup.website || '',
+													founder_name: selectedStartup.founder_name || '',
+													founder_email: selectedStartup.founder_email || '',
+													founder_telegram: selectedStartup.founder_telegram || '',
+													founder_linkedin_url: selectedStartup.founder_linkedin_url || '',
+													long_pitch: selectedStartup.long_pitch || '',
+													traction: selectedStartup.traction || ''
+												})
+											}}
+											className="px-3 py-1 text-sm bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition"
 										>
-											Edit Settings
+											Edit Details
 										</button>
 									)}
 									<button
@@ -541,14 +611,48 @@ export default function ProgressPage() {
 							)}
 
 							{/* Overview Section */}
-							{(selectedStartup.bio || selectedStartup.motivation || selectedStartup.long_pitch) && (
+							{(selectedStartup.bio || selectedStartup.motivation || selectedStartup.long_pitch || editingField === 'modal') && (
 								<div className="border-t pt-6">
 									<h3 className="text-lg font-semibold text-gray-900 mb-4">Overview</h3>
 									<div className="space-y-4">
-										{selectedStartup.long_pitch && (
+										{(selectedStartup.website || editingField === 'modal') && (
+											<div>
+												<span className="text-sm text-gray-500">Website</span>
+												{editingField === 'modal' && selectedStartup.id === myStartup?.id ? (
+													<input
+														type="text"
+														value={editValues.website || ''}
+														onChange={(e) => setEditValues({ ...editValues, website: e.target.value })}
+														className="mt-1 w-full px-2 py-1 border rounded text-gray-900"
+														placeholder="example.com"
+													/>
+												) : (
+													<p>
+														<a
+															href={`https://${selectedStartup.website}`}
+															target="_blank"
+															rel="noopener noreferrer"
+															className="text-blue-600 hover:text-blue-800"
+														>
+															{selectedStartup.website}
+														</a>
+													</p>
+												)}
+											</div>
+										)}
+										{(selectedStartup.long_pitch || editingField === 'modal') && (
 											<div>
 												<span className="text-sm text-gray-500">Pitch</span>
-												<p className="text-gray-900 mt-1 whitespace-pre-wrap">{selectedStartup.long_pitch}</p>
+												{editingField === 'modal' && selectedStartup.id === myStartup?.id ? (
+													<textarea
+														value={editValues.long_pitch || ''}
+														onChange={(e) => setEditValues({ ...editValues, long_pitch: e.target.value })}
+														className="mt-1 w-full px-2 py-1 border rounded text-gray-900"
+														rows={4}
+													/>
+												) : (
+													<p className="text-gray-900 mt-1 whitespace-pre-wrap">{selectedStartup.long_pitch}</p>
+												)}
 											</div>
 										)}
 										{selectedStartup.bio && (
@@ -573,12 +677,30 @@ export default function ProgressPage() {
 								<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 									<div>
 										<span className="text-sm text-gray-500">Name</span>
-										<p className="font-medium text-gray-900">{selectedStartup.founder_name || '-'}</p>
+										{editingField === 'modal' && selectedStartup.id === myStartup?.id ? (
+											<input
+												type="text"
+												value={editValues.founder_name || ''}
+												onChange={(e) => setEditValues({ ...editValues, founder_name: e.target.value })}
+												className="mt-1 w-full px-2 py-1 border rounded text-gray-900"
+											/>
+										) : (
+											<p className="font-medium text-gray-900">{selectedStartup.founder_name || '-'}</p>
+										)}
 									</div>
 									{selectedStartup.contact_me !== false && (
 										<div>
 											<span className="text-sm text-gray-500">Email</span>
-											<p className="font-medium text-gray-900">{selectedStartup.founder_email || '-'}</p>
+											{editingField === 'modal' && selectedStartup.id === myStartup?.id ? (
+												<input
+													type="email"
+													value={editValues.founder_email || ''}
+													onChange={(e) => setEditValues({ ...editValues, founder_email: e.target.value })}
+													className="mt-1 w-full px-2 py-1 border rounded text-gray-900"
+												/>
+											) : (
+												<p className="font-medium text-gray-900">{selectedStartup.founder_email || '-'}</p>
+											)}
 										</div>
 									)}
 									<div>
@@ -606,19 +728,29 @@ export default function ProgressPage() {
 											<p className="font-medium text-gray-900">{selectedStartup.founder_time_commitment_pct}%</p>
 										</div>
 									)}
-									{selectedStartup.founder_telegram && selectedStartup.contact_me !== false && (
+									{(selectedStartup.founder_telegram || editingField === 'modal') && selectedStartup.contact_me !== false && (
 										<div>
 											<span className="text-sm text-gray-500">Telegram</span>
-											<p>
-												<a
-													href={`https://t.me/${selectedStartup.founder_telegram.replace('@', '')}`}
-													target="_blank"
-													rel="noopener noreferrer"
-													className="text-blue-600 hover:text-blue-800"
-												>
-													{selectedStartup.founder_telegram}
-												</a>
-											</p>
+											{editingField === 'modal' && selectedStartup.id === myStartup?.id ? (
+												<input
+													type="text"
+													value={editValues.founder_telegram || ''}
+													onChange={(e) => setEditValues({ ...editValues, founder_telegram: e.target.value })}
+													className="mt-1 w-full px-2 py-1 border rounded text-gray-900"
+													placeholder="@username"
+												/>
+											) : (
+												<p>
+													<a
+														href={`https://t.me/${selectedStartup.founder_telegram.replace('@', '')}`}
+														target="_blank"
+														rel="noopener noreferrer"
+														className="text-blue-600 hover:text-blue-800"
+													>
+														{selectedStartup.founder_telegram}
+													</a>
+												</p>
+											)}
 										</div>
 									)}
 									{selectedStartup.founder_linkedin_url && selectedStartup.contact_me !== false && (
@@ -704,10 +836,19 @@ export default function ProgressPage() {
 							<div className="border-t pt-6">
 								<h3 className="text-lg font-semibold text-gray-900 mb-4">Due Diligence & Resources</h3>
 								<div className="space-y-4">
-									{selectedStartup.traction && (
+									{(selectedStartup.traction || editingField === 'modal') && (
 										<div>
 											<span className="text-sm text-gray-500">Traction</span>
-											<p className="text-gray-900 mt-1">{selectedStartup.traction}</p>
+											{editingField === 'modal' && selectedStartup.id === myStartup?.id ? (
+												<input
+													type="text"
+													value={editValues.traction || ''}
+													onChange={(e) => setEditValues({ ...editValues, traction: e.target.value })}
+													className="mt-1 w-full px-2 py-1 border rounded text-gray-900"
+												/>
+											) : (
+												<p className="text-gray-900 mt-1">{selectedStartup.traction}</p>
+											)}
 										</div>
 									)}
 									{selectedStartup.proof_of_concept && (
