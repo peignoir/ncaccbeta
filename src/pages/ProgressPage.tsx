@@ -209,7 +209,16 @@ export default function ProgressPage() {
 					</div>
 					<div className="mt-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg p-4 border border-indigo-200">
 						<p className="text-indigo-900 font-semibold italic">
-							🚀 "The distance between your dreams and reality is called action. You're at {myStartup.progress}% - keep pushing forward!"
+							💪 {myStartup.progress >= 80 
+								? `Amazing progress at ${myStartup.progress}%! This week: Close 2 deals and prepare for launch.`
+								: myStartup.progress >= 60
+								? `Strong momentum at ${myStartup.progress}%! This week: Talk to 5 customers and iterate on their feedback.`
+								: myStartup.progress >= 40
+								? `Good progress at ${myStartup.progress}%! This week: Ship that feature and get 3 user testimonials.`
+								: myStartup.progress >= 20
+								? `${myStartup.progress}% and climbing! This week: Launch your MVP and get feedback from 10 beta users.`
+								: `${myStartup.progress}% - Let's build momentum! This week: Validate your idea with 5 potential customers.`
+							}
 						</p>
 					</div>
 				</div>
