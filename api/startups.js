@@ -16,6 +16,55 @@ export default function handler(req, res) {
     return
   }
 
+  // Handle POST/PUT for updating startup data
+  if (req.method === 'POST' || req.method === 'PUT') {
+    try {
+      const { id, ...updates } = req.body
+      
+      if (!id) {
+        return res.status(400).json({ error: 'Startup ID required' })
+      }
+
+      // Read CSV data
+      const csvPath = path.join(process.cwd(), 'public', 'sample.csv')
+      const csvText = fs.readFileSync(csvPath, 'utf-8')
+      const parsed = Papa.parse(csvText, { header: true, skipEmptyLines: true })
+      const csvData = parsed.data || []
+      
+      // Find and update the startup
+      const startupIndex = csvData.findIndex(row => 
+        row.npid === id || row.id === id
+      )
+      
+      if (startupIndex === -1) {
+        return res.status(404).json({ error: 'Startup not found' })
+      }
+      
+      // Update the fields
+      Object.keys(updates).forEach(key => {
+        if (updates[key] !== undefined) {
+          // Convert boolean values to strings for CSV
+          if (typeof updates[key] === 'boolean') {
+            csvData[startupIndex][key] = updates[key] ? 'true' : 'false'
+          } else {
+            csvData[startupIndex][key] = updates[key]
+          }
+        }
+      })
+      
+      // Convert back to CSV
+      const newCsvText = Papa.unparse(csvData, { header: true })
+      
+      // Write back to file
+      fs.writeFileSync(csvPath, newCsvText, 'utf-8')
+      
+      return res.status(200).json({ success: true, message: 'Startup updated' })
+    } catch (error) {
+      console.error('Update error:', error)
+      return res.status(500).json({ error: 'Failed to update startup', details: error.message })
+    }
+  }
+
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' })
   }

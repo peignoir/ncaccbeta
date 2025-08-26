@@ -162,15 +162,13 @@ export default function ProgressPage() {
 			}
 			
 			// Save to backend
-			const response = await api.post('/api/startups/update', { 
+			await api.post('/api/startups', { 
 				id: myStartup.npid || myStartup.id, 
-				updates 
+				...updates 
 			})
 			
-			if (!response.ok) {
-				// Revert on failure
-				await loadStartups()
-			}
+			// Reload data to get the latest from CSV
+			await loadStartups()
 		} catch (error) {
 			console.error('Failed to save:', error)
 			// Revert on error
@@ -184,11 +182,13 @@ export default function ProgressPage() {
 
 	const openModal = (startup: Startup) => {
 		if (startup.stealth && startup.id !== myStartup?.id) return
-		setSelectedStartup(startup)
+		// Always use the latest startup data
+		const latestStartup = startups.find(s => s.id === startup.id) || startup
+		setSelectedStartup(latestStartup)
 		setEditValues({
-			progress: startup.progress,
-			stealth: startup.stealth,
-			contact_me: startup.contact_me !== false
+			progress: latestStartup.progress,
+			stealth: latestStartup.stealth === true || latestStartup.stealth === 'true' || latestStartup.stealth === '1',
+			contact_me: latestStartup.contact_me !== false
 		})
 		setShowModal(true)
 	}
@@ -197,6 +197,8 @@ export default function ProgressPage() {
 		setShowModal(false)
 		setSelectedStartup(null)
 		setEditingField(null)
+		// Clear edit values when closing
+		setEditValues({})
 	}
 
 	const filteredStartups = startups
@@ -535,27 +537,29 @@ export default function ProgressPage() {
 										<button
 											onClick={() => {
 												setEditingField('modal')
+												// Get the latest startup data
+												const latestStartup = startups.find(s => s.id === selectedStartup.id) || selectedStartup
 												// Initialize edit values with current startup data
 												setEditValues({
-													progress: selectedStartup.progress,
-													stealth: selectedStartup.stealth,
-													contact_me: selectedStartup.contact_me !== false,
-													startup_name: selectedStartup.startup_name || selectedStartup.name,
-													website: selectedStartup.website || '',
-													founder_name: selectedStartup.founder_name || '',
-													founder_email: selectedStartup.founder_email || '',
-													founder_telegram: selectedStartup.founder_telegram || '',
-													founder_linkedin_url: selectedStartup.founder_linkedin_url || '',
-													long_pitch: selectedStartup.long_pitch || '',
-													traction: selectedStartup.traction || '',
-													pitch_video_url: selectedStartup.pitch_video_url || selectedStartup.demo_video_url || '',
-													bio: selectedStartup.bio || '',
-													motivation: selectedStartup.motivation || '',
-													founder_city: selectedStartup.founder_city || '',
-													founder_country: selectedStartup.founder_country || '',
-													founder_time_commitment_pct: selectedStartup.founder_time_commitment_pct || '',
-													proof_of_concept: selectedStartup.proof_of_concept || '',
-													dataroom_url: selectedStartup.dataroom_url || ''
+													progress: latestStartup.progress,
+													stealth: latestStartup.stealth === true || latestStartup.stealth === 'true' || latestStartup.stealth === '1',
+													contact_me: latestStartup.contact_me !== false,
+													startup_name: latestStartup.startup_name || latestStartup.name,
+													website: latestStartup.website || '',
+													founder_name: latestStartup.founder_name || '',
+													founder_email: latestStartup.founder_email || '',
+													founder_telegram: latestStartup.founder_telegram || '',
+													founder_linkedin_url: latestStartup.founder_linkedin_url || '',
+													long_pitch: latestStartup.long_pitch || '',
+													traction: latestStartup.traction || '',
+													pitch_video_url: latestStartup.pitch_video_url || latestStartup.demo_video_url || '',
+													bio: latestStartup.bio || '',
+													motivation: latestStartup.motivation || '',
+													founder_city: latestStartup.founder_city || '',
+													founder_country: latestStartup.founder_country || '',
+													founder_time_commitment_pct: latestStartup.founder_time_commitment_pct || '',
+													proof_of_concept: latestStartup.proof_of_concept || '',
+													dataroom_url: latestStartup.dataroom_url || ''
 												})
 											}}
 											className="px-3 py-1 text-sm bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition"
