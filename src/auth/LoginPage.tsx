@@ -1,14 +1,31 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from './AuthContext'
+import ApiConfigManager from '../lib/apiConfig'
 
 export default function LoginPage() {
 	const { isAuthenticated, login } = useAuth()
 	const navigate = useNavigate()
 	const [code, setCode] = useState('')
+	const [apiKey, setApiKey] = useState(() => {
+		// Try to load saved API key from localStorage
+		const saved = localStorage.getItem('ncacc_api_key')
+		return saved || ''
+	})
 	const [remember, setRemember] = useState<boolean>(() => localStorage.getItem('ncacc_remember') === '1')
 	const [error, setError] = useState<string | null>(null)
 	const [loading, setLoading] = useState(false)
+	const [apiMode, setApiMode] = useState(ApiConfigManager.getMode())
+
+	useEffect(() => {
+		const unsubscribe = ApiConfigManager.onModeChange((mode) => {
+			console.log('[LoginPage] API mode changed to:', mode)
+			setApiMode(mode)
+			setError(null)
+			setCode('')
+		})
+		return unsubscribe
+	}, [])
 
 	useEffect(() => {
 		if (isAuthenticated) navigate('/')
@@ -17,37 +34,94 @@ export default function LoginPage() {
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault()
 		setError(null)
-		if (!code || !/^[-A-Za-z0-9+/=]+$/.test(code)) {
-			setError('Please enter a valid BASE64 code')
-			return
+		
+		// Different validation for different API modes
+		if (apiMode === 'mock') {
+			if (!code || !/^[-A-Za-z0-9+/=]+$/.test(code)) {
+				setError('Please enter a valid BASE64 code')
+				return
+			}
+		} else {
+			// For real API, validate API key
+			if (!apiKey || apiKey.trim().length === 0) {
+				setError('Please enter your API key')
+				return
+			}
+			// Update the API configuration with user's key
+			console.log('[LoginPage] Setting user API key')
+			ApiConfigManager.updateConfig({ apiKey: apiKey.trim() })
+			localStorage.setItem('ncacc_api_key', apiKey.trim())
 		}
+		
 		try {
 			setLoading(true)
-			await login(code.trim(), remember)
+			console.log(`[LoginPage] Attempting login with ${apiMode} API`)
+			// For real API, pass any value since authentication uses the API key
+			const loginCode = apiMode === 'mock' ? code.trim() : 'api-auth'
+			await login(loginCode, remember)
 			navigate('/')
 		} catch (err: any) {
+			console.error('[LoginPage] Login error:', err)
 			setError(err.message || 'Login failed')
 		} finally {
 			setLoading(false)
 		}
 	}
 
+	const toggleApiMode = () => {
+		const newMode = apiMode === 'mock' ? 'real' : 'mock'
+		console.log('[LoginPage] Switching API mode to:', newMode)
+		ApiConfigManager.setMode(newMode)
+	}
+
 	return (
-		<div className="min-h-screen flex items-center justify-center bg-white">
+		<div className="min-h-screen flex items-center justify-center bg-white relative">
+			{/* API Mode Indicator */}
+			<div className="absolute top-4 right-4">
+				<button
+					onClick={toggleApiMode}
+					className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+						apiMode === 'mock' 
+							? 'bg-blue-100 text-blue-700 hover:bg-blue-200' 
+							: 'bg-green-100 text-green-700 hover:bg-green-200'
+					}`}
+				>
+					API: {apiMode === 'mock' ? 'Mock' : 'Real (Socap.dev)'}
+				</button>
+			</div>
+
 			<div className="w-full max-w-md p-8 bg-gray-50 rounded-md shadow-sm">
 				<div className="text-center mb-6">
 					<div className="text-3xl font-bold">NC/ACC</div>
 					<div className="text-gray-500">No Cap Accelerator</div>
+					<div className="text-xs text-gray-400 mt-2">
+						{apiMode === 'mock' ? 'Using Local Mock Data' : 'Using Socap.dev API'}
+					</div>
 				</div>
 				<form onSubmit={handleSubmit} className="space-y-4">
-					<label className="block text-sm font-medium">Authentication Code</label>
-					<input
-						type="text"
-						placeholder="BASE64 code"
-						value={code}
-						onChange={(e) => setCode(e.target.value)}
-						className="w-full rounded-md border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-primary"
-					/>
+					{apiMode === 'mock' ? (
+						<>
+							<label className="block text-sm font-medium">Authentication Code</label>
+							<input
+								type="text"
+								placeholder="BASE64 code (e.g., bG9naW46MTAwMA==)"
+								value={code}
+								onChange={(e) => setCode(e.target.value)}
+								className="w-full rounded-md border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-primary"
+							/>
+						</>
+					) : (
+						<>
+							<label className="block text-sm font-medium">Socap.dev API Key</label>
+							<input
+								type="password"
+								placeholder="Enter your API key (e.g., sCERK6PhSbOU...)"
+								value={apiKey}
+								onChange={(e) => setApiKey(e.target.value)}
+								className="w-full rounded-md border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-green-500"
+							/>
+						</>
+					)}
 					<div className="flex items-center justify-between">
 						<label className="inline-flex items-center gap-2 text-sm">
 							<input
@@ -67,6 +141,28 @@ export default function LoginPage() {
 						</button>
 					</div>
 					{error && <div className="text-red-600 text-sm">{error}</div>}
+					
+					{/* Help text */}
+					<div className="text-xs text-gray-500 mt-4 border-t pt-3">
+						{apiMode === 'mock' ? (
+							<div>
+								<p className="font-medium text-blue-600">Mock API Mode</p>
+								<p className="mt-1">Uses local CSV data. Example codes:</p>
+								<ul className="mt-1 space-y-1 text-gray-600">
+									<li>• bG9naW46MTAwMA== (NPID 1000)</li>
+									<li>• bG9naW46MTc1MA== (NPID 1750)</li>
+									<li>• bG9naW46MTAwMQ== (NPID 1001)</li>
+								</ul>
+							</div>
+						) : (
+							<div>
+								<p className="font-medium text-green-600">Real API Mode</p>
+								<p className="mt-1">Connects to Socap.dev API using your API key.</p>
+								<p className="mt-1">Base URL: <code className="bg-gray-100 px-1">https://dev.socap.ai</code></p>
+								<p className="mt-1 text-amber-600">Test key: sCERK6PhSbOU6m1HvpyBmg</p>
+							</div>
+						)}
+					</div>
 				</form>
 			</div>
 		</div>

@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import { api } from '../lib/api'
+import unifiedApi from '../lib/unifiedApi'
+import ApiConfigManager from '../lib/apiConfig'
 
 type User = {
 	id: string
@@ -41,16 +43,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 	}, [user])
 
 	const login = async (code: string, remember: boolean) => {
-		const res = await api.post('/api/auth/verify', { code })
-		if (res.success) {
-			setToken(res.token)
-			setUser(res.user)
+		console.log('[Auth] Login attempt with API mode:', ApiConfigManager.getMode())
+		
+		const response = await unifiedApi.login(code)
+		console.log('[Auth] Login response:', response)
+		
+		if (response.success && response.data) {
+			setToken(response.data.token)
+			setUser({
+				id: String(response.data.npid),
+				name: response.data.username,
+				email: `${response.data.username}@ncacc.ai`,
+				startup: { npid: response.data.npid }
+			})
 			if (remember) localStorage.setItem('ncacc_remember', '1')
 			// simulate token expiry in 15 minutes
 			const exp = Date.now() + 15 * 60 * 1000
 			localStorage.setItem(EXP_KEY, String(exp))
+			console.log('[Auth] Login successful for user:', response.data.username)
 		} else {
-			throw new Error('Invalid code')
+			console.error('[Auth] Login failed:', response.error)
+			throw new Error(response.error || 'Invalid code')
 		}
 	}
 

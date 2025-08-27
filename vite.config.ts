@@ -9,6 +9,24 @@ export default defineConfig({
 	},
 	server: {
 		port: 5173,
+		proxy: {
+			'/api/v1': {
+				target: 'https://dev.socap.ai',
+				changeOrigin: true,
+				secure: false,
+				configure: (proxy, options) => {
+					proxy.on('proxyReq', (proxyReq, req, res) => {
+						console.log('[Proxy]', req.method, req.url, '->', options.target + proxyReq.path);
+					});
+					proxy.on('proxyRes', (proxyRes, req, res) => {
+						console.log('[Proxy] Response:', proxyRes.statusCode, 'from', req.url);
+					});
+					proxy.on('error', (err, req, res) => {
+						console.error('[Proxy] Error:', err);
+					});
+				}
+			}
+		}
 	}
 })
 

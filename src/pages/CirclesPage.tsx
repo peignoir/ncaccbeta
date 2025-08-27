@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '../auth/AuthContext'
 import { api } from '../lib/api'
 import CircleMemberModal from '../components/CircleMemberModal'
+import unifiedApi from '../lib/unifiedApi'
+import ApiConfigManager from '../lib/apiConfig'
 
 type Member = {
 	id: string
@@ -61,21 +63,31 @@ export default function CirclesPage() {
 
 	const loadCircles = async () => {
 		try {
-			const data = await api.get('/api/circles')
-			setCircles(data)
+			console.log('[CirclesPage] Loading circles with API mode:', ApiConfigManager.getMode())
+			
+			const response = await unifiedApi.getCircles()
+			console.log('[CirclesPage] Unified API response:', response)
+			
+			if (!response.success || !response.data) {
+				throw new Error(response.error || 'Failed to load circles')
+			}
+			
+			setCircles(response.data)
+			console.log(`[CirclesPage] Loaded ${response.data.length} circles`)
 			
 			// Find user's circle
-			const userCircle = data.find((circle: Circle) => 
+			const userCircle = response.data.find((circle: Circle) => 
 				circle.members.some((member: Member) => 
 					member.name === user?.name || 
 					member.startup === user?.startup?.name
 				)
 			)
 			if (userCircle) {
+				console.log('[CirclesPage] Found user circle:', userCircle.id)
 				setMyCircle(userCircle)
 			}
 		} catch (error) {
-			console.error('Failed to load circles:', error)
+			console.error('[CirclesPage] Failed to load circles:', error)
 		} finally {
 			setLoading(false)
 		}

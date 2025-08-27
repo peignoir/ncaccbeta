@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../auth/AuthContext'
 import { api } from '../lib/api'
+import unifiedApi from '../lib/unifiedApi'
+import ApiConfigManager from '../lib/apiConfig'
 
 type Startup = {
 	id: string
@@ -68,15 +70,24 @@ export default function ProgressPage() {
 
 	const loadStartups = async () => {
 		try {
-			const data = await api.get('/api/startups')
-			const processedData = data.map((s: any) => ({
+			console.log('[ProgressPage] Loading startups with API mode:', ApiConfigManager.getMode())
+			
+			const response = await unifiedApi.getStartups()
+			console.log('[ProgressPage] Unified API response:', response)
+			
+			if (!response.success || !response.data) {
+				throw new Error(response.error || 'Failed to load startups')
+			}
+			
+			const processedData = response.data.map((s: any) => ({
 				...s,
-				progress: s.current_progress != null ? Math.round(s.current_progress * 100) : (s.progress || 0),
+				progress: s.progress_percent || s.current_progress != null ? Math.round(s.current_progress * 100) : (s.progress || 0),
 				stealth: s.stealth === true || s.stealth === 'true' || s.stealth === '1',
 				contact_me: s.contact_me !== false && s.contact_me !== 'false' && s.contact_me !== '0',
 				name: s.startup_name || s.name || 'Unknown Startup',
-				founder_name: s.founder_name || s.founder || s.name || 'Unknown Founder'
+				founder_name: s.username || s.founder_name || s.founder || s.name || 'Unknown Founder'
 			}))
+			console.log(`[ProgressPage] Processed ${processedData.length} startups`)
 			setStartups(processedData)
 			
 			// Find user's startup
@@ -103,6 +114,11 @@ export default function ProgressPage() {
 	const handleSave = async (field: string) => {
 		if (!myStartup) return
 		
+		// Don't allow editing in Real API mode
+		if (ApiConfigManager.getMode() === 'real') {
+			console.log('[ProgressPage] Editing disabled in Real API mode')
+			return
+		}
 		
 		try {
 			const updates: Record<string, any> = {}
@@ -163,10 +179,16 @@ export default function ProgressPage() {
 			}
 			
 			// Save to backend
-			const response = await api.post('/api/startups', { 
-				id: myStartup.npid || myStartup.id, 
-				...updates 
-			})
+			console.log('[ProgressPage] Saving updates with API mode:', ApiConfigManager.getMode())
+			console.log('[ProgressPage] Updates:', updates)
+			
+			const npid = parseInt(myStartup.npid || myStartup.id)
+			const response = await unifiedApi.updateStartup(npid, updates)
+			console.log('[ProgressPage] Update response:', response)
+			
+			if (!response.success) {
+				throw new Error(response.error || 'Failed to save')
+			}
 			
 			// Reload data to get the latest from persistence
 			await loadStartups()
@@ -233,12 +255,19 @@ export default function ProgressPage() {
 				<div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-2xl p-8 shadow-lg">
 					<div className="flex items-center justify-between mb-4">
 						<h2 className="text-3xl font-bold text-gray-900">Your Startup</h2>
-						<button
-							onClick={() => openModal(myStartup)}
-							className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
-						>
-							View Details
-						</button>
+						<div className="flex items-center gap-3">
+							{ApiConfigManager.getMode() === 'real' && (
+								<span className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm">
+									📖 Read-only (Real API)
+								</span>
+							)}
+							<button
+								onClick={() => openModal(myStartup)}
+								className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
+							>
+								View Details
+							</button>
+						</div>
 					</div>
 					
 					<div className="bg-white rounded-xl p-6 shadow-sm">
@@ -537,7 +566,7 @@ export default function ProgressPage() {
 											</button>
 										</>
 									)}
-									{selectedStartup.id === myStartup?.id && editingField !== 'modal' && (
+									{selectedStartup.id === myStartup?.id && editingField !== 'modal' && ApiConfigManager.getMode() !== 'real' && (
 										<button
 											onClick={() => {
 												setEditingField('modal')
