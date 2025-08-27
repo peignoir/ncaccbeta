@@ -80,10 +80,17 @@ export class SocapApiClient {
 
   private async makeRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const config = ApiConfigManager.getConfig();
-    // Use local proxy in development to bypass CORS
+    // Use proxy to bypass CORS
     const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    const baseUrl = isDev ? 'http://localhost:3001' : config.realApiBaseUrl;
-    const url = `${baseUrl}${endpoint}`;
+    let url: string;
+    
+    if (isDev) {
+      // Use local proxy server in development
+      url = `http://localhost:3001${endpoint}`;
+    } else {
+      // Use Vercel serverless function in production
+      url = `/api/socap-proxy?path=${encodeURIComponent(endpoint)}`;
+    }
     
     console.log(`[SocapAPI] Making request to: ${url} (isDev: ${isDev})`);
     console.log('[SocapAPI] Request options:', {
