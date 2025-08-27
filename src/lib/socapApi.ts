@@ -7,14 +7,37 @@ export interface SocapProfile {
 
 export interface SocapContact {
   name: string;
+  email?: string | null;
   telegram_username: string;
-  telegram_id: number;
+  telegram_id: number | string;
 }
 
 export interface SocapPreDetails {
   event_name: string;
   finished: boolean;
   is_graduated: boolean;
+  bio?: string;
+  product?: string;
+  stealth?: boolean;
+  website?: string;
+  customer?: string;
+  traction?: string;
+  long_pitch?: string;
+  motivation?: string;
+  github_repos?: string[] | string;
+  startup_name?: string;
+  founder_country?: string;
+  competitors_urls?: string[] | string;
+  current_progress?: number;
+  why_now_catalyst?: string;
+  problem_statement?: string;
+  value_proposition?: string;
+  current_workaround?: string;
+  key_differentiator?: string;
+  founder_linkedin_url?: string;
+  product_job_to_be_done?: string;
+  business_model_explained?: string;
+  founder_time_commitment_pct?: number | string;
 }
 
 export interface SocapEventData {

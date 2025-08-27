@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Update API Key</title>
+</head>
+<body>
+    <h1>Update API Configuration</h1>
+    <button onclick="updateKey()">Update API Key and Switch to Real Mode</button>
+    <p id="status"></p>
+    
+    <script>
+        function updateKey() {
+            // Set the API mode to real with new API key
+            localStorage.setItem('ncacc_api_mode', 'real');
+            localStorage.setItem('ncacc_api_config', JSON.stringify({
+                mode: 'real',
+                realApiBaseUrl: 'https://dev.socap.ai',
+                apiKey: 'sCERK6PhSbOU6m1HvpyBmg'
+            }));
+            
+            document.getElementById('status').innerText = 'API key updated and switched to Real mode! Now refresh your app.';
+        }
+    </script>
+</body>
+</html>

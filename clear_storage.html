@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clear Storage</title>
+</head>
+<body>
+    <h1>Clear API Configuration</h1>
+    <button onclick="clearStorage()">Clear Storage</button>
+    <p id="status"></p>
+    
+    <script>
+        function clearStorage() {
+            // Clear the old API config with empty key
+            localStorage.removeItem('ncacc_api_config');
+            localStorage.removeItem('ncacc_api_mode');
+            
+            // Set the API mode to real for testing
+            localStorage.setItem('ncacc_api_mode', 'real');
+            localStorage.setItem('ncacc_api_config', JSON.stringify({
+                mode: 'real',
+                realApiBaseUrl: 'https://dev.socap.ai',
+                apiKey: 'rlgFmaj7Q1mj7F8o4-2b5A'
+            }));
+            
+            document.getElementById('status').innerText = 'Storage cleared and API key set! Now refresh your app.';
+        }
+    </script>
+</body>
+</html>

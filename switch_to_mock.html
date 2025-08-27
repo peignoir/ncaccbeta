@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Switch to Mock Mode</title>
+</head>
+<body>
+    <h1>Switch to Mock API Mode</h1>
+    <button onclick="switchToMock()">Switch to Mock Mode</button>
+    <p id="status"></p>
+    
+    <script>
+        function switchToMock() {
+            // Set the API mode to mock
+            localStorage.setItem('ncacc_api_mode', 'mock');
+            localStorage.setItem('ncacc_api_config', JSON.stringify({
+                mode: 'mock',
+                realApiBaseUrl: 'https://dev.socap.ai',
+                apiKey: 'rlgFmaj7Q1mj7F8o4-2b5A'
+            }));
+            
+            document.getElementById('status').innerText = 'Switched to Mock mode! Now refresh your app.';
+        }
+    </script>
+</body>
+</html>

@@ -63,7 +63,8 @@ export default function DebugPage() {
         setUsers(transformedUsers);
       } else {
         // Get data from mock API
-        const data = await unifiedApi.getAllStartups();
+        const response = await unifiedApi.getStartups();
+        const data = response.data || [];
         setRawApiResponse({
           source: 'mock',
           data,
