@@ -104,7 +104,7 @@ export default function LoginPage() {
 							<label className="block text-sm font-medium">Authentication Code</label>
 							<input
 								type="text"
-								placeholder="BASE64 code (e.g., bG9naW46MTAwMA==)"
+								placeholder="BASE64 code (e.g., bG9naW46MTc1MA==)"
 								value={code}
 								onChange={(e) => setCode(e.target.value)}
 								className="w-full rounded-md border border-gray-300 p-3 focus:outline-none focus:ring-2 focus:ring-primary"
@@ -149,9 +149,9 @@ export default function LoginPage() {
 								<p className="font-medium text-blue-600">Mock API Mode</p>
 								<p className="mt-1">Uses local CSV data. Example codes:</p>
 								<ul className="mt-1 space-y-1 text-gray-600">
-									<li>• bG9naW46MTAwMA== (NPID 1000)</li>
-									<li>• bG9naW46MTc1MA== (NPID 1750)</li>
-									<li>• bG9naW46MTAwMQ== (NPID 1001)</li>
+									<li>• bG9naW46MTc1MA== (NPID 1750 - Franck)</li>
+									<li>• bG9naW46MTI3NA== (NPID 1274)</li>
+									<li>• bG9naW46MjM0MQ== (NPID 2341)</li>
 								</ul>
 							</div>
 						) : (
