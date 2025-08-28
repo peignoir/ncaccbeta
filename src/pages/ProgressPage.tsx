@@ -134,11 +134,25 @@ export default function ProgressPage() {
 				}
 			} else {
 				// Mock mode - use existing logic
-				userStartup = processedData.find((s: Startup) => 
-					s.id === user?.startup?.id || 
-					s.npid === user?.startup?.id ||
-					s.founder_email === user?.email
-				);
+				console.log('[ProgressPage] Mock mode - looking for user startup');
+				console.log('[ProgressPage] User data:', user);
+				console.log('[ProgressPage] Looking for npid:', user?.startup?.npid || user?.id);
+				
+				userStartup = processedData.find((s: Startup) => {
+					const matches = s.id === String(user?.startup?.npid) || 
+						s.npid === String(user?.startup?.npid) ||
+						s.id === user?.id ||
+						s.npid === user?.id ||
+						s.founder_email === user?.email;
+					if (matches) {
+						console.log(`[ProgressPage] Found user startup: npid=${s.npid}, id=${s.id}, name=${s.name}`);
+					}
+					return matches;
+				});
+				
+				if (!userStartup) {
+					console.warn('[ProgressPage] No startup found for user in mock mode');
+				}
 			}
 			if (userStartup) {
 				setMyStartup(userStartup)
