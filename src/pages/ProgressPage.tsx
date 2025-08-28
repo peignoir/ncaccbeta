@@ -89,6 +89,7 @@ export default function ProgressPage() {
 				founder_name: s.username || s.founder_name || s.founder || s.name || 'Unknown Founder'
 			}))
 			console.log(`[ProgressPage] Processed ${processedData.length} startups`)
+			console.log('[ProgressPage] All telegram_ids:', processedData.map((s: any) => ({ npid: s.npid, telegram_id: s.telegram_id, name: s.username })))
 			setStartups(processedData)
 			
 			// Find user's startup
@@ -101,21 +102,30 @@ export default function ProgressPage() {
 					try {
 						const decoded = JSON.parse(atob(token));
 						const userTelegramId = decoded.telegram_id;
+						console.log('[ProgressPage] Decoded token:', decoded);
 						console.log('[ProgressPage] Looking for user with telegram_id:', userTelegramId);
 						
-						userStartup = processedData.find((s: Startup) => 
-							String(s.telegram_id) === String(userTelegramId) ||
-							String(s.npid) === String(userTelegramId)
-						);
+						userStartup = processedData.find((s: Startup) => {
+							const matches = String(s.telegram_id) === String(userTelegramId);
+							if (matches) {
+								console.log(`[ProgressPage] Found match! npid=${s.npid}, telegram_id=${s.telegram_id}`);
+							}
+							return matches;
+						});
 						
 						if (!userStartup) {
-							// Also check if npid matches the telegram_id
-							userStartup = processedData.find((s: Startup) => {
-								// Check raw data if available
-								const raw = (s as any).raw;
-								return raw?.contact?.telegram_id && 
-									String(raw.contact.telegram_id) === String(userTelegramId);
-							});
+							console.warn(`[ProgressPage] No startup found for telegram_id ${userTelegramId}`);
+							console.log('[ProgressPage] Available startups:', processedData.map((s: any) => ({
+								npid: s.npid,
+								telegram_id: s.telegram_id,
+								name: s.username
+							})));
+							// Fallback to first startup that matches isCurrentUser flag
+							userStartup = processedData.find((s: any) => s.isCurrentUser === true);
+							if (!userStartup && processedData.length > 0) {
+								console.error('[ProgressPage] WARNING: Using first startup as fallback - this is likely wrong!');
+								userStartup = processedData[0];
+							}
 						}
 					} catch (e) {
 						console.error('[ProgressPage] Failed to decode token:', e);
