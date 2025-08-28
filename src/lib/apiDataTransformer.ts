@@ -56,7 +56,7 @@ export class ApiDataTransformer {
       circle_id: this.generateCircleId(index),
       startup_name: preDetails.startup_name || event.data.event_name || 'Unnamed Startup',
       stealth: preDetails.stealth || false,
-      telegram_id: eventTelegramId || event.contact.telegram_username || '',
+      telegram_id: String(eventTelegramId || event.contact.telegram_username || ''),
       telegram_username: event.contact.telegram_username || '',
       email: event.contact.email || `user${npid}@example.com`,
       isCurrentUser,

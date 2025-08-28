@@ -163,16 +163,58 @@ export class UnifiedApi {
     try {
       // First get the current user's profile to identify them
       let currentUserTelegramId: number | string | undefined;
+      let currentUserProfile: any = null;
       try {
         const profile = await socapApi.getProfile();
         currentUserTelegramId = profile.telegram_id;
+        currentUserProfile = profile;
         console.log('[UnifiedAPI] Current user telegram_id:', currentUserTelegramId);
+        console.log('[UnifiedAPI] Current user profile:', profile);
       } catch (error) {
         console.warn('[UnifiedAPI] Could not get profile for user identification:', error);
       }
       
       const events = await socapApi.getEventList();
       console.log(`[UnifiedAPI] Got ${events.length} events from real API`);
+      
+      // Check if current user exists in events list
+      let userFoundInEvents = false;
+      if (currentUserTelegramId) {
+        userFoundInEvents = events.some(event => 
+          String(event.contact?.telegram_id) === String(currentUserTelegramId)
+        );
+        console.log(`[UnifiedAPI] User ${currentUserTelegramId} found in events: ${userFoundInEvents}`);
+      }
+      
+      // If user not in events but has profile, create a placeholder entry
+      if (currentUserProfile && !userFoundInEvents && currentUserTelegramId) {
+        console.log('[UnifiedAPI] Creating placeholder entry for authenticated user not in events');
+        const placeholderEvent = {
+          contact: {
+            name: currentUserProfile.name || 'Unknown User',
+            telegram_id: currentUserTelegramId,
+            telegram_username: '',
+            email: `user${currentUserTelegramId}@example.com`
+          },
+          data: {
+            event_name: 'New Startup',
+            percent: 0,
+            finished: false,
+            modified: new Date().toISOString(),
+            group: 'venture',
+            pre_details: {
+              event_name: 'New Startup',
+              finished: false,
+              is_graduated: false,
+              startup_name: 'My Startup',
+              stealth: false,
+              contact_me: true
+            }
+          }
+        };
+        events.unshift(placeholderEvent); // Add at beginning to ensure it's processed
+        console.log('[UnifiedAPI] Added placeholder entry for user');
+      }
       
       const transformedData = events.map((event, index) => 
         ApiDataTransformer.transformSocapEventToStartup(event, index, currentUserTelegramId)

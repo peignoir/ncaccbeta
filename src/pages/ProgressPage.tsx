@@ -14,6 +14,7 @@ type Startup = {
 	founder_name?: string
 	founder_email?: string
 	founder_telegram?: string
+	telegram_id?: string
 	founder_linkedin_url?: string
 	location?: string
 	founder_city?: string
