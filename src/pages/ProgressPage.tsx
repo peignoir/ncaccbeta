@@ -82,6 +82,7 @@ export default function ProgressPage() {
 			
 			const processedData = response.data.map((s: any) => ({
 				...s,
+				id: String(s.npid || s.id), // Ensure we have an id field for compatibility
 				progress: s.progress_percent || s.current_progress != null ? Math.round(s.current_progress * 100) : (s.progress || 0),
 				stealth: s.stealth === true || s.stealth === 'true' || s.stealth === '1',
 				contact_me: s.contact_me !== false && s.contact_me !== 'false' && s.contact_me !== '0',
@@ -248,8 +249,11 @@ export default function ProgressPage() {
 
 	const openModal = (startup: Startup) => {
 		if (startup.stealth && startup.id !== myStartup?.id) return
-		// Always use the latest startup data
-		const latestStartup = startups.find(s => s.id === startup.id) || startup
+		// Always use the latest startup data - check both id and npid
+		const latestStartup = startups.find(s => 
+			(s.id && s.id === startup.id) || 
+			(s.npid && s.npid === startup.npid)
+		) || startup
 		
 		
 		setSelectedStartup(latestStartup)
