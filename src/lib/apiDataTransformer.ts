@@ -31,11 +31,9 @@ export class ApiDataTransformer {
   static transformSocapEventToStartup(event: SocapEvent, index: number, currentUserTelegramId?: number | string): AppStartup {
     console.log('[Transformer] Transforming Socap event to startup:', event);
     
-    // Use a unique npid based on telegram_id if available, otherwise use index
+    // Use index-based npid for consistency
     const eventTelegramId = event.contact?.telegram_id;
-    const npid = eventTelegramId ? 
-      (typeof eventTelegramId === 'string' ? parseInt(eventTelegramId) || (1000 + index) : eventTelegramId) :
-      (1000 + index);
+    const npid = 1000 + index;
     
     const house = this.determineHouse(event.data.group);
     const progress = Math.round(event.data.percent);

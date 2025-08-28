@@ -177,43 +177,19 @@ export class UnifiedApi {
       const events = await socapApi.getEventList();
       console.log(`[UnifiedAPI] Got ${events.length} events from real API`);
       
-      // Check if current user exists in events list
-      let userFoundInEvents = false;
+      // Log to help debug user matching
       if (currentUserTelegramId) {
-        userFoundInEvents = events.some(event => 
+        const userFoundInEvents = events.some(event => 
           String(event.contact?.telegram_id) === String(currentUserTelegramId)
         );
         console.log(`[UnifiedAPI] User ${currentUserTelegramId} found in events: ${userFoundInEvents}`);
-      }
-      
-      // If user not in events but has profile, create a placeholder entry
-      if (currentUserProfile && !userFoundInEvents && currentUserTelegramId) {
-        console.log('[UnifiedAPI] Creating placeholder entry for authenticated user not in events');
-        const placeholderEvent = {
-          contact: {
-            name: currentUserProfile.name || 'Unknown User',
-            telegram_id: currentUserTelegramId,
-            telegram_username: '',
-            email: `user${currentUserTelegramId}@example.com`
-          },
-          data: {
-            event_name: 'New Startup',
-            percent: 0,
-            finished: false,
-            modified: new Date().toISOString(),
-            group: 'venture',
-            pre_details: {
-              event_name: 'New Startup',
-              finished: false,
-              is_graduated: false,
-              startup_name: 'My Startup',
-              stealth: false,
-              contact_me: true
-            }
-          }
-        };
-        events.unshift(placeholderEvent); // Add at beginning to ensure it's processed
-        console.log('[UnifiedAPI] Added placeholder entry for user');
+        
+        if (userFoundInEvents) {
+          const userEventIndex = events.findIndex(event => 
+            String(event.contact?.telegram_id) === String(currentUserTelegramId)
+          );
+          console.log(`[UnifiedAPI] User found at index ${userEventIndex}, will have npid ${1000 + userEventIndex}`);
+        }
       }
       
       const transformedData = events.map((event, index) => 
