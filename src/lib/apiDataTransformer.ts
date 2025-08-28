@@ -28,15 +28,24 @@ export interface AppStartup {
 }
 
 export class ApiDataTransformer {
-  static transformSocapEventToStartup(event: SocapEvent, index: number): AppStartup {
+  static transformSocapEventToStartup(event: SocapEvent, index: number, currentUserTelegramId?: number | string): AppStartup {
     console.log('[Transformer] Transforming Socap event to startup:', event);
     
-    const npid = 1000 + index;
+    // Use a unique npid based on telegram_id if available, otherwise use index
+    const eventTelegramId = event.contact?.telegram_id;
+    const npid = eventTelegramId ? 
+      (typeof eventTelegramId === 'string' ? parseInt(eventTelegramId) || (1000 + index) : eventTelegramId) :
+      (1000 + index);
+    
     const house = this.determineHouse(event.data.group);
     const progress = Math.round(event.data.percent);
     
     // Extract all available data from pre_details
     const preDetails = event.data.pre_details || {};
+    
+    // Check if this is the current user's startup
+    const isCurrentUser = currentUserTelegramId && 
+      String(eventTelegramId) === String(currentUserTelegramId);
     
     const startup: AppStartup = {
       npid,
@@ -47,8 +56,10 @@ export class ApiDataTransformer {
       circle_id: this.generateCircleId(index),
       startup_name: preDetails.startup_name || event.data.event_name || 'Unnamed Startup',
       stealth: preDetails.stealth || false,
-      telegram_id: event.contact.telegram_username || '',
+      telegram_id: eventTelegramId || event.contact.telegram_username || '',
+      telegram_username: event.contact.telegram_username || '',
       email: event.contact.email || `user${npid}@example.com`,
+      isCurrentUser,
       linkedin_url: preDetails.founder_linkedin_url || '',
       contact_me: true,
       progress_percent: progress,

@@ -91,11 +91,43 @@ export default function ProgressPage() {
 			setStartups(processedData)
 			
 			// Find user's startup
-			const userStartup = processedData.find((s: Startup) => 
-				s.id === user?.startup?.id || 
-				s.npid === user?.startup?.id ||
-				s.founder_email === user?.email
-			)
+			// In Real API mode, match by telegram_id from the auth token
+			let userStartup;
+			if (ApiConfigManager.getMode() === 'real') {
+				// Try to decode the auth token to get telegram_id
+				const token = localStorage.getItem('auth_token');
+				if (token) {
+					try {
+						const decoded = JSON.parse(atob(token));
+						const userTelegramId = decoded.telegram_id;
+						console.log('[ProgressPage] Looking for user with telegram_id:', userTelegramId);
+						
+						userStartup = processedData.find((s: Startup) => 
+							String(s.telegram_id) === String(userTelegramId) ||
+							String(s.npid) === String(userTelegramId)
+						);
+						
+						if (!userStartup) {
+							// Also check if npid matches the telegram_id
+							userStartup = processedData.find((s: Startup) => {
+								// Check raw data if available
+								const raw = (s as any).raw;
+								return raw?.contact?.telegram_id && 
+									String(raw.contact.telegram_id) === String(userTelegramId);
+							});
+						}
+					} catch (e) {
+						console.error('[ProgressPage] Failed to decode token:', e);
+					}
+				}
+			} else {
+				// Mock mode - use existing logic
+				userStartup = processedData.find((s: Startup) => 
+					s.id === user?.startup?.id || 
+					s.npid === user?.startup?.id ||
+					s.founder_email === user?.email
+				);
+			}
 			if (userStartup) {
 				setMyStartup(userStartup)
 				setEditValues({

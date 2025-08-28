@@ -71,36 +71,39 @@ export class UnifiedApi {
     }
   }
 
-  private async realLogin(code: string): Promise<UnifiedApiResponse<{ token: string; npid: number; username: string }>> {
+  private async realLogin(code: string): Promise<UnifiedApiResponse<{ token: string; npid: number; username: string; telegram_id?: number | string }>> {
     console.log('[UnifiedAPI] Performing real API login with token:', code);
     
     try {
-      // For real API, we'll try to get the profile to verify authentication
-      // The API key is already configured, so we just need to test the connection
+      // Get the user profile to identify the logged-in user
       console.log('[UnifiedAPI] Testing Socap API connection for authentication');
       
       const profile = await socapApi.getProfile();
       console.log('[UnifiedAPI] Successfully authenticated with Socap API, profile:', profile);
       
-      // Generate a session token based on the profile
-      const npid = profile.telegram_id || 1000;
+      // Store profile data for later matching
+      const telegram_id = profile.telegram_id;
       const username = profile.name || 'Socap User';
       
+      // We'll use telegram_id for matching with events list
+      // The actual npid will be determined when loading startups
       const token = btoa(JSON.stringify({ 
-        npid,
+        telegram_id,
         username,
         exp: Date.now() + 15 * 60 * 1000,
-        apiMode: 'real'
+        apiMode: 'real',
+        profile
       }));
 
-      console.log(`[UnifiedAPI] Created session for user: ${username} (NPID: ${npid})`);
+      console.log(`[UnifiedAPI] Created session for user: ${username} (Telegram ID: ${telegram_id})`);
 
       return {
         success: true,
         data: {
           token,
-          npid,
-          username
+          npid: 1000, // Temporary, will be matched later
+          username,
+          telegram_id
         },
         source: 'real'
       };
@@ -158,11 +161,21 @@ export class UnifiedApi {
     console.log('[UnifiedAPI] Getting real API startups');
     
     try {
+      // First get the current user's profile to identify them
+      let currentUserTelegramId: number | string | undefined;
+      try {
+        const profile = await socapApi.getProfile();
+        currentUserTelegramId = profile.telegram_id;
+        console.log('[UnifiedAPI] Current user telegram_id:', currentUserTelegramId);
+      } catch (error) {
+        console.warn('[UnifiedAPI] Could not get profile for user identification:', error);
+      }
+      
       const events = await socapApi.getEventList();
       console.log(`[UnifiedAPI] Got ${events.length} events from real API`);
       
       const transformedData = events.map((event, index) => 
-        ApiDataTransformer.transformSocapEventToStartup(event, index)
+        ApiDataTransformer.transformSocapEventToStartup(event, index, currentUserTelegramId)
       );
       
       const existingData = mockPersistence.getAllStartups();
