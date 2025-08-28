@@ -97,7 +97,7 @@ export default function ProgressPage() {
 			let userStartup;
 			if (ApiConfigManager.getMode() === 'real') {
 				// Try to decode the auth token to get telegram_id
-				const token = localStorage.getItem('auth_token');
+				const token = localStorage.getItem('ncacc_token');
 				if (token) {
 					try {
 						const decoded = JSON.parse(atob(token));
