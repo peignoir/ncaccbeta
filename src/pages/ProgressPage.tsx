@@ -329,7 +329,9 @@ export default function ProgressPage() {
 							</div>
 							<div className="flex items-center gap-4">
 								<div className="text-right">
-									<div className="text-2xl font-bold text-indigo-600">{myStartup.progress}%</div>
+									<div className="text-2xl font-bold text-indigo-600">
+										{isNaN(myStartup.progress) || myStartup.progress === null || myStartup.progress === undefined ? 'N/A' : `${myStartup.progress}%`}
+									</div>
 									<div className="text-sm text-gray-500">Progress</div>
 								</div>
 								{myStartup.house && (
@@ -347,7 +349,9 @@ export default function ProgressPage() {
 					</div>
 					<div className="mt-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg p-4 border border-indigo-200">
 						<p className="text-indigo-900 font-semibold italic">
-							💪 {myStartup.progress >= 80 
+							💪 {isNaN(myStartup.progress) || myStartup.progress === null || myStartup.progress === undefined
+								? `Let's get started! This week: Validate your idea with 5 potential customers.`
+								: myStartup.progress >= 80 
 								? `No Cap: Amazing progress at ${myStartup.progress}%! This week: Close 2 deals and prepare for launch.`
 								: myStartup.progress >= 60
 								? `No Cap: Strong momentum at ${myStartup.progress}%! This week: Talk to 5 customers and iterate on their feedback.`
@@ -481,12 +485,12 @@ export default function ProgressPage() {
 																startup.progress >= 40 ? 'bg-yellow-500' :
 																'bg-red-500'
 															}`}
-															style={{ width: `${startup.progress}%` }}
+															style={{ width: `${isNaN(startup.progress) || startup.progress === null || startup.progress === undefined ? 0 : startup.progress}%` }}
 														/>
 													</div>
 												</div>
 												<span className="text-sm font-semibold text-gray-700 w-12">
-													{startup.progress}%
+													{isNaN(startup.progress) || startup.progress === null || startup.progress === undefined ? 'N/A' : `${startup.progress}%`}
 												</span>
 											</div>
 										</td>
@@ -733,12 +737,12 @@ export default function ProgressPage() {
 												<div className="w-full bg-gray-200 rounded-full h-4">
 													<div
 														className="bg-gradient-to-r from-indigo-500 to-purple-600 h-4 rounded-full transition-all"
-														style={{ width: `${selectedStartup.progress}%` }}
+														style={{ width: `${isNaN(selectedStartup.progress) || selectedStartup.progress === null || selectedStartup.progress === undefined ? 0 : selectedStartup.progress}%` }}
 													/>
 												</div>
 											</div>
 											<span className="text-xl font-bold text-indigo-600">
-												{selectedStartup.progress}%
+												{isNaN(selectedStartup.progress) || selectedStartup.progress === null || selectedStartup.progress === undefined ? 'N/A' : `${selectedStartup.progress}%`}
 											</span>
 										</div>
 									</div>
