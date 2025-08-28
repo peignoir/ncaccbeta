@@ -236,6 +236,44 @@ export function installMockApi() {
 			console.log('Handling API call:', url)
 			try {
 				// route handling
+				if (url === '/api/login' && init?.method === 'POST') {
+					const body = init?.body ? JSON.parse(init.body as string) : {}
+					console.log('Login request with code:', body.code)
+					
+					const startups = await loadStartups()
+					
+					// Try to decode the login code
+					let decoded = ''
+					try {
+						decoded = atob(body.code)
+					} catch {
+						decoded = body.code
+					}
+					
+					// Extract NPID from decoded string (format: "login:1750")
+					const match = decoded.match(/login:(\d+)/)
+					if (match) {
+						const npid = match[1]
+						const startup = startups.find(s => String(s.npid) === npid || String(s.id) === npid)
+						
+						if (startup) {
+							const token = btoa(JSON.stringify({
+								npid: startup.npid,
+								username: startup.username || startup.founder_name || startup.name,
+								exp: Date.now() + 15 * 60 * 1000
+							}))
+							
+							return json({
+								token,
+								npid: startup.npid,
+								username: startup.username || startup.founder_name || startup.name
+							})
+						}
+					}
+					
+					return json({ message: 'Invalid login code' }, 401)
+				}
+				
 				if (url === '/api/auth/verify' && init?.method !== 'GET') {
 					const body = init?.body ? JSON.parse(init.body as string) : {}
 					console.log('Auth verify request with code:', body.code)
@@ -312,6 +350,39 @@ export function installMockApi() {
 				}
 
 				if (url.startsWith('/api/startups')) {
+					// Handle GET for fetching all startups
+					if (!init?.method || init?.method === 'GET') {
+						const startups = await loadStartups()
+						return json(startups)
+					}
+					
+					// Handle PATCH for individual startup updates (e.g., /api/startups/1750)
+					if (init?.method === 'PATCH') {
+						try {
+							const urlParts = url.split('/')
+							const npid = urlParts[urlParts.length - 1]
+							const body = init?.body ? JSON.parse(init.body as string) : {}
+							
+							console.log(`Updating startup ${npid} with:`, body)
+							
+							// Get current data
+							const startups = await loadStartups()
+							const startup = startups.find(s => String(s.npid) === npid || String(s.id) === npid)
+							
+							if (!startup) {
+								return json({ message: 'Startup not found' }, 404)
+							}
+							
+							// Apply updates using mockPersistence
+							const updated = { ...startup, ...body }
+							mockPersistence.saveStartup(String(npid), updated)
+							
+							return json(updated)
+						} catch (e: any) {
+							return json({ message: e?.message || 'Update failed' }, 500)
+						}
+					}
+					
 					// Handle POST for updates
 					if (init?.method === 'POST' || init?.method === 'PUT') {
 						try {
