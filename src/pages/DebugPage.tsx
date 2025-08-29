@@ -180,7 +180,26 @@ export default function DebugPage() {
           {/* Users List */}
           <div className="bg-white rounded-lg shadow-sm border">
             <div className="p-4 border-b">
-              <h2 className="font-semibold">Users List</h2>
+              <div className="flex items-start justify-between">
+                <h2 className="font-semibold">Users List</h2>
+                {apiMode === 'real' && apiRequests.length > 0 && (
+                  <div className="text-xs space-y-1">
+                    {apiRequests.map((req, idx) => (
+                      <div key={idx} className="flex items-center gap-2">
+                        <span className="px-1 py-0.5 bg-blue-100 text-blue-700 rounded font-mono">
+                          {req.method}
+                        </span>
+                        <span className="text-gray-500 truncate max-w-[200px]" title={req.url}>
+                          {req.url.replace(/.*\/api\/v1/, '/api/v1')}
+                        </span>
+                        {req.duration && (
+                          <span className="text-gray-400">{req.duration}ms</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
             <div className="max-h-[600px] overflow-y-auto">
               {users.map((user, idx) => (
@@ -206,9 +225,17 @@ export default function DebugPage() {
           {/* User Details / Raw JSON */}
           <div className="bg-white rounded-lg shadow-sm border">
             <div className="p-4 border-b">
-              <h2 className="font-semibold">
-                {selectedUser ? `Details: ${getUserDisplayName(selectedUser)}` : 'Select a user'}
-              </h2>
+              <div className="flex items-start justify-between">
+                <h2 className="font-semibold">
+                  {selectedUser ? `Details: ${getUserDisplayName(selectedUser)}` : 'Select a user'}
+                </h2>
+                {apiMode === 'real' && selectedUser && (
+                  <div className="text-xs text-gray-500">
+                    <div>From: /api/v1/agent/agent_user/event-list</div>
+                    <div>Index: {users.findIndex(u => u === selectedUser)}</div>
+                  </div>
+                )}
+              </div>
             </div>
             <div className="p-4">
               {selectedUser ? (

@@ -1,13 +1,20 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from './AuthContext'
 import ApiConfigManager from '../lib/apiConfig'
 
 export default function LoginPage() {
 	const { isAuthenticated, login } = useAuth()
 	const navigate = useNavigate()
+	const [searchParams] = useSearchParams()
 	const [code, setCode] = useState('')
 	const [apiKey, setApiKey] = useState(() => {
+		// Check URL params first, then localStorage
+		const urlApiKey = searchParams.get('apikey') || searchParams.get('api_key')
+		if (urlApiKey) {
+			console.log('[LoginPage] Found API key in URL parameters')
+			return urlApiKey
+		}
 		// Try to load saved API key from localStorage
 		const saved = localStorage.getItem('ncacc_api_key')
 		return saved || ''
@@ -30,6 +37,41 @@ export default function LoginPage() {
 	useEffect(() => {
 		if (isAuthenticated) navigate('/')
 	}, [isAuthenticated, navigate])
+
+	// Auto-login when API key is provided in URL
+	useEffect(() => {
+		const urlApiKey = searchParams.get('apikey') || searchParams.get('api_key')
+		const autoLogin = searchParams.get('auto') === 'true' || searchParams.get('autologin') === 'true'
+		
+		if (urlApiKey && autoLogin && !isAuthenticated && !loading) {
+			console.log('[LoginPage] Auto-login with API key from URL')
+			// Set to real API mode if API key is provided
+			if (apiMode !== 'real') {
+				ApiConfigManager.setMode('real')
+				setApiMode('real')
+			}
+			// Trigger login automatically
+			handleAutoLogin(urlApiKey)
+		}
+	}, [searchParams, isAuthenticated, loading])
+
+	const handleAutoLogin = async (urlApiKey: string) => {
+		try {
+			setLoading(true)
+			setError(null)
+			
+			// Update the API configuration with the URL key
+			ApiConfigManager.updateConfig({ apiKey: urlApiKey.trim() })
+			localStorage.setItem('ncacc_api_key', urlApiKey.trim())
+			
+			console.log('[LoginPage] Attempting auto-login with API key from URL')
+			await login('api-auth', true) // Remember = true for auto-login
+		} catch (err) {
+			setError('Auto-login failed. Please try logging in manually.')
+		} finally {
+			setLoading(false)
+		}
+	}
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault()
@@ -97,6 +139,14 @@ export default function LoginPage() {
 					<div className="text-xs text-gray-400 mt-2">
 						{apiMode === 'mock' ? 'Using Local Mock Data' : 'Using Socap.dev API'}
 					</div>
+					{(searchParams.get('apikey') || searchParams.get('api_key')) && (
+						<div className="mt-3 p-2 bg-blue-50 rounded text-xs text-blue-700">
+							API key provided via URL
+							{searchParams.get('auto') === 'true' || searchParams.get('autologin') === 'true' 
+								? ' - Auto-login enabled' 
+								: ' - Click login to authenticate'}
+						</div>
+					)}
 				</div>
 				<form onSubmit={handleSubmit} className="space-y-4">
 					{apiMode === 'mock' ? (
