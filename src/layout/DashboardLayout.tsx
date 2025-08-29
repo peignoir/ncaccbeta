@@ -1,9 +1,11 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
+import ApiConfigManager from '../lib/apiConfig'
 
 export default function DashboardLayout() {
 	const { user, logout } = useAuth()
 	const navigate = useNavigate()
+	const isRealApiMode = ApiConfigManager.isRealApiMode()
 
 	const handleLogout = () => {
 		logout()
@@ -35,7 +37,7 @@ export default function DashboardLayout() {
 					<div className="max-w-6xl mx-auto px-4 flex gap-4">
 						<Tab to="/progress" label="Your Startup" />
 						<Tab to="/circles" label="Circles" />
-						<Tab to="/debug" label="Debug" />
+						{isRealApiMode && <Tab to="/debug" label="Debug" />}
 					</div>
 				</nav>
 			</header>

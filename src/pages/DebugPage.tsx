@@ -14,6 +14,17 @@ interface UserData {
   [key: string]: any;
 }
 
+interface ApiRequest {
+  url: string;
+  method: string;
+  headers?: Record<string, string>;
+  timestamp: string;
+  duration?: number;
+  status?: number;
+  response?: any;
+  error?: string;
+}
+
 export default function DebugPage() {
   const [users, setUsers] = useState<UserData[]>([]);
   const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
@@ -21,27 +32,70 @@ export default function DebugPage() {
   const [error, setError] = useState<string | null>(null);
   const [apiMode] = useState(ApiConfigManager.getMode());
   const [rawApiResponse, setRawApiResponse] = useState<any>(null);
+  const [apiRequests, setApiRequests] = useState<ApiRequest[]>([]);
 
   useEffect(() => {
     loadUsers();
   }, []);
 
+  const trackApiCall = async (name: string, url: string, method: string, apiCall: () => Promise<any>) => {
+    const startTime = Date.now();
+    const request: ApiRequest = {
+      url,
+      method,
+      timestamp: new Date().toISOString(),
+      headers: {
+        'X-API-KEY': ApiConfigManager.getConfig().apiKey?.substring(0, 10) + '***',
+        'Content-Type': 'application/json'
+      }
+    };
+    
+    try {
+      const response = await apiCall();
+      request.duration = Date.now() - startTime;
+      request.status = 200;
+      request.response = response;
+      setApiRequests(prev => [...prev, request]);
+      return response;
+    } catch (err) {
+      request.duration = Date.now() - startTime;
+      request.error = err instanceof Error ? err.message : 'Unknown error';
+      setApiRequests(prev => [...prev, request]);
+      throw err;
+    }
+  };
+
   const loadUsers = async () => {
     try {
       setLoading(true);
       setError(null);
+      setApiRequests([]);
       
       if (apiMode === 'real') {
-        // Get raw data from Socap API
+        // Get raw data from Socap API with request tracking
+        const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const baseUrl = isDev ? 'http://localhost:3001' : '/api/socap-proxy';
+        
         const [profile, events] = await Promise.all([
-          socapApi.getProfile().catch(err => ({ error: err.message })),
-          socapApi.getEventList().catch(err => [])
+          trackApiCall(
+            'Profile',
+            `${baseUrl}/api/v1/agent/agent_user/profile`,
+            'GET',
+            () => socapApi.getProfile()
+          ).catch(err => ({ error: err.message })),
+          trackApiCall(
+            'Event List',
+            `${baseUrl}/api/v1/agent/agent_user/event-list`,
+            'GET',
+            () => socapApi.getEventList()
+          ).catch(err => [])
         ]);
         
         setRawApiResponse({
           profile,
           events,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
+          apiCalls: apiRequests.length
         });
         
         // Transform for display
@@ -193,11 +247,63 @@ export default function DebugPage() {
         </div>
       )}
 
+      {/* API Requests Made */}
+      {apiMode === 'real' && apiRequests.length > 0 && (
+        <div className="mt-6 bg-white rounded-lg shadow-sm border">
+          <div className="p-4 border-b">
+            <h2 className="font-semibold">API Requests Made</h2>
+          </div>
+          <div className="p-4 space-y-4">
+            {apiRequests.map((request, idx) => (
+              <div key={idx} className="border rounded p-3 bg-gray-50">
+                <div className="flex items-start justify-between mb-2">
+                  <div>
+                    <span className="inline-block px-2 py-1 text-xs font-mono bg-blue-100 text-blue-700 rounded">
+                      {request.method}
+                    </span>
+                    <span className="ml-2 text-sm font-mono">{request.url}</span>
+                  </div>
+                  {request.duration && (
+                    <span className="text-xs text-gray-500">{request.duration}ms</span>
+                  )}
+                </div>
+                
+                {request.headers && (
+                  <div className="mt-2">
+                    <div className="text-xs font-semibold text-gray-600 mb-1">Headers:</div>
+                    <div className="text-xs font-mono bg-white p-2 rounded">
+                      {Object.entries(request.headers).map(([key, value]) => (
+                        <div key={key}>
+                          <span className="text-gray-500">{key}:</span> {value}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                <div className="mt-2">
+                  <div className="text-xs font-semibold text-gray-600 mb-1">
+                    {request.error ? 'Error:' : 'Response:'}
+                  </div>
+                  <pre className="text-xs font-mono bg-white p-2 rounded overflow-x-auto max-h-40">
+                    {request.error || JSON.stringify(request.response, null, 2)}
+                  </pre>
+                </div>
+                
+                <div className="mt-1 text-xs text-gray-400">
+                  {new Date(request.timestamp).toLocaleTimeString()}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Raw API Response */}
       {rawApiResponse && (
         <div className="mt-6 bg-white rounded-lg shadow-sm border">
           <div className="p-4 border-b">
-            <h2 className="font-semibold">Raw API Response</h2>
+            <h2 className="font-semibold">Raw API Response Summary</h2>
           </div>
           <div className="p-4">
             <pre className="bg-gray-50 p-3 rounded text-xs overflow-x-auto max-h-96">
