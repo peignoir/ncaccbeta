@@ -1,4 +1,4 @@
-import { SocapEvent, SocapProfile, SocapPreDetails } from './socapApi';
+import { SocapEvent, SocapProfile, SocapDetails } from './socapApi';
 
 export interface AppStartup {
   npid: number;
@@ -38,8 +38,8 @@ export class ApiDataTransformer {
     const house = this.determineHouse(event.data.group);
     const progress = Math.round(event.data.percent);
     
-    // Extract all available data from pre_details
-    const preDetails = event.data.pre_details || {};
+    // Extract all available data from details
+    const details = event.data.details || {};
     
     // Check if this is the current user's startup
     const isCurrentUser = currentUserTelegramId && 
@@ -52,36 +52,36 @@ export class ApiDataTransformer {
       wave_id: 1,
       house,
       circle_id: this.generateCircleId(index),
-      startup_name: preDetails.startup_name || event.data.event_name || 'Unnamed Startup',
-      stealth: preDetails.stealth || false,
+      startup_name: details.startup_name || event.data.event_name || 'Unnamed Startup',
+      stealth: details.stealth || false,
       telegram_id: String(eventTelegramId || event.contact.telegram_username || ''),
       telegram_username: event.contact.telegram_username || '',
       email: event.contact.email || `user${npid}@example.com`,
       isCurrentUser,
-      linkedin_url: preDetails.founder_linkedin_url || '',
+      linkedin_url: details.founder_linkedin_url || '',
       contact_me: true,
       progress_percent: progress,
       
-      // Add all additional fields from pre_details
-      website: preDetails.website || '',
-      bio: preDetails.bio || '',
-      product: preDetails.product || '',
-      customer: preDetails.customer || '',
-      traction: preDetails.traction || '',
-      long_pitch: preDetails.long_pitch || '',
-      motivation: preDetails.motivation || '',
-      github_repos: preDetails.github_repos || '',
-      founder_country: preDetails.founder_country || '',
-      competitors_urls: preDetails.competitors_urls || '',
-      current_progress: preDetails.current_progress || progress,
-      why_now_catalyst: preDetails.why_now_catalyst || '',
-      problem_statement: preDetails.problem_statement || '',
-      value_proposition: preDetails.value_proposition || '',
-      current_workaround: preDetails.current_workaround || '',
-      key_differentiator: preDetails.key_differentiator || '',
-      business_model_explained: preDetails.business_model_explained || '',
-      product_job_to_be_done: preDetails.product_job_to_be_done || '',
-      founder_time_commitment_pct: preDetails.founder_time_commitment_pct || '',
+      // Add all additional fields from details
+      website: details.website || '',
+      bio: details.bio || '',
+      product: details.product || '',
+      customer: details.customer || '',
+      traction: details.traction || '',
+      long_pitch: details.long_pitch || '',
+      motivation: details.motivation || '',
+      github_repos: details.github_repos || '',
+      founder_country: details.founder_country || '',
+      competitors_urls: details.competitors_urls || '',
+      current_progress: details.current_progress || progress,
+      why_now_catalyst: details.why_now_catalyst || '',
+      problem_statement: details.problem_statement || '',
+      value_proposition: details.value_proposition || '',
+      current_workaround: details.current_workaround || '',
+      key_differentiator: details.key_differentiator || '',
+      business_model_explained: details.business_model_explained || '',
+      product_job_to_be_done: details.product_job_to_be_done || '',
+      founder_time_commitment_pct: details.founder_time_commitment_pct || '',
       check_in_1: progress >= 10,
       check_in_2: progress >= 20,
       check_in_3: progress >= 30,
@@ -107,17 +107,17 @@ export class ApiDataTransformer {
     };
   }
 
-  static transformPreDetailsToProgress(preDetails: SocapPreDetails): {
+  static transformDetailsToProgress(details: SocapDetails): {
     isGraduated: boolean;
     isFinished: boolean;
     eventName: string;
   } {
-    console.log('[Transformer] Transforming pre-event details:', preDetails);
+    console.log('[Transformer] Transforming event details:', details);
     
     return {
-      isGraduated: preDetails.is_graduated,
-      isFinished: preDetails.finished,
-      eventName: preDetails.event_name,
+      isGraduated: details.is_graduated,
+      isFinished: details.finished,
+      eventName: details.event_name,
     };
   }
 

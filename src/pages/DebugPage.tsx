@@ -51,10 +51,10 @@ export default function DebugPage() {
           username: event.contact?.name || 'Unknown',
           telegram_id: event.contact?.telegram_id || event.contact?.telegram_username || '',
           email: event.contact?.email || `user${1000 + idx}@example.com`,
-          startup_name: event.data?.pre_details?.startup_name || event.data?.event_name || 'Unknown',
+          startup_name: event.data?.details?.startup_name || event.data?.event_name || 'Unknown',
           event_name: event.data?.event_name || 'Unknown',
-          website: event.data?.pre_details?.website || '',
-          linkedin: event.data?.pre_details?.founder_linkedin_url || '',
+          website: event.data?.details?.website || '',
+          linkedin: event.data?.details?.founder_linkedin_url || '',
           progress: event.data?.percent || 0,
           graduated: event.data?.is_graduated || false,
           raw: event

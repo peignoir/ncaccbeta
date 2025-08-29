@@ -302,6 +302,26 @@ export class UnifiedApi {
     console.log(`[UnifiedAPI] Getting circles with mode: ${mode}`);
 
     try {
+      // In mock mode or when using production API, use the /api/circles endpoint directly
+      if (mode === 'mock' || !ApiConfigManager.getConfig().apiKey) {
+        console.log('[UnifiedAPI] Using /api/circles endpoint');
+        const response = await fetch('/api/circles');
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch circles: ${response.status}`);
+        }
+        
+        const circles = await response.json();
+        console.log(`[UnifiedAPI] Fetched ${circles.length} circles from API`);
+        
+        return {
+          success: true,
+          data: circles,
+          source: 'mock'
+        };
+      }
+      
+      // In real mode with API key, generate from startups data
       const startupsResponse = await this.getStartups();
       
       if (!startupsResponse.success || !startupsResponse.data) {
@@ -309,12 +329,12 @@ export class UnifiedApi {
       }
 
       const circles = this.generateCirclesFromStartups(startupsResponse.data);
-      console.log(`[UnifiedAPI] Generated ${circles.length} circles`);
+      console.log(`[UnifiedAPI] Generated ${circles.length} circles from startups`);
 
       return {
         success: true,
         data: circles,
-        source: mode === 'mock' ? 'mock' : 'real'
+        source: 'real'
       };
     } catch (error) {
       console.error('[UnifiedAPI] Get circles error:', error);
@@ -329,30 +349,47 @@ export class UnifiedApi {
   private generateCirclesFromStartups(startups: AppStartup[]): any[] {
     console.log('[UnifiedAPI] Generating circles from startups');
     
-    const circleMap = new Map<string, AppStartup[]>();
+    const circleMap = new Map<string, { members: AppStartup[], name?: string, description?: string }>();
     
     startups.forEach(startup => {
-      if (startup.circle_id) {
-        if (!circleMap.has(startup.circle_id)) {
-          circleMap.set(startup.circle_id, []);
-        }
-        circleMap.get(startup.circle_id)!.push(startup);
+      const circleId = startup.circle_id || startup.circle || '1';
+      if (!circleMap.has(circleId)) {
+        circleMap.set(circleId, {
+          members: [],
+          name: startup.circle_name || `Circle ${circleId.replace('circle_', '')}`,
+          description: startup.circle_description || 'A supportive peer group for collaborative learning and accountability.'
+        });
       }
+      circleMap.get(circleId)!.members.push(startup);
     });
 
-    const circles = Array.from(circleMap.entries()).map(([id, members]) => ({
-      id,
-      name: `Circle ${id.split('_')[1]}`,
-      members: members.map(m => ({
-        npid: m.npid,
-        name: m.username,
-        startup_name: m.stealth ? 'Stealth Startup' : m.startup_name,
-        house: m.house,
-        telegram: m.contact_me ? m.telegram_id : undefined,
-        email: m.contact_me ? m.email : undefined,
-        linkedin: m.contact_me ? m.linkedin_url : undefined
+    const circles = Array.from(circleMap.entries()).map(([id, data]) => ({
+      id: id.startsWith('circle_') ? id : `circle_${id}`,
+      name: data.name || `Circle ${id.replace('circle_', '')}`,
+      description: data.description || 'A supportive peer group for collaborative learning and accountability.',
+      members: data.members.map(m => ({
+        id: `m_${m.npid || m.id}`,
+        name: m.username || m.founder_name || 'Unknown Founder',
+        startup: m.stealth ? 'Stealth Startup' : (m.startup_name || 'Unknown Startup'),
+        website: m.website,
+        house: m.house || 'venture',
+        // Include contact info based on contact_me flag
+        email: m.contact_me !== false ? m.email : undefined,
+        telegram: m.contact_me !== false ? (m.telegram_id || m.telegram_username) : undefined,
+        linkedin: m.contact_me !== false ? m.linkedin_url : undefined,
+        // Always include non-contact info
+        bio: m.bio,
+        city: m.founder_city,
+        country: m.founder_country,
+        traction: m.traction,
+        motivation: m.motivation,
+        contact_me: m.contact_me !== false,
+        wave: m.wave_id || 'wave1'
       })),
-      meeting_link: `https://meet.jit.si/ncacc-${id}`
+      insights: [
+        `${data.members.length} founders`,
+        (data.description || '').substring(0, 100) + '...'
+      ]
     }));
 
     console.log(`[UnifiedAPI] Generated ${circles.length} circles with member counts:`, 

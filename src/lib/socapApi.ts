@@ -12,7 +12,7 @@ export interface SocapContact {
   telegram_id: number | string;
 }
 
-export interface SocapPreDetails {
+export interface SocapDetails {
   event_name: string;
   finished: boolean;
   is_graduated: boolean;
@@ -46,7 +46,7 @@ export interface SocapEventData {
   finished: boolean;
   modified: string;
   group: string;
-  pre_details: SocapPreDetails;
+  details: SocapDetails;
 }
 
 export interface SocapEvent {
@@ -137,20 +137,20 @@ export class SocapApiClient {
     return events;
   }
 
-  async getPreEventDetails(): Promise<SocapPreDetails> {
-    console.log('[SocapAPI] Fetching pre-event details');
+  async getEventDetails(): Promise<SocapDetails> {
+    console.log('[SocapAPI] Fetching event details');
     try {
-      return await this.makeRequest<SocapPreDetails>('/api/v1/agent/agent_user/pre-event-details');
+      return await this.makeRequest<SocapDetails>('/api/v1/agent/agent_user/event-details');
     } catch (error) {
-      console.warn('[SocapAPI] Failed to fetch pre-event details, falling back to event list', error);
+      console.warn('[SocapAPI] Failed to fetch event details, falling back to event list', error);
       
       const events = await this.getEventList();
-      if (events.length > 0 && events[0].data.pre_details) {
-        console.log('[SocapAPI] Extracted pre-details from event list');
-        return events[0].data.pre_details;
+      if (events.length > 0 && events[0].data.details) {
+        console.log('[SocapAPI] Extracted details from event list');
+        return events[0].data.details;
       }
       
-      throw new Error('No pre-event details available');
+      throw new Error('No event details available');
     }
   }
 
