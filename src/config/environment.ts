@@ -3,7 +3,8 @@
 
 export const ENV_CONFIG = {
   // Set to 'development' or 'production'
-  environment: 'development' as 'development' | 'production',
+  // This can be overridden by VITE_ENVIRONMENT env variable
+  environment: (import.meta.env.VITE_ENVIRONMENT || 'development') as 'development' | 'production',
   
   // API URLs for different environments
   apiUrls: {
