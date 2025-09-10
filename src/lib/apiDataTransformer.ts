@@ -5,7 +5,7 @@ export interface AppStartup {
   login_code: string;
   username: string;
   wave_id: number;
-  house: 'venture' | 'karma' | 'lifestyle' | 'side';
+  house: 'venture' | 'karma' | 'lifestyle' | 'side' | 'build';
   circle_id?: string;
   startup_name: string;
   stealth: boolean | string;
@@ -139,12 +139,15 @@ export class ApiDataTransformer {
     };
   }
 
-  private static determineHouse(group: string): 'venture' | 'karma' | 'lifestyle' | 'side' {
+  private static determineHouse(group: string): 'venture' | 'karma' | 'lifestyle' | 'side' | 'build' {
     console.log('[Transformer] Determining house from group:', group);
     
     const groupLower = group?.toLowerCase() || '';
     
-    if (groupLower.includes('build') || groupLower.includes('venture') || groupLower.includes('growth')) {
+    if (groupLower.includes('build')) {
+      return 'build' as any; // BUILD HOUSE stays as build
+    }
+    if (groupLower.includes('venture') || groupLower.includes('growth')) {
       return 'venture';
     }
     if (groupLower.includes('karma') || groupLower.includes('impact') || groupLower.includes('social')) {

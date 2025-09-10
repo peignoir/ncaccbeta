@@ -351,6 +351,7 @@ export default function ProgressPage() {
 								</div>
 								{myStartup.house && (
 									<span className={`px-3 py-1 rounded-full text-sm font-medium ${
+										myStartup.house === 'build' ? 'bg-indigo-100 text-indigo-700' :
 										myStartup.house === 'venture' ? 'bg-purple-100 text-purple-700' :
 										myStartup.house === 'lifestyle' ? 'bg-green-100 text-green-700' :
 										myStartup.house === 'side' ? 'bg-blue-100 text-blue-700' :
@@ -405,6 +406,7 @@ export default function ProgressPage() {
 								className="px-3 py-1 border rounded-lg text-sm"
 							>
 								<option value="all">All Houses</option>
+								<option value="build">Build</option>
 								<option value="venture">Venture</option>
 								<option value="lifestyle">Lifestyle</option>
 								<option value="side">Side</option>
@@ -492,6 +494,7 @@ export default function ProgressPage() {
 										<td className="py-4 px-4">
 											{startup.house ? (
 												<span className={`px-2 py-1 rounded-full text-xs font-medium ${
+													startup.house === 'build' ? 'bg-indigo-100 text-indigo-700' :
 													startup.house === 'venture' ? 'bg-purple-100 text-purple-700' :
 													startup.house === 'lifestyle' ? 'bg-green-100 text-green-700' :
 													startup.house === 'side' ? 'bg-blue-100 text-blue-700' :
@@ -925,6 +928,7 @@ export default function ProgressPage() {
 										<p>
 											{selectedStartup.house ? (
 												<span className={`px-2 py-1 rounded-full text-xs font-medium ${
+													selectedStartup.house === 'build' ? 'bg-indigo-100 text-indigo-700' :
 													selectedStartup.house === 'venture' ? 'bg-purple-100 text-purple-700' :
 													selectedStartup.house === 'lifestyle' ? 'bg-green-100 text-green-700' :
 													selectedStartup.house === 'side' ? 'bg-blue-100 text-blue-700' :
@@ -1214,6 +1218,20 @@ export default function ProgressPage() {
 									</div>
 								</div>
 							)}
+							
+							{/* Debug: All Raw Fields */}
+							<div className="border-t pt-6">
+								<details className="group">
+									<summary className="cursor-pointer text-lg font-semibold text-gray-900 mb-4 hover:text-indigo-600">
+										All API Fields (Debug) ▼
+									</summary>
+									<div className="mt-4 bg-gray-50 rounded-lg p-4 max-h-96 overflow-auto">
+										<pre className="text-xs font-mono text-gray-700 whitespace-pre-wrap">
+											{JSON.stringify(selectedStartup, null, 2)}
+										</pre>
+									</div>
+								</details>
+							</div>
 						</div>
 					</div>
 				</div>
