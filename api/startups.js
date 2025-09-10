@@ -173,6 +173,8 @@ export default function handler(req, res) {
 
     // If user is logged in and has a house, filter by default (unless showAll is true)
     if (userHouse && showAll !== 'true') {
+      // Note: The house value from CSV might be different from what the API returns
+      // So we filter by the actual CSV house value
       filtered = filtered.filter(s => s.house === userHouse)
       console.log(`Filtering to user's house (${userHouse}): ${filtered.length} startups`)
     } else if (house && house !== 'all') {

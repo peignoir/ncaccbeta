@@ -209,12 +209,24 @@ export class UnifiedApi {
         ApiDataTransformer.transformSocapEventToStartup(event, index, currentUserTelegramId)
       );
       
-      // No persistence needed
-      const mergedData = transformedData;
+      // Apply house filtering if needed
+      let filteredData = transformedData;
+      
+      if (!options?.showAll && currentUserTelegramId) {
+        // Find the current user's house
+        const currentUserStartup = transformedData.find(s => s.isCurrentUser);
+        const userHouse = currentUserStartup?.house;
+        
+        if (userHouse) {
+          console.log(`[UnifiedAPI] Filtering to user's house: ${userHouse}`);
+          filteredData = transformedData.filter(s => s.house === userHouse);
+          console.log(`[UnifiedAPI] Filtered from ${transformedData.length} to ${filteredData.length} startups`);
+        }
+      }
       
       return {
         success: true,
-        data: ApiDataTransformer.validateAndCleanData(mergedData),
+        data: ApiDataTransformer.validateAndCleanData(filteredData),
         source: 'real'
       };
     } catch (error) {
