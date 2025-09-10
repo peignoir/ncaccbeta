@@ -22,13 +22,22 @@ export default function LoginPage() {
 	const [remember, setRemember] = useState<boolean>(() => localStorage.getItem('ncacc_remember') === '1')
 	const [error, setError] = useState<string | null>(null)
 	const [loading, setLoading] = useState(false)
-	const [apiMode, setApiMode] = useState(ApiConfigManager.getMode())
+	// Always start in 'real' mode by default, hide mock mode completely
+	const [apiMode, setApiMode] = useState(() => {
+		ApiConfigManager.setMode('real')
+		return 'real'
+	})
 	const [showApiToggle, setShowApiToggle] = useState(false)
 
-	// Check if "pofpof" is entered as API key to show the toggle
+	// Check if "pofpof" is entered as API key to enable Mock mode
 	useEffect(() => {
 		if (apiKey.toLowerCase() === 'pofpof') {
 			setShowApiToggle(true)
+			// Automatically switch to Mock mode
+			if (apiMode !== 'mock') {
+				ApiConfigManager.setMode('mock')
+				setApiMode('mock')
+			}
 		}
 	}, [apiKey])
 
@@ -85,12 +94,6 @@ export default function LoginPage() {
 		e.preventDefault()
 		setError(null)
 		
-		// Don't attempt login if "pofpof" is entered - it's just for showing the toggle
-		if (apiKey.toLowerCase() === 'pofpof') {
-			setError('Please select Mock mode or enter a valid API key')
-			return
-		}
-		
 		// Different validation for different API modes
 		if (apiMode === 'mock') {
 			if (!code || !/^[-A-Za-z0-9+/=]+$/.test(code)) {
@@ -98,15 +101,24 @@ export default function LoginPage() {
 				return
 			}
 		} else {
-			// For real API, validate API key
-			if (!apiKey || apiKey.trim().length === 0) {
-				setError('Please enter your API key')
-				return
+			// Skip API key validation if "pofpof" since it auto-switches to Mock mode
+			if (apiKey.toLowerCase() === 'pofpof') {
+				// pofpof enables Mock mode, so we need a BASE64 code
+				if (!code || !/^[-A-Za-z0-9+/=]+$/.test(code)) {
+					setError('Please enter a valid BASE64 code for Mock mode')
+					return
+				}
+			} else {
+				// For real API, validate API key
+				if (!apiKey || apiKey.trim().length === 0) {
+					setError('Please enter your API key')
+					return
+				}
+				// Update the API configuration with user's key
+				console.log('[LoginPage] Setting user API key')
+				ApiConfigManager.updateConfig({ apiKey: apiKey.trim() })
+				localStorage.setItem('ncacc_api_key', apiKey.trim())
 			}
-			// Update the API configuration with user's key
-			console.log('[LoginPage] Setting user API key')
-			ApiConfigManager.updateConfig({ apiKey: apiKey.trim() })
-			localStorage.setItem('ncacc_api_key', apiKey.trim())
 		}
 		
 		try {
