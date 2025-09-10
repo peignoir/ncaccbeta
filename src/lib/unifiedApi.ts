@@ -125,23 +125,33 @@ export class UnifiedApi {
     }
   }
 
-  async getStartups(): Promise<UnifiedApiResponse<AppStartup[]>> {
+  async getStartups(options?: { showAll?: boolean }): Promise<UnifiedApiResponse<AppStartup[]>> {
     const apiKey = ApiConfigManager.getApiKey();
-    console.log(`[UnifiedAPI] Getting startups`);
+    console.log(`[UnifiedAPI] Getting startups`, options);
 
     if (apiKey === 'pofpof') {
       console.log('[UnifiedAPI] Using mock data for pofpof key');
-      return MockDataProvider.getMockStartups();
+      return MockDataProvider.getMockStartups(options);
     } else {
-      return this.getRealStartups();
+      return this.getRealStartups(options);
     }
   }
 
-  private async getMockStartups(): Promise<UnifiedApiResponse<AppStartup[]>> {
-    console.log('[UnifiedAPI] Getting mock startups');
+  private async getMockStartups(options?: { showAll?: boolean }): Promise<UnifiedApiResponse<AppStartup[]>> {
+    console.log('[UnifiedAPI] Getting mock startups', options);
     
     try {
-      const response = await fetch('/api/startups');
+      // Include authorization header if we have a token
+      const headers: HeadersInit = {};
+      const token = localStorage.getItem('ncacc_token');
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      
+      // Add showAll parameter if needed
+      const url = options?.showAll ? '/api/startups?showAll=true' : '/api/startups';
+      
+      const response = await fetch(url, { headers });
       const data = await response.json();
       console.log(`[UnifiedAPI] Mock startups count: ${data.length}`);
       
@@ -160,8 +170,8 @@ export class UnifiedApi {
     }
   }
 
-  private async getRealStartups(): Promise<UnifiedApiResponse<AppStartup[]>> {
-    console.log('[UnifiedAPI] Getting real API startups');
+  private async getRealStartups(options?: { showAll?: boolean }): Promise<UnifiedApiResponse<AppStartup[]>> {
+    console.log('[UnifiedAPI] Getting real API startups', options);
     
     try {
       // First get the current user's profile to identify them

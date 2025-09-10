@@ -64,16 +64,17 @@ export default function ProgressPage() {
 	const [myStartup, setMyStartup] = useState<Startup | null>(null)
 	const [selectedStartup, setSelectedStartup] = useState<Startup | null>(null)
 	const [showModal, setShowModal] = useState(false)
+	const [showAllHouses, setShowAllHouses] = useState(false)
 
 	useEffect(() => {
 		loadStartups()
-	}, [])
+	}, [showAllHouses])
 
 	const loadStartups = async () => {
 		try {
-			console.log('[ProgressPage] Loading startups with API mode:', ApiConfigManager.isMockApiMode() ? "mock" : "real")
+			console.log('[ProgressPage] Loading startups with API mode:', ApiConfigManager.isMockApiMode() ? "mock" : "real", 'showAll:', showAllHouses)
 			
-			const response = await unifiedApi.getStartups()
+			const response = await unifiedApi.getStartups({ showAll: showAllHouses })
 			console.log('[ProgressPage] Unified API response:', response)
 			
 			if (!response.success || !response.data) {
@@ -383,19 +384,33 @@ export default function ProgressPage() {
 			{/* All Startups Section */}
 			<div className="bg-white rounded-2xl p-8 shadow-lg">
 				<div className="flex items-center justify-between mb-6">
-					<h2 className="text-2xl font-bold text-gray-900">All Startups</h2>
+					<h2 className="text-2xl font-bold text-gray-900">
+						{showAllHouses ? 'All Startups' : `${myStartup?.house || 'Your'} House Members`}
+					</h2>
 					<div className="flex items-center gap-4">
-						<select
-							value={houseFilter}
-							onChange={(e) => setHouseFilter(e.target.value)}
-							className="px-3 py-1 border rounded-lg text-sm"
+						<button
+							onClick={() => setShowAllHouses(!showAllHouses)}
+							className={`px-4 py-1.5 rounded-lg text-sm font-medium transition ${
+								showAllHouses 
+									? 'bg-gray-200 text-gray-700 hover:bg-gray-300' 
+									: 'bg-primary text-white hover:opacity-90'
+							}`}
 						>
-							<option value="all">All Houses</option>
-							<option value="venture">Venture</option>
-							<option value="lifestyle">Lifestyle</option>
-							<option value="side">Side</option>
-							<option value="karma">Karma</option>
-						</select>
+							{showAllHouses ? 'Show My House Only' : 'Show All Houses'}
+						</button>
+						{showAllHouses && (
+							<select
+								value={houseFilter}
+								onChange={(e) => setHouseFilter(e.target.value)}
+								className="px-3 py-1 border rounded-lg text-sm"
+							>
+								<option value="all">All Houses</option>
+								<option value="venture">Venture</option>
+								<option value="lifestyle">Lifestyle</option>
+								<option value="side">Side</option>
+								<option value="karma">Karma</option>
+							</select>
+						)}
 						<select
 							value={stealthFilter}
 							onChange={(e) => setStealthFilter(e.target.value as 'all' | 'show' | 'hide')}

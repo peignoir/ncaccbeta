@@ -70,6 +70,22 @@ export default function handler(req, res) {
   }
 
   try {
+    // Get Authorization header to identify the user
+    const authHeader = req.headers.authorization
+    let userHouse = null
+    let userTelegramId = null
+    
+    // Try to decode the token to get user's house
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.substring(7)
+      try {
+        const decoded = JSON.parse(Buffer.from(token, 'base64').toString())
+        userTelegramId = decoded.telegram_id
+        console.log('User telegram_id from token:', userTelegramId)
+      } catch (e) {
+        console.log('Could not decode token:', e)
+      }
+    }
     
     // Read CSV data
     const csvPath = path.join(process.cwd(), 'public', 'sample.csv')
@@ -83,6 +99,18 @@ export default function handler(req, res) {
       console.error('Failed to read CSV:', e)
       // Return empty array if CSV fails
       csvData = []
+    }
+    
+    // Find the user's house from their startup data
+    if (userTelegramId && csvData.length > 0) {
+      const userStartup = csvData.find(row => 
+        String(row.telegram_id) === String(userTelegramId) ||
+        String(row.founder_telegram) === String(userTelegramId)
+      )
+      if (userStartup) {
+        userHouse = userStartup.house
+        console.log('User house found:', userHouse)
+      }
     }
 
     // Transform data
@@ -140,10 +168,15 @@ export default function handler(req, res) {
     })
 
     // Apply filters if any
-    const { house, sort } = req.query || {}
+    const { house, sort, showAll } = req.query || {}
     let filtered = startups
 
-    if (house && house !== 'all') {
+    // If user is logged in and has a house, filter by default (unless showAll is true)
+    if (userHouse && showAll !== 'true') {
+      filtered = filtered.filter(s => s.house === userHouse)
+      console.log(`Filtering to user's house (${userHouse}): ${filtered.length} startups`)
+    } else if (house && house !== 'all') {
+      // Otherwise use the query parameter if provided
       filtered = filtered.filter(s => s.house === house)
     }
 

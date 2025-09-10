@@ -352,7 +352,46 @@ export function installMockApi() {
 				if (url.startsWith('/api/startups')) {
 					// Handle GET for fetching all startups
 					if (!init?.method || init?.method === 'GET') {
-						const startups = await loadStartups()
+						let startups = await loadStartups()
+						
+						// Check for user authentication and filter by house
+						const authHeader = init?.headers?.['Authorization'] || init?.headers?.['authorization']
+						let userHouse: string | null = null
+						
+						if (authHeader && authHeader.startsWith('Bearer ')) {
+							const token = authHeader.substring(7)
+							try {
+								const decoded = JSON.parse(atob(token))
+								const userTelegramId = decoded.telegram_id
+								
+								// Find the user's house from their startup
+								const userStartup = startups.find(s => 
+									String(s.telegram_id) === String(userTelegramId) ||
+									String(s.founder_telegram) === String(userTelegramId)
+								)
+								
+								if (userStartup) {
+									userHouse = userStartup.house
+									console.log('[MockServer] User house found:', userHouse)
+								}
+							} catch (e) {
+								console.log('[MockServer] Could not decode token:', e)
+							}
+						}
+						
+						// Parse URL query parameters
+						const urlObj = new URL(url, 'http://localhost')
+						const showAll = urlObj.searchParams.get('showAll')
+						const houseFilter = urlObj.searchParams.get('house')
+						
+						// Filter by house if user is logged in (unless showAll is true)
+						if (userHouse && showAll !== 'true') {
+							startups = startups.filter(s => s.house === userHouse)
+							console.log(`[MockServer] Filtering to user's house (${userHouse}): ${startups.length} startups`)
+						} else if (houseFilter && houseFilter !== 'all') {
+							startups = startups.filter(s => s.house === houseFilter)
+						}
+						
 						return json(startups)
 					}
 					

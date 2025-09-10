@@ -73,11 +73,20 @@ class MockDataProvider {
     };
   }
   
-  static async getMockStartups() {
+  static async getMockStartups(options?: { showAll?: boolean }) {
     const data = await this.loadMockData();
+    
+    // For pofpof mode, always show only Franck's house (venture) unless showAll is true
+    let filtered = data;
+    if (!options?.showAll) {
+      // Filter to only show venture house members (Franck's house)
+      filtered = data.filter(s => s.house === 'venture');
+      console.log(`[MockDataProvider] Filtering to venture house: ${filtered.length} startups`);
+    }
+    
     return {
       success: true,
-      data: data.map(s => ({
+      data: filtered.map(s => ({
         ...s,
         npid: parseInt(s.npid),
         current_progress: parseFloat(s.current_progress),

@@ -144,7 +144,7 @@ export class ApiDataTransformer {
     
     const groupLower = group?.toLowerCase() || '';
     
-    if (groupLower.includes('venture') || groupLower.includes('growth')) {
+    if (groupLower.includes('build') || groupLower.includes('venture') || groupLower.includes('growth')) {
       return 'venture';
     }
     if (groupLower.includes('karma') || groupLower.includes('impact') || groupLower.includes('social')) {
