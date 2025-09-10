@@ -1,3 +1,5 @@
+import { getApiBaseUrl } from '../config/environment';
+
 export interface ApiConfig {
   realApiBaseUrl: string;
   apiKey: string;
@@ -6,7 +8,7 @@ export interface ApiConfig {
 const API_CONFIG_KEY = 'ncacc_api_config';
 
 export const DEFAULT_CONFIG: ApiConfig = {
-  realApiBaseUrl: 'https://dev.socap.ai',
+  realApiBaseUrl: getApiBaseUrl(),
   apiKey: '' // User must provide their own API key
 };
 
