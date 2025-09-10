@@ -26,9 +26,11 @@ export default function LoginPage() {
 	const [apiMode, setApiMode] = useState('real')
 	const [showApiToggle, setShowApiToggle] = useState(false)
 
-	// Initialize API mode on mount
+	// Initialize API mode on mount only if not already real
 	useEffect(() => {
-		ApiConfigManager.setMode('real')
+		if (ApiConfigManager.getMode() !== 'real') {
+			ApiConfigManager.setMode('real')
+		}
 	}, [])
 
 	// Check if "pofpof" is entered as API key to enable Mock mode

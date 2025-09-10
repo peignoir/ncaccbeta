@@ -11,14 +11,20 @@ if (ApiConfigManager.isMockApiMode()) {
   console.log('[Setup] Real API mode - mock interceptors not installed')
 }
 
+let currentMode = ApiConfigManager.getMode()
+
 ApiConfigManager.onModeChange((mode) => {
   console.log('[Setup] API mode changed to:', mode)
-  if (mode === 'mock') {
-    console.log('[Setup] Reloading page to install mock interceptors')
-    window.location.reload()
-  } else if (mode === 'real') {
-    console.log('[Setup] Reloading page to remove mock interceptors')
-    window.location.reload()
+  // Only reload if mode actually changed
+  if (mode !== currentMode) {
+    currentMode = mode
+    if (mode === 'mock') {
+      console.log('[Setup] Reloading page to install mock interceptors')
+      window.location.reload()
+    } else if (mode === 'real') {
+      console.log('[Setup] Reloading page to remove mock interceptors')
+      window.location.reload()
+    }
   }
 })
 
