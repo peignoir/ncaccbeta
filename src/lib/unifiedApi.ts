@@ -1,7 +1,7 @@
 import ApiConfigManager from './apiConfig';
 import socapApi from './socapApi';
 import ApiDataTransformer, { AppStartup } from './apiDataTransformer';
-import { mockPersistence } from './mockPersistence';
+import MockDataProvider from './mockDataProvider';
 
 export interface UnifiedApiResponse<T> {
   success: boolean;
@@ -25,11 +25,13 @@ export class UnifiedApi {
   }
 
   async login(code: string): Promise<UnifiedApiResponse<{ token: string; npid: number; username: string }>> {
-    const mode = ApiConfigManager.getMode();
-    console.log(`[UnifiedAPI] Login attempt with mode: ${mode}, code: ${code}`);
+    const apiKey = ApiConfigManager.getApiKey();
+    console.log(`[UnifiedAPI] Login attempt with API key: ${apiKey?.substring(0, 6)}...`);
 
-    if (mode === 'mock') {
-      return this.mockLogin(code);
+    // Special handling for pofpof
+    if (apiKey === 'pofpof') {
+      console.log('[UnifiedAPI] Using mock data for pofpof key');
+      return MockDataProvider.getMockLogin();
     } else {
       return this.realLogin(code);
     }
@@ -124,11 +126,12 @@ export class UnifiedApi {
   }
 
   async getStartups(): Promise<UnifiedApiResponse<AppStartup[]>> {
-    const mode = ApiConfigManager.getMode();
-    console.log(`[UnifiedAPI] Getting startups with mode: ${mode}`);
+    const apiKey = ApiConfigManager.getApiKey();
+    console.log(`[UnifiedAPI] Getting startups`);
 
-    if (mode === 'mock') {
-      return this.getMockStartups();
+    if (apiKey === 'pofpof') {
+      console.log('[UnifiedAPI] Using mock data for pofpof key');
+      return MockDataProvider.getMockStartups();
     } else {
       return this.getRealStartups();
     }
@@ -196,11 +199,8 @@ export class UnifiedApi {
         ApiDataTransformer.transformSocapEventToStartup(event, index, currentUserTelegramId)
       );
       
-      const existingData = mockPersistence.getAllStartups();
-      console.log(`[UnifiedAPI] Merging with ${Object.keys(existingData).length} existing startups`);
-      
-      const existingArray = Object.values(existingData) as AppStartup[];
-      const mergedData = ApiDataTransformer.mergeWithExistingData(transformedData, existingArray);
+      // No persistence needed
+      const mergedData = transformedData;
       
       return {
         success: true,
@@ -216,11 +216,16 @@ export class UnifiedApi {
   }
 
   async updateStartup(npid: number, updates: Partial<AppStartup>): Promise<UnifiedApiResponse<AppStartup>> {
-    const mode = ApiConfigManager.getMode();
-    console.log(`[UnifiedAPI] Updating startup ${npid} with mode: ${mode}`, updates);
+    const apiKey = ApiConfigManager.getApiKey();
+    console.log(`[UnifiedAPI] Updating startup ${npid}`, updates);
 
-    if (mode === 'mock') {
-      return this.updateMockStartup(npid, updates);
+    if (apiKey === 'pofpof') {
+      // Mock updates aren't persisted
+      return {
+        success: true,
+        data: { npid, ...updates } as AppStartup,
+        source: 'mock'
+      };
     } else {
       return this.updateWithPersistence(npid, updates);
     }
@@ -278,8 +283,8 @@ export class UnifiedApi {
         ...updates
       };
 
-      console.log('[UnifiedAPI] Saving to persistence:', updatedStartup);
-      mockPersistence.saveStartup(String(npid), updatedStartup);
+      // No persistence for real API updates
+      console.log('[UnifiedAPI] Update complete:', updatedStartup);
 
       console.log('[UnifiedAPI] Update successful for real API mode (persisted locally)');
       return {
@@ -298,12 +303,12 @@ export class UnifiedApi {
   }
 
   async getCircles(): Promise<UnifiedApiResponse<any[]>> {
-    const mode = ApiConfigManager.getMode();
-    console.log(`[UnifiedAPI] Getting circles with mode: ${mode}`);
+    const apiKey = ApiConfigManager.getApiKey();
+    console.log(`[UnifiedAPI] Getting circles`);
 
     try {
       // In mock mode or when using production API, use the /api/circles endpoint directly
-      if (mode === 'mock' || !ApiConfigManager.getConfig().apiKey) {
+      if (apiKey === 'pofpof' || !ApiConfigManager.getConfig().apiKey) {
         console.log('[UnifiedAPI] Using /api/circles endpoint');
         const response = await fetch('/api/circles');
         
@@ -341,7 +346,7 @@ export class UnifiedApi {
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Failed to get circles',
-        source: mode === 'mock' ? 'mock' : 'real'
+        source: apiKey === 'pofpof' ? 'mock' : 'real'
       };
     }
   }
@@ -399,11 +404,11 @@ export class UnifiedApi {
   }
 
   async testConnection(): Promise<boolean> {
-    const mode = ApiConfigManager.getMode();
-    console.log(`[UnifiedAPI] Testing connection with mode: ${mode}`);
+    const apiKey = ApiConfigManager.getApiKey();
+    console.log(`[UnifiedAPI] Testing connection`);
 
-    if (mode === 'mock') {
-      console.log('[UnifiedAPI] Mock mode always returns true');
+    if (apiKey === 'pofpof') {
+      console.log('[UnifiedAPI] Pofpof key always returns true');
       return true;
     }
 

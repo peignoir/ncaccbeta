@@ -43,7 +43,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 	}, [user])
 
 	const login = async (code: string, remember: boolean) => {
-		console.log('[Auth] Login attempt with API mode:', ApiConfigManager.getMode())
+		console.log('[Auth] Login attempt')
 		
 		const response = await unifiedApi.login(code)
 		console.log('[Auth] Login response:', response)

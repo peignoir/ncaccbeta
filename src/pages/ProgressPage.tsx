@@ -71,7 +71,7 @@ export default function ProgressPage() {
 
 	const loadStartups = async () => {
 		try {
-			console.log('[ProgressPage] Loading startups with API mode:', ApiConfigManager.getMode())
+			console.log('[ProgressPage] Loading startups with API mode:', ApiConfigManager.isMockApiMode() ? "mock" : "real")
 			
 			const response = await unifiedApi.getStartups()
 			console.log('[ProgressPage] Unified API response:', response)
@@ -96,7 +96,7 @@ export default function ProgressPage() {
 			// Find user's startup
 			// In Real API mode, match by telegram_id from the auth token
 			let userStartup;
-			if (ApiConfigManager.getMode() === 'real') {
+			if (ApiConfigManager.isMockApiMode() ? "mock" : "real" === 'real') {
 				// Try to decode the auth token to get telegram_id
 				const token = localStorage.getItem('ncacc_token');
 				if (token) {
@@ -173,7 +173,7 @@ export default function ProgressPage() {
 		if (!myStartup) return
 		
 		// Don't allow editing in Real API mode
-		if (ApiConfigManager.getMode() === 'real') {
+		if (ApiConfigManager.isMockApiMode() ? "mock" : "real" === 'real') {
 			console.log('[ProgressPage] Editing disabled in Real API mode')
 			return
 		}
@@ -237,7 +237,7 @@ export default function ProgressPage() {
 			}
 			
 			// Save to backend
-			console.log('[ProgressPage] Saving updates with API mode:', ApiConfigManager.getMode())
+			console.log('[ProgressPage] Saving updates with API mode:', ApiConfigManager.isMockApiMode() ? "mock" : "real")
 			console.log('[ProgressPage] Updates:', updates)
 			
 			const npid = parseInt(myStartup.npid || myStartup.id)
@@ -317,7 +317,7 @@ export default function ProgressPage() {
 					<div className="flex items-center justify-between mb-4">
 						<h2 className="text-3xl font-bold text-gray-900">Your Startup</h2>
 						<div className="flex items-center gap-3">
-							{ApiConfigManager.getMode() === 'real' && (
+							{ApiConfigManager.isMockApiMode() ? "mock" : "real" === 'real' && (
 								<span className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm">
 									📖 Read-only (Real API)
 								</span>
@@ -631,7 +631,7 @@ export default function ProgressPage() {
 											</button>
 										</>
 									)}
-									{selectedStartup.id === myStartup?.id && editingField !== 'modal' && ApiConfigManager.getMode() !== 'real' && (
+									{selectedStartup.id === myStartup?.id && editingField !== 'modal' && ApiConfigManager.isMockApiMode() ? "mock" : "real" !== 'real' && (
 										<button
 											onClick={() => {
 												setEditingField('modal')

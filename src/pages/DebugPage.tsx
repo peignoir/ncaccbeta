@@ -30,7 +30,7 @@ export default function DebugPage() {
   const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [apiMode] = useState(ApiConfigManager.getMode());
+  const [apiMode] = useState(ApiConfigManager.isMockApiMode() ? "mock" : "real");
   const [rawApiResponse, setRawApiResponse] = useState<any>(null);
   const [apiRequests, setApiRequests] = useState<ApiRequest[]>([]);
 

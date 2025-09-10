@@ -22,21 +22,6 @@ export default function LoginPage() {
 		if (isAuthenticated) navigate('/')
 	}, [isAuthenticated, navigate])
 
-	// Check for pending mock login after reload
-	useEffect(() => {
-		const pendingMockLogin = localStorage.getItem('ncacc_mock_login_pending')
-		if (pendingMockLogin === 'true' && ApiConfigManager.getMode() === 'mock') {
-			localStorage.removeItem('ncacc_mock_login_pending')
-			const remember = localStorage.getItem('ncacc_remember') === '1'
-			console.log('[LoginPage] Completing mock login after reload')
-			login('bG9naW46MTc1MA==', remember).then(() => {
-				navigate('/')
-			}).catch((err) => {
-				setError(err.message || 'Mock login failed')
-			})
-		}
-	}, [])
-
 	// Auto-login when API key is provided in URL
 	useEffect(() => {
 		const urlApiKey = searchParams.get('apikey') || searchParams.get('api_key')
@@ -52,16 +37,12 @@ export default function LoginPage() {
 			setLoading(true)
 			setError(null)
 			
-			// Special handling for pofpof
-			if (urlApiKey.toLowerCase() === 'pofpof') {
-				ApiConfigManager.setMode('mock')
-				await login('bG9naW46MTc1MA==', true) // Default mock login
-			} else {
-				ApiConfigManager.setMode('real')
-				ApiConfigManager.updateConfig({ apiKey: urlApiKey.trim() })
+			ApiConfigManager.updateConfig({ apiKey: urlApiKey.trim() })
+			if (urlApiKey.toLowerCase() !== 'pofpof') {
 				localStorage.setItem('ncacc_api_key', urlApiKey.trim())
-				await login('api-auth', true)
 			}
+			
+			await login('api-auth', true)
 		} catch (err) {
 			setError('Auto-login failed. Please try logging in manually.')
 		} finally {
@@ -81,24 +62,16 @@ export default function LoginPage() {
 		try {
 			setLoading(true)
 			
-			// Special handling for "pofpof" - use mock mode
-			if (apiKey.toLowerCase() === 'pofpof') {
-				console.log('[LoginPage] Special key detected - switching to mock mode')
-				// Store the intent to use mock mode and reload
-				localStorage.setItem('ncacc_mock_login_pending', 'true')
-				localStorage.setItem('ncacc_remember', remember ? '1' : '0')
-				ApiConfigManager.setMode('mock')
-				// Page will reload due to mode change listener in setup.ts
-				return
-			} else {
-				// Normal API key - use real mode
-				console.log('[LoginPage] Using real API with key')
-				ApiConfigManager.setMode('real')
-				ApiConfigManager.updateConfig({ apiKey: apiKey.trim() })
+			// Set the API key in config
+			ApiConfigManager.updateConfig({ apiKey: apiKey.trim() })
+			
+			// Save to localStorage if not pofpof
+			if (apiKey.toLowerCase() !== 'pofpof') {
 				localStorage.setItem('ncacc_api_key', apiKey.trim())
-				await login('api-auth', remember)
 			}
 			
+			// Always use the same login flow
+			await login('api-auth', remember)
 			navigate('/')
 		} catch (err: any) {
 			console.error('[LoginPage] Login error:', err)

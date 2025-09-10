@@ -5,7 +5,7 @@ import ApiConfigManager from '../lib/apiConfig'
 export default function DashboardLayout() {
 	const { user, logout } = useAuth()
 	const navigate = useNavigate()
-	const isRealApiMode = ApiConfigManager.isRealApiMode()
+	const isRealApiMode = ApiConfigManager.getApiKey() !== 'pofpof'
 
 	const handleLogout = () => {
 		logout()

@@ -63,7 +63,7 @@ export default function CirclesPage() {
 
 	const loadCircles = async () => {
 		try {
-			console.log('[CirclesPage] Loading circles with API mode:', ApiConfigManager.getMode())
+			console.log('[CirclesPage] Loading circles with API mode:', ApiConfigManager.isMockApiMode() ? "mock" : "real")
 			
 			const response = await unifiedApi.getCircles()
 			console.log('[CirclesPage] Unified API response:', response)
