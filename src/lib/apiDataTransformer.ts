@@ -5,7 +5,7 @@ export interface AppStartup {
   login_code: string;
   username: string;
   wave_id: number;
-  house: 'venture' | 'karma' | 'lifestyle' | 'side' | 'build';
+  house: string; // Raw house value from API
   circle_id?: string;
   startup_name: string;
   stealth: boolean | string;
@@ -35,7 +35,8 @@ export class ApiDataTransformer {
     const eventTelegramId = event.contact?.telegram_id;
     const npid = 1000 + index;
     
-    const house = this.determineHouse(event.data.group);
+    // Use raw group value directly from API
+    const house = event.data.group || 'unknown';
     const progress = Math.round(event.data.percent);
     
     // Extract all available data from details
@@ -62,26 +63,36 @@ export class ApiDataTransformer {
       contact_me: true,
       progress_percent: progress,
       
-      // Add all additional fields from details
-      website: details.website || '',
-      bio: details.bio || '',
-      product: details.product || '',
-      customer: details.customer || '',
-      traction: details.traction || '',
-      long_pitch: details.long_pitch || '',
-      motivation: details.motivation || '',
-      github_repos: details.github_repos || '',
-      founder_country: details.founder_country || '',
-      competitors_urls: details.competitors_urls || '',
+      // Include ALL raw data from the API
+      raw_event: event, // Include the entire raw event
+      raw_group: event.data.group,
+      raw_percent: event.data.percent,
+      raw_details: details,
+      
+      // Add all fields from details (even empty ones)
+      website: details.website,
+      bio: details.bio,
+      product: details.product,
+      customer: details.customer,
+      traction: details.traction,
+      long_pitch: details.long_pitch,
+      motivation: details.motivation,
+      github_repos: details.github_repos,
+      founder_country: details.founder_country,
+      competitors_urls: details.competitors_urls,
       current_progress: details.current_progress || progress,
-      why_now_catalyst: details.why_now_catalyst || '',
-      problem_statement: details.problem_statement || '',
-      value_proposition: details.value_proposition || '',
-      current_workaround: details.current_workaround || '',
-      key_differentiator: details.key_differentiator || '',
-      business_model_explained: details.business_model_explained || '',
-      product_job_to_be_done: details.product_job_to_be_done || '',
-      founder_time_commitment_pct: details.founder_time_commitment_pct || '',
+      why_now_catalyst: details.why_now_catalyst,
+      problem_statement: details.problem_statement,
+      value_proposition: details.value_proposition,
+      current_workaround: details.current_workaround,
+      key_differentiator: details.key_differentiator,
+      business_model_explained: details.business_model_explained,
+      product_job_to_be_done: details.product_job_to_be_done,
+      founder_time_commitment_pct: details.founder_time_commitment_pct,
+      
+      // Include ALL fields from details object dynamically
+      ...details,
+      
       check_in_1: progress >= 10,
       check_in_2: progress >= 20,
       check_in_3: progress >= 30,

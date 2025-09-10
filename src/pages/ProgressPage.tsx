@@ -48,8 +48,30 @@ type Startup = {
 	contact_me?: boolean | string
 	circle?: string
 	circle_name?: string
+	raw_event?: any // Raw event data from API
+	raw_group?: string
+	raw_percent?: number
+	raw_details?: any
+	[key: string]: any // Allow any additional fields
 	circle_description?: string
 	wave?: string
+}
+
+// Function to get house badge color based on raw house value
+function getHouseBadgeClass(house: string | undefined): string {
+	if (!house) return 'bg-gray-100 text-gray-700';
+	
+	const houseLower = house.toLowerCase();
+	
+	// Map raw house values to colors
+	if (houseLower.includes('build')) return 'bg-indigo-100 text-indigo-700';
+	if (houseLower.includes('venture')) return 'bg-purple-100 text-purple-700';
+	if (houseLower.includes('lifestyle')) return 'bg-green-100 text-green-700';
+	if (houseLower.includes('side')) return 'bg-blue-100 text-blue-700';
+	if (houseLower.includes('karma')) return 'bg-orange-100 text-orange-700';
+	
+	// Default color for unknown houses
+	return 'bg-gray-100 text-gray-700';
 }
 
 export default function ProgressPage() {
@@ -289,6 +311,9 @@ export default function ProgressPage() {
 		setEditValues({})
 	}
 
+	// Get unique houses from the data
+	const uniqueHouses = Array.from(new Set(startups.map(s => s.house).filter(Boolean))).sort();
+	
 	const filteredStartups = startups
 		.filter(s => {
 			const houseMatch = houseFilter === 'all' || s.house === houseFilter
@@ -350,13 +375,7 @@ export default function ProgressPage() {
 									<div className="text-sm text-gray-500">Progress</div>
 								</div>
 								{myStartup.house && (
-									<span className={`px-3 py-1 rounded-full text-sm font-medium ${
-										myStartup.house === 'build' ? 'bg-indigo-100 text-indigo-700' :
-										myStartup.house === 'venture' ? 'bg-purple-100 text-purple-700' :
-										myStartup.house === 'lifestyle' ? 'bg-green-100 text-green-700' :
-										myStartup.house === 'side' ? 'bg-blue-100 text-blue-700' :
-										'bg-orange-100 text-orange-700'
-									}`}>
+									<span className={`px-3 py-1 rounded-full text-sm font-medium ${getHouseBadgeClass(myStartup.house)}`}>
 										{myStartup.house}
 									</span>
 								)}
@@ -386,7 +405,7 @@ export default function ProgressPage() {
 			<div className="bg-white rounded-2xl p-8 shadow-lg">
 				<div className="flex items-center justify-between mb-6">
 					<h2 className="text-2xl font-bold text-gray-900">
-						{showAllHouses ? 'All Startups' : `${myStartup?.house || 'Your'} House Members`}
+						{showAllHouses ? 'All Startups' : `${myStartup?.house || 'Your'} Members`}
 					</h2>
 					<div className="flex items-center gap-4">
 						<button
@@ -406,11 +425,9 @@ export default function ProgressPage() {
 								className="px-3 py-1 border rounded-lg text-sm"
 							>
 								<option value="all">All Houses</option>
-								<option value="build">Build</option>
-								<option value="venture">Venture</option>
-								<option value="lifestyle">Lifestyle</option>
-								<option value="side">Side</option>
-								<option value="karma">Karma</option>
+								{uniqueHouses.map(house => (
+									<option key={house} value={house}>{house}</option>
+								))}
 							</select>
 						)}
 						<select
@@ -493,13 +510,7 @@ export default function ProgressPage() {
 										</td>
 										<td className="py-4 px-4">
 											{startup.house ? (
-												<span className={`px-2 py-1 rounded-full text-xs font-medium ${
-													startup.house === 'build' ? 'bg-indigo-100 text-indigo-700' :
-													startup.house === 'venture' ? 'bg-purple-100 text-purple-700' :
-													startup.house === 'lifestyle' ? 'bg-green-100 text-green-700' :
-													startup.house === 'side' ? 'bg-blue-100 text-blue-700' :
-													'bg-orange-100 text-orange-700'
-												}`}>
+												<span className={`px-2 py-1 rounded-full text-xs font-medium ${getHouseBadgeClass(startup.house)}`}>
 													{startup.house}
 												</span>
 											) : (
@@ -927,13 +938,7 @@ export default function ProgressPage() {
 										<span className="text-sm text-gray-500">House</span>
 										<p>
 											{selectedStartup.house ? (
-												<span className={`px-2 py-1 rounded-full text-xs font-medium ${
-													selectedStartup.house === 'build' ? 'bg-indigo-100 text-indigo-700' :
-													selectedStartup.house === 'venture' ? 'bg-purple-100 text-purple-700' :
-													selectedStartup.house === 'lifestyle' ? 'bg-green-100 text-green-700' :
-													selectedStartup.house === 'side' ? 'bg-blue-100 text-blue-700' :
-													'bg-orange-100 text-orange-700'
-												}`}>
+												<span className={`px-2 py-1 rounded-full text-xs font-medium ${getHouseBadgeClass(selectedStartup.house)}`}>
 													{selectedStartup.house}
 												</span>
 											) : '-'}
