@@ -343,11 +343,6 @@ export default function ProgressPage() {
 					<div className="flex items-center justify-between mb-4">
 						<h2 className="text-3xl font-bold text-gray-900">Your Startup</h2>
 						<div className="flex items-center gap-3">
-							{ApiConfigManager.isMockApiMode() ? "mock" : "real" === 'real' && (
-								<span className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm">
-									📖 Read-only (Real API)
-								</span>
-							)}
 							<button
 								onClick={() => openModal(myStartup)}
 								className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
@@ -1224,11 +1219,11 @@ export default function ProgressPage() {
 								</div>
 							)}
 							
-							{/* Debug: All Raw Fields */}
+							{/* All Raw Fields */}
 							<div className="border-t pt-6">
 								<details className="group">
 									<summary className="cursor-pointer text-lg font-semibold text-gray-900 mb-4 hover:text-indigo-600">
-										All API Fields (Debug) ▼
+										All Data Fields ▼
 									</summary>
 									<div className="mt-4 bg-gray-50 rounded-lg p-4 max-h-96 overflow-auto">
 										<pre className="text-xs font-mono text-gray-700 whitespace-pre-wrap">
