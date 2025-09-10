@@ -85,6 +85,12 @@ export default function LoginPage() {
 		e.preventDefault()
 		setError(null)
 		
+		// Don't attempt login if "pofpof" is entered - it's just for showing the toggle
+		if (apiKey.toLowerCase() === 'pofpof') {
+			setError('Please select Mock mode or enter a valid API key')
+			return
+		}
+		
 		// Different validation for different API modes
 		if (apiMode === 'mock') {
 			if (!code || !/^[-A-Za-z0-9+/=]+$/.test(code)) {
@@ -204,27 +210,18 @@ export default function LoginPage() {
 					</div>
 					{error && <div className="text-red-600 text-sm">{error}</div>}
 					
-					{/* Help text - Only show when API toggle is visible */}
-					{showApiToggle && (
+					{/* Help text - Only show mock mode help when API toggle is visible */}
+					{showApiToggle && apiMode === 'mock' && (
 						<div className="text-xs text-gray-500 mt-4 border-t pt-3">
-							{apiMode === 'mock' ? (
-								<div>
-									<p className="font-medium text-blue-600">Mock API Mode</p>
-									<p className="mt-1">Uses local CSV data. Example codes:</p>
-									<ul className="mt-1 space-y-1 text-gray-600">
-										<li>• bG9naW46MTc1MA== (NPID 1750 - Franck)</li>
-										<li>• bG9naW46MTI3NA== (NPID 1274)</li>
-										<li>• bG9naW46MjM0MQ== (NPID 2341)</li>
-									</ul>
-								</div>
-							) : (
-								<div>
-									<p className="font-medium text-green-600">Real API Mode</p>
-									<p className="mt-1">Connects to Socap.dev API using your API key.</p>
-									<p className="mt-1">Base URL: <code className="bg-gray-100 px-1">https://dev.socap.ai</code></p>
-									<p className="mt-1 text-amber-600">Test key: sCERK6PhSbOU6m1HvpyBmg</p>
-								</div>
-							)}
+							<div>
+								<p className="font-medium text-blue-600">Mock API Mode</p>
+								<p className="mt-1">Uses local CSV data. Example codes:</p>
+								<ul className="mt-1 space-y-1 text-gray-600">
+									<li>• bG9naW46MTc1MA== (NPID 1750 - Franck)</li>
+									<li>• bG9naW46MTI3NA== (NPID 1274)</li>
+									<li>• bG9naW46MjM0MQ== (NPID 2341)</li>
+								</ul>
+							</div>
 						</div>
 					)}
 				</form>
