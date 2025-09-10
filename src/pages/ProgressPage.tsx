@@ -347,7 +347,7 @@ export default function ProgressPage() {
 								onClick={() => openModal(myStartup)}
 								className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
 							>
-								View Details
+								See what NC/ACC knows about you
 							</button>
 						</div>
 					</div>
