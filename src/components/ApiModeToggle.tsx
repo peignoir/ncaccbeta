@@ -3,6 +3,8 @@ import ApiConfigManager, { ApiMode } from '../lib/apiConfig';
 
 export default function ApiModeToggle() {
   const [mode, setMode] = useState<ApiMode>(ApiConfigManager.getMode());
+  const [isVisible, setIsVisible] = useState(false);
+  const [keyBuffer, setKeyBuffer] = useState('');
 
   useEffect(() => {
     const unsubscribe = ApiConfigManager.onModeChange((newMode) => {
@@ -13,11 +15,33 @@ export default function ApiModeToggle() {
     return unsubscribe;
   }, []);
 
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      const newBuffer = keyBuffer + e.key;
+      setKeyBuffer(newBuffer);
+      
+      if (newBuffer.includes('pofpof')) {
+        setIsVisible(true);
+        setKeyBuffer('');
+      }
+      
+      // Clear buffer after 2 seconds of no typing
+      setTimeout(() => setKeyBuffer(''), 2000);
+    };
+
+    window.addEventListener('keypress', handleKeyPress);
+    return () => window.removeEventListener('keypress', handleKeyPress);
+  }, [keyBuffer]);
+
   const handleModeChange = (newMode: ApiMode) => {
     console.log('[ApiModeToggle] User requesting mode change to:', newMode);
     console.log(`[ApiModeToggle] Switching to ${newMode} API`);
     ApiConfigManager.setMode(newMode);
   };
+
+  if (!isVisible) {
+    return null;
+  }
 
   return (
     <div className="fixed bottom-4 right-4 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 z-50 border border-gray-200 dark:border-gray-700">
