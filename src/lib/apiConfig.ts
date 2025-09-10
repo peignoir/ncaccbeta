@@ -10,9 +10,9 @@ const API_MODE_KEY = 'ncacc_api_mode';
 const API_CONFIG_KEY = 'ncacc_api_config';
 
 export const DEFAULT_CONFIG: ApiConfig = {
-  mode: 'mock',
+  mode: 'real',
   realApiBaseUrl: 'https://dev.socap.ai',
-  apiKey: 'sCERK6PhSbOU6m1HvpyBmg' // Dev API key
+  apiKey: '' // User must provide their own API key
 };
 
 export class ApiConfigManager {
@@ -24,7 +24,12 @@ export class ApiConfigManager {
     const savedMode = localStorage.getItem(API_MODE_KEY) as ApiMode;
     const savedConfig = localStorage.getItem(API_CONFIG_KEY);
     
-    if (savedMode) {
+    // Always default to 'real' mode unless explicitly set otherwise
+    if (savedMode && savedMode === 'mock') {
+      // Clear mock mode from storage - we don't want it persisted
+      localStorage.removeItem(API_MODE_KEY);
+      this.config.mode = 'real';
+    } else if (savedMode) {
       console.log(`[ApiConfig] Found saved API mode: ${savedMode}`);
       this.config.mode = savedMode;
     }
@@ -33,11 +38,10 @@ export class ApiConfigManager {
       try {
         const parsed = JSON.parse(savedConfig);
         console.log('[ApiConfig] Found saved API config:', parsed);
-        // Ensure we don't overwrite the default API key with an empty one
-        if (!parsed.apiKey) {
-          parsed.apiKey = DEFAULT_CONFIG.apiKey;
+        // Don't use saved config if it has mock mode
+        if (parsed.mode !== 'mock') {
+          this.config = { ...this.config, ...parsed };
         }
-        this.config = { ...this.config, ...parsed };
       } catch (e) {
         console.error('[ApiConfig] Failed to parse saved config:', e);
       }

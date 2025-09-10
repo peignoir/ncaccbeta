@@ -23,11 +23,13 @@ export default function LoginPage() {
 	const [error, setError] = useState<string | null>(null)
 	const [loading, setLoading] = useState(false)
 	// Always start in 'real' mode by default, hide mock mode completely
-	const [apiMode, setApiMode] = useState(() => {
-		ApiConfigManager.setMode('real')
-		return 'real'
-	})
+	const [apiMode, setApiMode] = useState('real')
 	const [showApiToggle, setShowApiToggle] = useState(false)
+
+	// Initialize API mode on mount
+	useEffect(() => {
+		ApiConfigManager.setMode('real')
+	}, [])
 
 	// Check if "pofpof" is entered as API key to enable Mock mode
 	useEffect(() => {
@@ -39,17 +41,9 @@ export default function LoginPage() {
 				setApiMode('mock')
 			}
 		}
-	}, [apiKey])
+	}, [apiKey, apiMode])
 
-	useEffect(() => {
-		const unsubscribe = ApiConfigManager.onModeChange((mode) => {
-			console.log('[LoginPage] API mode changed to:', mode)
-			setApiMode(mode)
-			setError(null)
-			setCode('')
-		})
-		return unsubscribe
-	}, [])
+	// Removed ApiConfigManager listener to prevent conflicts
 
 	useEffect(() => {
 		if (isAuthenticated) navigate('/')
