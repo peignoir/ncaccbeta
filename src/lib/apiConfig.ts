@@ -21,34 +21,15 @@ export class ApiConfigManager {
 
   static {
     console.log('[ApiConfig] Initializing API configuration manager');
-    const savedMode = localStorage.getItem(API_MODE_KEY) as ApiMode;
-    const savedConfig = localStorage.getItem(API_CONFIG_KEY);
+    // Simple initialization - no mode persistence
+    this.config = { ...DEFAULT_CONFIG };
     
-    // Clear any saved mock mode immediately
-    if (savedMode === 'mock' || savedConfig?.includes('"mode":"mock"')) {
-      console.log('[ApiConfig] Clearing saved mock mode');
-      localStorage.removeItem(API_MODE_KEY);
-      localStorage.removeItem(API_CONFIG_KEY);
+    // Load saved API key if present
+    const savedApiKey = localStorage.getItem('ncacc_api_key');
+    if (savedApiKey) {
+      this.config.apiKey = savedApiKey;
     }
     
-    // Always start with real mode
-    this.config.mode = 'real';
-    
-    // Only load saved config if it's for real mode
-    if (savedConfig && !savedConfig.includes('"mode":"mock"')) {
-      try {
-        const parsed = JSON.parse(savedConfig);
-        if (parsed.mode === 'real') {
-          console.log('[ApiConfig] Found saved API config:', parsed);
-          this.config = { ...this.config, ...parsed };
-        }
-      } catch (e) {
-        console.error('[ApiConfig] Failed to parse saved config:', e);
-      }
-    }
-    
-    // Ensure we're in real mode
-    this.config.mode = 'real';
     console.log('[ApiConfig] Current configuration:', this.config);
   }
 
@@ -61,19 +42,13 @@ export class ApiConfigManager {
   }
 
   static setMode(mode: ApiMode): void {
+    // Only switch if mode actually changed
+    if (this.config.mode === mode) return;
+    
     console.log(`[ApiConfig] Switching API mode from ${this.config.mode} to ${mode}`);
     this.config.mode = mode;
     
-    // Only save 'real' mode to localStorage, never persist 'mock'
-    if (mode === 'real') {
-      localStorage.setItem(API_MODE_KEY, mode);
-      localStorage.setItem(API_CONFIG_KEY, JSON.stringify(this.config));
-    } else {
-      // Clear saved mode when switching to mock
-      localStorage.removeItem(API_MODE_KEY);
-      localStorage.removeItem(API_CONFIG_KEY);
-    }
-    
+    // Never persist mode changes - only in memory
     console.log('[ApiConfig] Notifying listeners of mode change');
     this.listeners.forEach(listener => listener(mode));
   }
