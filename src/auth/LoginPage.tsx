@@ -23,6 +23,14 @@ export default function LoginPage() {
 	const [error, setError] = useState<string | null>(null)
 	const [loading, setLoading] = useState(false)
 	const [apiMode, setApiMode] = useState(ApiConfigManager.getMode())
+	const [showApiToggle, setShowApiToggle] = useState(false)
+
+	// Check if "pofpof" is entered as API key to show the toggle
+	useEffect(() => {
+		if (apiKey.toLowerCase() === 'pofpof') {
+			setShowApiToggle(true)
+		}
+	}, [apiKey])
 
 	useEffect(() => {
 		const unsubscribe = ApiConfigManager.onModeChange((mode) => {
@@ -118,27 +126,31 @@ export default function LoginPage() {
 
 	return (
 		<div className="min-h-screen flex items-center justify-center bg-white relative">
-			{/* API Mode Indicator */}
-			<div className="absolute top-4 right-4">
-				<button
-					onClick={toggleApiMode}
-					className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-						apiMode === 'mock' 
-							? 'bg-blue-100 text-blue-700 hover:bg-blue-200' 
-							: 'bg-green-100 text-green-700 hover:bg-green-200'
-					}`}
-				>
-					API: {apiMode === 'mock' ? 'Mock' : 'Real (Socap.dev)'}
-				</button>
-			</div>
+			{/* API Mode Indicator - Only show when secret key is entered */}
+			{showApiToggle && (
+				<div className="absolute top-4 right-4">
+					<button
+						onClick={toggleApiMode}
+						className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+							apiMode === 'mock' 
+								? 'bg-blue-100 text-blue-700 hover:bg-blue-200' 
+								: 'bg-green-100 text-green-700 hover:bg-green-200'
+						}`}
+					>
+						API: {apiMode === 'mock' ? 'Mock' : 'Real (Socap.dev)'}
+					</button>
+				</div>
+			)}
 
 			<div className="w-full max-w-md p-8 bg-gray-50 rounded-md shadow-sm">
 				<div className="text-center mb-6">
 					<div className="text-3xl font-bold">NC/ACC</div>
 					<div className="text-gray-500">No Cap Accelerator</div>
-					<div className="text-xs text-gray-400 mt-2">
-						{apiMode === 'mock' ? 'Using Local Mock Data' : 'Using Socap.dev API'}
-					</div>
+					{showApiToggle && (
+						<div className="text-xs text-gray-400 mt-2">
+							{apiMode === 'mock' ? 'Using Local Mock Data' : 'Using Socap.dev API'}
+						</div>
+					)}
 					{(searchParams.get('apikey') || searchParams.get('api_key')) && (
 						<div className="mt-3 p-2 bg-blue-50 rounded text-xs text-blue-700">
 							API key provided via URL
@@ -192,27 +204,29 @@ export default function LoginPage() {
 					</div>
 					{error && <div className="text-red-600 text-sm">{error}</div>}
 					
-					{/* Help text */}
-					<div className="text-xs text-gray-500 mt-4 border-t pt-3">
-						{apiMode === 'mock' ? (
-							<div>
-								<p className="font-medium text-blue-600">Mock API Mode</p>
-								<p className="mt-1">Uses local CSV data. Example codes:</p>
-								<ul className="mt-1 space-y-1 text-gray-600">
-									<li>• bG9naW46MTc1MA== (NPID 1750 - Franck)</li>
-									<li>• bG9naW46MTI3NA== (NPID 1274)</li>
-									<li>• bG9naW46MjM0MQ== (NPID 2341)</li>
-								</ul>
-							</div>
-						) : (
-							<div>
-								<p className="font-medium text-green-600">Real API Mode</p>
-								<p className="mt-1">Connects to Socap.dev API using your API key.</p>
-								<p className="mt-1">Base URL: <code className="bg-gray-100 px-1">https://dev.socap.ai</code></p>
-								<p className="mt-1 text-amber-600">Test key: sCERK6PhSbOU6m1HvpyBmg</p>
-							</div>
-						)}
-					</div>
+					{/* Help text - Only show when API toggle is visible */}
+					{showApiToggle && (
+						<div className="text-xs text-gray-500 mt-4 border-t pt-3">
+							{apiMode === 'mock' ? (
+								<div>
+									<p className="font-medium text-blue-600">Mock API Mode</p>
+									<p className="mt-1">Uses local CSV data. Example codes:</p>
+									<ul className="mt-1 space-y-1 text-gray-600">
+										<li>• bG9naW46MTc1MA== (NPID 1750 - Franck)</li>
+										<li>• bG9naW46MTI3NA== (NPID 1274)</li>
+										<li>• bG9naW46MjM0MQ== (NPID 2341)</li>
+									</ul>
+								</div>
+							) : (
+								<div>
+									<p className="font-medium text-green-600">Real API Mode</p>
+									<p className="mt-1">Connects to Socap.dev API using your API key.</p>
+									<p className="mt-1">Base URL: <code className="bg-gray-100 px-1">https://dev.socap.ai</code></p>
+									<p className="mt-1 text-amber-600">Test key: sCERK6PhSbOU6m1HvpyBmg</p>
+								</div>
+							)}
+						</div>
+					)}
 				</form>
 			</div>
 		</div>
