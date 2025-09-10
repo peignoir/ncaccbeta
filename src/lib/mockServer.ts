@@ -355,7 +355,8 @@ export function installMockApi() {
 						let startups = await loadStartups()
 						
 						// Check for user authentication and filter by house
-						const authHeader = init?.headers?.['Authorization'] || init?.headers?.['authorization']
+						const headers = init?.headers as Record<string, string> | undefined
+						const authHeader = headers?.['Authorization'] || headers?.['authorization']
 						let userHouse: string | null = null
 						
 						if (authHeader && authHeader.startsWith('Bearer ')) {
@@ -371,7 +372,7 @@ export function installMockApi() {
 								)
 								
 								if (userStartup) {
-									userHouse = userStartup.house
+									userHouse = userStartup.house || null
 									console.log('[MockServer] User house found:', userHouse)
 								}
 							} catch (e) {
