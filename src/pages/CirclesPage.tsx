@@ -139,88 +139,109 @@ export default function CirclesPage() {
 			{/* My Circle */}
 			{myCircle && (
 				<div className="bg-white rounded-xl shadow-lg p-6 border-2 border-indigo-500">
-					<div className="flex justify-between items-start mb-6">
-						<div>
-							<h2 className="text-2xl font-bold text-gray-900">{myCircle.name}</h2>
-							<span className="inline-block px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm font-medium mt-2">
-								Your Circle
-							</span>
-						</div>
-						<div className="text-right">
-							<div className="bg-gray-50 rounded-lg p-3">
-								<h4 className="text-sm font-semibold text-gray-700 mb-2">Contact Info</h4>
-								{(() => {
-									const currentUserMember = myCircle.members.find(m => 
-										m.name === user?.name || 
-										m.startup === user?.startup?.name
-									)
-									if (!currentUserMember) {
-										return <p className="text-sm text-gray-500">No contact info available</p>
-									}
-									return (
-										<div className="space-y-1">
-											{currentUserMember.email && (
-												<div className="text-sm">
-													<span className="text-gray-600">Email:</span>{' '}
-													<a href={`mailto:${currentUserMember.email}`} className="text-indigo-600 hover:text-indigo-800">
-														{currentUserMember.email}
-													</a>
-												</div>
-											)}
-											{currentUserMember.telegram && (
-												<div className="text-sm">
-													<span className="text-gray-600">Telegram:</span>{' '}
-													<span className="text-indigo-600">@{currentUserMember.telegram}</span>
-												</div>
-											)}
-											{!currentUserMember.email && !currentUserMember.telegram && (
-												<p className="text-sm text-gray-500">No contact info available</p>
-											)}
-										</div>
-									)
-								})()}
+					{/* Check if circle has 0 or 1 members */}
+					{myCircle.members.length <= 1 ? (
+						<div className="text-center py-8">
+							<h2 className="text-2xl font-bold text-gray-900 mb-4">Your Circle is Being Formed</h2>
+							<div className="max-w-2xl mx-auto space-y-4">
+								<p className="text-lg text-gray-700">
+									We match circles based on activity, geography, and more.
+								</p>
+								<p className="text-gray-600">
+									Since you're just getting started, your circle isn't ready yet — but keep working and chatting with No Cap, 
+									and in a day or two you'll see your amazing peer circle take shape.
+								</p>
+								<p className="text-indigo-600 font-semibold text-lg mt-6">
+									#goodluck!
+								</p>
 							</div>
 						</div>
-					</div>
-					
-					<p className="text-gray-600 mb-6">{myCircle.description}</p>
-					
-					{/* Meeting Schedule */}
-					<div className="bg-indigo-50 rounded-lg p-4 mb-6">
-						<h3 className="font-semibold text-indigo-900 mb-2">Suggested Schedule</h3>
-						<div className="space-y-2 text-sm text-indigo-800">
-							<div>📅 <strong>Weekly Standup:</strong> Mondays 10am (your timezone)</div>
-							<div>🎯 <strong>Format:</strong> 5min each - Last week wins, this week goals, blockers</div>
-							<div>🆘 <strong>Emergency Room:</strong> Always open for urgent help</div>
-						</div>
-					</div>
-					
-					{/* Members Grid */}
-					<h3 className="font-semibold text-gray-900 mb-4">Members ({myCircle.members.length})</h3>
-					<div className="grid md:grid-cols-2 gap-4">
-						{myCircle.members.map((member) => (
-							<div 
-								key={member.id} 
-								className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition cursor-pointer"
-								onClick={() => openMemberProfile(member)}
-							>
-								<div className="flex justify-between items-start">
-									<div>
-										<p className="font-semibold text-gray-900">{member.name}</p>
-										<p className="text-sm text-gray-600">{member.startup}</p>
-										{member.house && (
-											<span className="inline-block mt-1 px-2 py-1 bg-white text-xs text-gray-600 rounded">
-												{member.house}
-											</span>
-										)}
+					) : (
+						<>
+							<div className="flex justify-between items-start mb-6">
+								<div>
+									<h2 className="text-2xl font-bold text-gray-900">{myCircle.name}</h2>
+									<span className="inline-block px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm font-medium mt-2">
+										Your Circle
+									</span>
+								</div>
+								<div className="text-right">
+									<div className="bg-gray-50 rounded-lg p-3">
+										<h4 className="text-sm font-semibold text-gray-700 mb-2">Contact Info</h4>
+										{(() => {
+											const currentUserMember = myCircle.members.find(m => 
+												m.name === user?.name || 
+												m.startup === user?.startup?.name
+											)
+											if (!currentUserMember) {
+												return <p className="text-sm text-gray-500">No contact info available</p>
+											}
+											return (
+												<div className="space-y-1">
+													{currentUserMember.email && (
+														<div className="text-sm">
+															<span className="text-gray-600">Email:</span>{' '}
+															<a href={`mailto:${currentUserMember.email}`} className="text-indigo-600 hover:text-indigo-800">
+																{currentUserMember.email}
+															</a>
+														</div>
+													)}
+													{currentUserMember.telegram && (
+														<div className="text-sm">
+															<span className="text-gray-600">Telegram:</span>{' '}
+															<span className="text-indigo-600">@{currentUserMember.telegram}</span>
+														</div>
+													)}
+													{!currentUserMember.email && !currentUserMember.telegram && (
+														<p className="text-sm text-gray-500">No contact info available</p>
+													)}
+												</div>
+											)
+										})()}
 									</div>
-									<button className="text-indigo-600 hover:text-indigo-800 text-sm">
-										View Profile →
-									</button>
 								</div>
 							</div>
-						))}
-					</div>
+							
+							<p className="text-gray-600 mb-6">{myCircle.description}</p>
+							
+							{/* Meeting Schedule */}
+							<div className="bg-indigo-50 rounded-lg p-4 mb-6">
+								<h3 className="font-semibold text-indigo-900 mb-2">Suggested Schedule</h3>
+								<div className="space-y-2 text-sm text-indigo-800">
+									<div>📅 <strong>Weekly Standup:</strong> Mondays 10am (your timezone)</div>
+									<div>🎯 <strong>Format:</strong> 5min each - Last week wins, this week goals, blockers</div>
+									<div>🆘 <strong>Emergency Room:</strong> Always open for urgent help</div>
+								</div>
+							</div>
+							
+							{/* Members Grid */}
+							<h3 className="font-semibold text-gray-900 mb-4">Members ({myCircle.members.length})</h3>
+							<div className="grid md:grid-cols-2 gap-4">
+								{myCircle.members.map((member) => (
+									<div 
+										key={member.id} 
+										className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition cursor-pointer"
+										onClick={() => openMemberProfile(member)}
+									>
+										<div className="flex justify-between items-start">
+											<div>
+												<p className="font-semibold text-gray-900">{member.name}</p>
+												<p className="text-sm text-gray-600">{member.startup}</p>
+												{member.house && (
+													<span className="inline-block mt-1 px-2 py-1 bg-white text-xs text-gray-600 rounded">
+														{member.house}
+													</span>
+												)}
+											</div>
+											<button className="text-indigo-600 hover:text-indigo-800 text-sm">
+												View Profile →
+											</button>
+										</div>
+									</div>
+								))}
+							</div>
+						</>
+					)}
 				</div>
 			)}
 
