@@ -245,60 +245,6 @@ export default function CirclesPage() {
 				</div>
 			)}
 
-			{/* Other Circles */}
-			<div>
-				<h2 className="text-2xl font-bold text-gray-900 mb-6">Other Circles</h2>
-				<div className="grid md:grid-cols-2 gap-6">
-					{circles.filter(c => c.id !== myCircle?.id).map((circle) => (
-						<div key={circle.id} className="bg-white rounded-xl shadow-md p-6">
-							<h3 className="text-xl font-semibold text-gray-900 mb-2">{circle.name}</h3>
-							<p className="text-gray-600 text-sm mb-4">{circle.description}</p>
-							
-							<div className="space-y-3">
-								<div className="flex items-center justify-between text-sm">
-									<span className="text-gray-500">Members</span>
-									<span className="font-medium">{circle.members.length} founders</span>
-								</div>
-								
-								{/* Circle Focus */}
-								{circle.insights && (
-									<div className="pt-3 border-t border-gray-200">
-										<p className="text-xs font-medium text-gray-500 mb-2">Circle Focus:</p>
-										<ul className="space-y-1">
-											{circle.insights.slice(0, 2).map((insight, idx) => (
-												<li key={idx} className="text-sm text-gray-600">
-													• {insight}
-												</li>
-											))}
-										</ul>
-									</div>
-								)}
-
-								{/* Sample Members */}
-								<div className="pt-3 border-t border-gray-200">
-									<p className="text-xs font-medium text-gray-500 mb-2">Members:</p>
-									<div className="flex flex-wrap gap-2">
-										{circle.members.slice(0, 3).map((member) => (
-											<span 
-												key={member.id} 
-												className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded cursor-pointer hover:bg-gray-200"
-												onClick={() => openMemberProfile(member)}
-											>
-												{member.name.split(' ')[0]}
-											</span>
-										))}
-										{circle.members.length > 3 && (
-											<span className="text-xs text-gray-500">
-												+{circle.members.length - 3} more
-											</span>
-										)}
-									</div>
-								</div>
-							</div>
-						</div>
-					))}
-				</div>
-			</div>
 
 			{/* Member Profile Modal */}
 			<CircleMemberModal
