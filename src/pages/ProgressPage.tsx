@@ -1274,8 +1274,8 @@ export default function ProgressPage() {
 								</div>
 							)}
 							
-							{/* All Raw Fields */}
-							<div className="border-t pt-6">
+							{/* All Raw Fields - Hidden for production */}
+							{/* <div className="border-t pt-6">
 								<details className="group">
 									<summary className="cursor-pointer text-lg font-semibold text-gray-900 mb-4 hover:text-indigo-600">
 										All Data Fields ▼
@@ -1286,7 +1286,7 @@ export default function ProgressPage() {
 										</pre>
 									</div>
 								</details>
-							</div>
+							</div> */}
 						</div>
 					</div>
 				</div>
