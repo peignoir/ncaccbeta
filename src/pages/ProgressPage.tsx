@@ -74,6 +74,47 @@ function getHouseBadgeClass(house: string | undefined): string {
 	return 'bg-gray-100 text-gray-700';
 }
 
+// Function to get house goal information
+function getHouseGoalInfo(house: string | undefined): { goal: string; description: string } {
+	if (!house) return { goal: 'Define Your Path', description: 'Set your startup goals and track progress' };
+	
+	const houseLower = house.toLowerCase();
+	
+	if (houseLower.includes('build')) {
+		return {
+			goal: 'Sustainable monthly profitability supporting lifestyle',
+			description: 'NC/ACC will help you build a profitable business that supports your desired quality of life. Focus on product-market fit, positive unit economics, and efficient operations that generate consistent monthly revenue while maintaining work-life balance.'
+		};
+	}
+	
+	if (houseLower.includes('venture')) {
+		return {
+			goal: 'First investor check (angel, pre-seed, or seed)',
+			description: 'NC/ACC will guide you to secure your first investment. Build an investor-ready pitch deck, engage with investors, structure deals, and close funding to accelerate your business growth.'
+		};
+	}
+	
+	if (houseLower.includes('side')) {
+		return {
+			goal: 'First $1,000 revenue while maintaining day job',
+			description: 'NC/ACC will help you generate your first revenue while keeping your day job. Launch your MVP, acquire paying customers, optimize your sales funnel, and build sustainable income streams.'
+		};
+	}
+	
+	if (houseLower.includes('karma')) {
+		return {
+			goal: 'First grant or major donation',
+			description: 'NC/ACC will support your mission-driven venture. Articulate your social impact, identify aligned funders, submit compelling applications, and secure funding to amplify your positive impact.'
+		};
+	}
+	
+	// Default for unknown houses
+	return {
+		goal: house + ' Goal',
+		description: 'NC/ACC will help you achieve your unique goals and build a successful venture aligned with your values and vision.'
+	};
+}
+
 export default function ProgressPage() {
 	const { user } = useAuth()
 	const [startups, setStartups] = useState<Startup[]>([])
@@ -377,21 +418,35 @@ export default function ProgressPage() {
 							</div>
 						</div>
 					</div>
+					{/* House Goal Information */}
 					<div className="mt-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg p-4 border border-indigo-200">
-						<p className="text-indigo-900 font-semibold italic">
-							💪 {isNaN(myStartup.progress) || myStartup.progress === null || myStartup.progress === undefined
-								? `Let's get started! This week: Validate your idea with 5 potential customers.`
-								: myStartup.progress >= 80 
-								? `No Cap: Amazing progress at ${myStartup.progress}%! This week: Close 2 deals and prepare for launch.`
-								: myStartup.progress >= 60
-								? `No Cap: Strong momentum at ${myStartup.progress}%! This week: Talk to 5 customers and iterate on their feedback.`
-								: myStartup.progress >= 40
-								? `No Cap: Good progress at ${myStartup.progress}%! This week: Ship that feature and get 3 user testimonials.`
-								: myStartup.progress >= 20
-								? `${myStartup.progress}% and climbing! This week: Launch your MVP and get feedback from 10 beta users.`
-								: `${myStartup.progress}% - Let's build momentum! This week: Validate your idea with 5 potential customers.`
-							}
-						</p>
+						<div className="space-y-3">
+							<div>
+								<p className="text-sm text-indigo-600 font-medium uppercase tracking-wide">Your {myStartup.house} House Goal</p>
+								<p className="text-lg font-bold text-indigo-900 mt-1">
+									{getHouseGoalInfo(myStartup.house).goal}
+								</p>
+							</div>
+							<p className="text-sm text-indigo-800 leading-relaxed">
+								{getHouseGoalInfo(myStartup.house).description}
+							</p>
+							<div className="pt-2 border-t border-indigo-200">
+								<p className="text-indigo-900 font-semibold italic">
+									💪 {isNaN(myStartup.progress) || myStartup.progress === null || myStartup.progress === undefined
+										? `Let's get started! This week: Take the first step toward your ${myStartup.house} goal.`
+										: myStartup.progress >= 80 
+										? `Amazing progress at ${myStartup.progress}%! You're close to achieving your ${myStartup.house} goal!`
+										: myStartup.progress >= 60
+										? `Strong momentum at ${myStartup.progress}%! Keep pushing toward your ${myStartup.house} milestone.`
+										: myStartup.progress >= 40
+										? `Good progress at ${myStartup.progress}%! Halfway to your ${myStartup.house} goal.`
+										: myStartup.progress >= 20
+										? `${myStartup.progress}% and climbing! Building toward your ${myStartup.house} goal.`
+										: `${myStartup.progress}% - Let's build momentum toward your ${myStartup.house} goal!`
+									}
+								</p>
+							</div>
+						</div>
 					</div>
 				</div>
 			)}
