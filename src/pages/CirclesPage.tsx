@@ -119,6 +119,9 @@ export default function CirclesPage() {
 				<p className="text-gray-600 max-w-3xl mx-auto">
 					Small groups of 4-7 founders in similar timezones. Meet weekly, share openly, help each other win.
 				</p>
+				<p className="text-lg mt-4 font-semibold text-indigo-700 max-w-3xl mx-auto">
+					One job: lift one another. Start with a kickoff call, agree on your rhythm and goals, and may the strongest circles rise!
+				</p>
 			</div>
 
 			{/* Mentoring Best Practices */}
