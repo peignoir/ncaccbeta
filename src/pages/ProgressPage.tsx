@@ -400,7 +400,7 @@ export default function ProgressPage() {
 									{myStartup.stealth ? 'Stealth Mode' : myStartup.name}
 								</h3>
 								<p className="text-gray-600">
-									{myStartup.stealth ? 'Information hidden' : `Founded by ${myStartup.founder_name}`}
+									{myStartup.stealth ? 'Information hidden' : `Solo-Founded by ${myStartup.founder_name}`}
 								</p>
 							</div>
 							<div className="flex items-center gap-4">
