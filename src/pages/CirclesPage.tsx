@@ -143,23 +143,40 @@ export default function CirclesPage() {
 								Your Circle
 							</span>
 						</div>
-						<div className="text-right space-y-2">
-							<a
-								href={generateMeetingLink(myCircle.id, 'weekly')}
-								target="_blank"
-								rel="noopener noreferrer"
-								className="block px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition text-sm"
-							>
-								📅 Join Weekly Meeting
-							</a>
-							<a
-								href={generateMeetingLink(myCircle.id, 'emergency')}
-								target="_blank"
-								rel="noopener noreferrer"
-								className="block px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition text-sm"
-							>
-								🆘 Emergency Help Room
-							</a>
+						<div className="text-right">
+							<div className="bg-gray-50 rounded-lg p-3">
+								<h4 className="text-sm font-semibold text-gray-700 mb-2">Contact Info</h4>
+								{(() => {
+									const currentUserMember = myCircle.members.find(m => 
+										m.name === user?.name || 
+										m.startup === user?.startup?.name
+									)
+									if (!currentUserMember) {
+										return <p className="text-sm text-gray-500">No contact info available</p>
+									}
+									return (
+										<div className="space-y-1">
+											{currentUserMember.email && (
+												<div className="text-sm">
+													<span className="text-gray-600">Email:</span>{' '}
+													<a href={`mailto:${currentUserMember.email}`} className="text-indigo-600 hover:text-indigo-800">
+														{currentUserMember.email}
+													</a>
+												</div>
+											)}
+											{currentUserMember.telegram && (
+												<div className="text-sm">
+													<span className="text-gray-600">Telegram:</span>{' '}
+													<span className="text-indigo-600">@{currentUserMember.telegram}</span>
+												</div>
+											)}
+											{!currentUserMember.email && !currentUserMember.telegram && (
+												<p className="text-sm text-gray-500">No contact info available</p>
+											)}
+										</div>
+									)
+								})()}
+							</div>
 						</div>
 					</div>
 					
