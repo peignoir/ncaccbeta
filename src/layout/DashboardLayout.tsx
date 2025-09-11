@@ -36,7 +36,7 @@ export default function DashboardLayout() {
 				<nav className="bg-white">
 					<div className="max-w-6xl mx-auto px-4 flex gap-4">
 						<Tab to="/progress" label="Your Startup" />
-						<Tab to="/circles" label="Circles" />
+						<Tab to="/circles" label="Your Peer Mentoring Circle" />
 						{isRealApiMode && <Tab to="/debug" label="Debug" />}
 					</div>
 				</nav>
