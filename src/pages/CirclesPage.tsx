@@ -149,7 +149,7 @@ export default function CirclesPage() {
 								</p>
 								<p className="text-gray-600">
 									Since you're just getting started, your circle isn't ready yet — but keep working and chatting with No Cap, 
-									and in a day or two you'll see your amazing peer circle take shape.
+									and in a day or two you will be able to access your amazing peer circle.
 								</p>
 								<p className="text-indigo-600 font-semibold text-lg mt-6">
 									#goodluck!
