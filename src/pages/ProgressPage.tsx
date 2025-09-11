@@ -433,7 +433,7 @@ export default function ProgressPage() {
 							<div className="pt-2 border-t border-indigo-200">
 								<p className="text-indigo-900 font-semibold italic">
 									💪 {isNaN(myStartup.progress) || myStartup.progress === null || myStartup.progress === undefined
-										? `Let's get started! This week: Take the first step toward your ${myStartup.house} goal.`
+										? `Ready to start? Talk to NC/ACC to set your goals and get personalized guidance on your first steps toward your ${myStartup.house} milestone!`
 										: myStartup.progress >= 80 
 										? `Amazing progress at ${myStartup.progress}%! You're close to achieving your ${myStartup.house} goal!`
 										: myStartup.progress >= 60
@@ -756,6 +756,16 @@ export default function ProgressPage() {
 						</div>
 
 						<div className="px-8 py-6 space-y-8">
+							{/* NC/ACC Edit Notice */}
+							{selectedStartup.id === myStartup?.id && (
+								<div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-200">
+									<p className="text-sm text-blue-800">
+										<span className="font-semibold">💬 Want to update this information?</span> Talk to NC/ACC! 
+										She'll help you refine your startup details, track your progress, and provide personalized guidance based on your {myStartup.house} house goals.
+									</p>
+								</div>
+							)}
+							
 							{/* Pitch Video at Top */}
 							{(() => {
 								const isEditing = editingField === 'modal' && selectedStartup.id === myStartup?.id
