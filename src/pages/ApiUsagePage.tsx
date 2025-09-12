@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import ApiConfigManager from '../lib/apiConfig'
+import { initializeDemoData } from '../lib/generateDemoUsage'
 
 type ApiUsageRecord = {
   timestamp: string
@@ -33,6 +34,8 @@ export default function ApiUsagePage() {
       navigate('/progress')
       return
     }
+    // Initialize demo data if needed
+    initializeDemoData()
     loadUsageData()
   }, [timeRange])
 
