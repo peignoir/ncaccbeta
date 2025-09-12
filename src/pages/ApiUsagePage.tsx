@@ -42,9 +42,12 @@ export default function ApiUsagePage() {
   const loadUsageData = () => {
     // Load from localStorage (in production, this would come from a backend)
     const storedUsage = localStorage.getItem('ncacc_api_usage')
+    console.log('[ApiUsagePage] Loading usage data from localStorage')
+    
     if (storedUsage) {
       try {
         const records: ApiUsageRecord[] = JSON.parse(storedUsage)
+        console.log(`[ApiUsagePage] Parsed ${records.length} records`)
         
         // Filter by time range
         const now = new Date()
@@ -70,11 +73,22 @@ export default function ApiUsagePage() {
         
         setUsageRecords(filteredRecords)
         calculateUserStats(filteredRecords)
+        console.log(`[ApiUsagePage] Showing ${filteredRecords.length} records after filtering`)
       } catch (e) {
         console.error('Failed to parse usage data:', e)
       }
+    } else {
+      console.log('[ApiUsagePage] No usage data found in localStorage')
+      setUsageRecords([])
+      setUserStats([])
     }
     setLoading(false)
+  }
+  
+  const regenerateDemoData = () => {
+    console.log('[ApiUsagePage] Regenerating demo data')
+    initializeDemoData(true)
+    loadUsageData()
   }
 
   const calculateUserStats = (records: ApiUsageRecord[]) => {
@@ -150,6 +164,14 @@ export default function ApiUsagePage() {
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-3xl font-bold text-gray-900">API Usage Analytics</h2>
           <div className="flex items-center gap-2">
+            {ApiConfigManager.getApiKey() === 'pofpof' && (
+              <button
+                onClick={regenerateDemoData}
+                className="px-3 py-2 border border-purple-300 bg-purple-100 hover:bg-purple-200 rounded-lg text-sm text-purple-700 font-medium transition"
+              >
+                Generate Demo Data
+              </button>
+            )}
             <select
               value={timeRange}
               onChange={(e) => setTimeRange(e.target.value as any)}
