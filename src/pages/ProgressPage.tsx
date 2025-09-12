@@ -144,20 +144,30 @@ export default function ProgressPage() {
 				throw new Error(response.error || 'Failed to load startups')
 			}
 			
-			const processedData = response.data.map((s: any) => ({
-				...s,
-				id: String(s.npid || s.id), // Ensure we have an id field for compatibility
-				progress: s.progress_percent !== undefined && s.progress_percent !== null 
-					? s.progress_percent 
-					: (s.current_progress !== undefined && s.current_progress !== null 
-						? Math.round(s.current_progress * 100) 
-						: (s.progress !== undefined && s.progress !== null ? s.progress : 0)),
-				stealth: s.stealth === true || s.stealth === 'true' || s.stealth === '1',
-				contact_me: s.contact_me !== false && s.contact_me !== 'false' && s.contact_me !== '0',
-				name: s.startup_name || s.name || 'Unknown Startup',
-				founder_name: s.username || s.founder_name || s.founder || s.name || 'Unknown Founder'
-			}))
-			console.log(`[ProgressPage] Processed ${processedData.length} startups`)
+			const processedData = response.data
+				.map((s: any) => ({
+					...s,
+					id: String(s.npid || s.id), // Ensure we have an id field for compatibility
+					progress: s.progress_percent !== undefined && s.progress_percent !== null 
+						? s.progress_percent 
+						: (s.current_progress !== undefined && s.current_progress !== null 
+							? Math.round(s.current_progress * 100) 
+							: (s.progress !== undefined && s.progress !== null ? s.progress : 0)),
+					stealth: s.stealth === true || s.stealth === 'true' || s.stealth === '1',
+					contact_me: s.contact_me !== false && s.contact_me !== 'false' && s.contact_me !== '0',
+					name: s.startup_name || s.name || 'Unknown Startup',
+					founder_name: s.username || s.founder_name || s.founder || s.name || 'Unknown Founder'
+				}))
+				.filter((s: any) => {
+					// Filter out startups with house = "unknown"
+					const house = s.house?.toLowerCase();
+					if (house === 'unknown') {
+						console.log(`[ProgressPage] Filtering out startup with unknown house: ${s.name} (npid: ${s.npid})`);
+						return false;
+					}
+					return true;
+				})
+			console.log(`[ProgressPage] Processed ${processedData.length} startups (after filtering unknown houses)`)
 			console.log('[ProgressPage] All telegram_ids:', processedData.map((s: any) => ({ npid: s.npid, telegram_id: s.telegram_id, name: s.username })))
 			setStartups(processedData)
 			
