@@ -57,14 +57,39 @@ function hashUserId(userId: string): string {
 }
 
 // Initialize demo data if in pofpof mode
-export function initializeDemoData() {
+export function initializeDemoData(forceRegenerate = false) {
   const apiKey = localStorage.getItem('ncacc_api_key');
+  console.log('[Demo] Checking if should initialize demo data. API key:', apiKey);
+  
   if (apiKey === 'pofpof') {
     const existingData = localStorage.getItem('ncacc_api_usage');
-    if (!existingData || JSON.parse(existingData).length === 0) {
+    let shouldGenerate = forceRegenerate;
+    
+    try {
+      if (!existingData) {
+        shouldGenerate = true;
+        console.log('[Demo] No existing data, will generate');
+      } else {
+        const parsed = JSON.parse(existingData);
+        if (!Array.isArray(parsed) || parsed.length === 0) {
+          shouldGenerate = true;
+          console.log('[Demo] Existing data is empty, will generate');
+        } else {
+          console.log(`[Demo] Found ${parsed.length} existing records`);
+        }
+      }
+    } catch (e) {
+      shouldGenerate = true;
+      console.log('[Demo] Error parsing existing data, will generate');
+    }
+    
+    if (shouldGenerate) {
       const demoData = generateDemoUsageData();
       localStorage.setItem('ncacc_api_usage', JSON.stringify(demoData));
-      console.log('[Demo] Generated demo API usage data');
+      console.log(`[Demo] Generated ${demoData.length} demo API usage records`);
+      return demoData;
     }
   }
+  
+  return null;
 }
