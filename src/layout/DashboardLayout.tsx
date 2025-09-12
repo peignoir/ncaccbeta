@@ -37,6 +37,10 @@ export default function DashboardLayout() {
 					<div className="max-w-6xl mx-auto px-4 flex gap-6">
 						<Tab to="/progress" label="🚀 Your Startup" isPrimary />
 						<Tab to="/circles" label="👥 Your Peer Mentoring Circle" isPrimary />
+						{/* Admin tabs for pofpof users */}
+						{!isRealApiMode && (
+							<Tab to="/api-usage" label="📊 API Usage" />
+						)}
 						{/* Debug tab - uncomment to enable */}
 						{/* {isRealApiMode && <Tab to="/debug" label="Debug" />} */}
 					</div>

@@ -1,4 +1,5 @@
 import ApiConfigManager from './apiConfig';
+import apiUsageTracker from './apiUsageTracker';
 
 export interface SocapProfile {
   name: string;
@@ -98,6 +99,9 @@ export class SocapApiClient {
       headers: { ...options.headers, 'X-API-KEY': '***hidden***' }
     });
 
+    const startTime = Date.now();
+    let responseStatus = 0;
+    
     try {
       const response = await fetch(url, {
         ...options,
@@ -107,8 +111,19 @@ export class SocapApiClient {
         }
       });
 
+      responseStatus = response.status;
       console.log(`[SocapAPI] Response status: ${response.status} ${response.statusText}`);
       console.log('[SocapAPI] Response headers:', Object.fromEntries(response.headers.entries()));
+
+      // Track API usage
+      const responseTime = Date.now() - startTime;
+      apiUsageTracker.track(
+        endpoint,
+        options.method || 'GET',
+        config.apiKey,
+        responseTime,
+        response.status
+      );
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -120,6 +135,16 @@ export class SocapApiClient {
       console.log('[SocapAPI] Response data:', data);
       return data;
     } catch (error) {
+      // Track failed requests too
+      if (!responseStatus) {
+        apiUsageTracker.track(
+          endpoint,
+          options.method || 'GET',
+          config.apiKey,
+          Date.now() - startTime,
+          500 // Network error
+        );
+      }
       console.error('[SocapAPI] Request failed:', error);
       throw error;
     }

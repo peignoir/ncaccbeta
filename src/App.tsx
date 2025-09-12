@@ -5,6 +5,7 @@ import DashboardLayout from './layout/DashboardLayout'
 import ProgressPage from './pages/ProgressPage'
 import CirclesPage from './pages/CirclesPage'
 import DebugPage from './pages/DebugPage'
+import ApiUsagePage from './pages/ApiUsagePage'
 
 function ProtectedRoute({ children }: { children: JSX.Element }) {
 	const { isAuthenticated } = useAuth()
@@ -29,6 +30,7 @@ export default function App() {
 					<Route path="progress" element={<ProgressPage />} />
 					<Route path="circles" element={<CirclesPage />} />
 					<Route path="debug" element={<DebugPage />} />
+					<Route path="api-usage" element={<ApiUsagePage />} />
 				</Route>
 				<Route path="*" element={<Navigate to="/" replace />} />
 			</Routes>
