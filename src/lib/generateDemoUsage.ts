@@ -1,3 +1,5 @@
+import ApiConfigManager from './apiConfig';
+
 // Generate demo usage data for testing the API usage dashboard
 export function generateDemoUsageData() {
   const demoData = [];
@@ -59,9 +61,12 @@ function hashUserId(userId: string): string {
 // Initialize demo data if in pofpof mode
 export function initializeDemoData(forceRegenerate = false) {
   const apiKey = localStorage.getItem('ncacc_api_key');
-  console.log('[Demo] Checking if should initialize demo data. API key:', apiKey);
+  const apiKeyFromManager = ApiConfigManager.getApiKey();
+  console.log('[Demo] Checking if should initialize demo data. API key from localStorage:', apiKey);
+  console.log('[Demo] API key from ConfigManager:', apiKeyFromManager);
   
-  if (apiKey === 'pofpof') {
+  // Check both sources for pofpof (or if force regenerate is true)
+  if (apiKey === 'pofpof' || apiKeyFromManager === 'pofpof' || forceRegenerate) {
     const existingData = localStorage.getItem('ncacc_api_usage');
     let shouldGenerate = forceRegenerate;
     
