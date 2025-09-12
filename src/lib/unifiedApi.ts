@@ -2,6 +2,7 @@ import ApiConfigManager from './apiConfig';
 import socapApi from './socapApi';
 import ApiDataTransformer, { AppStartup } from './apiDataTransformer';
 import MockDataProvider from './mockDataProvider';
+import apiUsageTracker from './apiUsageTracker';
 
 export interface UnifiedApiResponse<T> {
   success: boolean;
@@ -75,6 +76,7 @@ export class UnifiedApi {
 
   private async realLogin(code: string): Promise<UnifiedApiResponse<{ token: string; npid: number; username: string; telegram_id?: number | string }>> {
     console.log('[UnifiedAPI] Performing real API login with token:', code);
+    const startTime = Date.now();
     
     try {
       // Get the user profile to identify the logged-in user
@@ -82,6 +84,15 @@ export class UnifiedApi {
       
       const profile = await socapApi.getProfile();
       console.log('[UnifiedAPI] Successfully authenticated with Socap API, profile:', profile);
+      
+      // Track successful login
+      apiUsageTracker.track(
+        '/api/v1/agent/agent_user/profile',
+        'GET',
+        ApiConfigManager.getApiKey(),
+        Date.now() - startTime,
+        200
+      );
       
       // Store profile data for later matching
       const telegram_id = profile.telegram_id;
@@ -187,8 +198,18 @@ export class UnifiedApi {
         console.warn('[UnifiedAPI] Could not get profile for user identification:', error);
       }
       
+      const eventsStartTime = Date.now();
       const events = await socapApi.getEventList();
       console.log(`[UnifiedAPI] Got ${events.length} events from real API`);
+      
+      // Manually track this important call
+      apiUsageTracker.track(
+        '/api/v1/agent/agent_user/event-list',
+        'GET',
+        ApiConfigManager.getApiKey(),
+        Date.now() - eventsStartTime,
+        200
+      );
       
       // Log to help debug user matching
       if (currentUserTelegramId) {
