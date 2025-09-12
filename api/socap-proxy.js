@@ -17,7 +17,8 @@ export default async function handler(req, res) {
     }
 
     // Build the Socap API URL
-    const url = `https://dev.socap.ai${path}`;
+    // const url = `https://dev.socap.ai${path}`;
+    const url = `https://app.socap.ai${path}`; // Production server
     console.log(`[Proxy] Forwarding request to: ${url}`);
 
     // Forward the request

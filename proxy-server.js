@@ -13,7 +13,8 @@ app.use(express.json());
 app.use('/api', async (req, res) => {
   try {
     const apiPath = req.originalUrl;
-    const apiUrl = `https://dev.socap.ai${apiPath}`;
+    // const apiUrl = `https://dev.socap.ai${apiPath}`;
+    const apiUrl = `https://app.socap.ai${apiPath}`; // Production server
     
     console.log(`[Proxy] ${req.method} ${apiPath} -> ${apiUrl}`);
     
@@ -22,7 +23,8 @@ app.use('/api', async (req, res) => {
       url: apiUrl,
       headers: {
         ...req.headers,
-        host: 'dev.socap.ai',
+        // host: 'dev.socap.ai',
+        host: 'app.socap.ai', // Production server
       },
       data: req.body,
     });
@@ -40,5 +42,6 @@ app.use('/api', async (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Proxy server running on http://localhost:${PORT}`);
-  console.log('Proxying requests from /api/* to https://dev.socap.ai/api/*');
+  // console.log('Proxying requests from /api/* to https://dev.socap.ai/api/*');
+  console.log('Proxying requests from /api/* to https://app.socap.ai/api/*'); // Production server
 });
