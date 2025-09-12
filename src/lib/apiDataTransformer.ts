@@ -37,7 +37,9 @@ export class ApiDataTransformer {
     
     // Use raw group value directly from API
     const house = event.data.group || 'unknown';
-    const progress = Math.round(event.data.percent);
+    const progress = event.data.percent !== undefined && event.data.percent !== null 
+      ? Math.round(event.data.percent) 
+      : 0;
     
     // Extract all available data from details
     const details = event.data.details || {};
@@ -80,7 +82,9 @@ export class ApiDataTransformer {
       github_repos: details.github_repos,
       founder_country: details.founder_country,
       competitors_urls: details.competitors_urls,
-      current_progress: details.current_progress || progress,
+      current_progress: details.current_progress !== undefined && details.current_progress !== null 
+        ? details.current_progress 
+        : (progress / 100),
       why_now_catalyst: details.why_now_catalyst,
       problem_statement: details.problem_statement,
       value_proposition: details.value_proposition,
