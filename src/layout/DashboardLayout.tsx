@@ -33,10 +33,10 @@ export default function DashboardLayout() {
 						</button>
 					</div>
 				</div>
-				<nav className="bg-white">
-					<div className="max-w-6xl mx-auto px-4 flex gap-4">
-						<Tab to="/progress" label="Your Startup" />
-						<Tab to="/circles" label="Your Peer Mentoring Circle" />
+				<nav className="bg-gradient-to-r from-indigo-50 to-purple-50 border-t border-gray-100">
+					<div className="max-w-6xl mx-auto px-4 flex gap-6">
+						<Tab to="/progress" label="🚀 Your Startup" isPrimary />
+						<Tab to="/circles" label="👥 Your Peer Mentoring Circle" isPrimary />
 						{isRealApiMode && <Tab to="/debug" label="Debug" />}
 					</div>
 				</nav>
@@ -48,13 +48,21 @@ export default function DashboardLayout() {
 	)
 }
 
-function Tab({ to, label }: { to: string; label: string }) {
+function Tab({ to, label, isPrimary = false }: { to: string; label: string; isPrimary?: boolean }) {
 	return (
 		<NavLink
 			to={to}
 			className={({ isActive }) =>
-				`py-3 border-b-2 -mb-px ${
-					isActive ? 'border-primary text-primary' : 'border-transparent text-gray-600 hover:text-black'
+				`py-4 px-2 border-b-3 -mb-px font-medium transition-all duration-200 ${
+					isActive 
+						? isPrimary 
+							? 'border-indigo-600 text-indigo-700 bg-white rounded-t-lg shadow-sm scale-105' 
+							: 'border-indigo-500 text-indigo-600'
+						: isPrimary
+							? 'border-transparent text-gray-700 hover:text-indigo-600 hover:bg-white/50 hover:border-indigo-300'
+							: 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
+				} ${
+					isPrimary ? 'text-base' : 'text-sm'
 				}`
 			}
 		>

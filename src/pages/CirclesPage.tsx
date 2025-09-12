@@ -139,8 +139,8 @@ export default function CirclesPage() {
 			{/* My Circle */}
 			{myCircle && (
 				<div className="bg-white rounded-xl shadow-lg p-6 border-2 border-indigo-500">
-					{/* Check if circle has 0 or 1 members */}
-					{myCircle.members.length <= 1 ? (
+					{/* Check if circle has 3 or fewer members */}
+					{myCircle.members.length <= 3 ? (
 						<div className="text-center py-8">
 							<h2 className="text-2xl font-bold text-gray-900 mb-4">Your Circle is Being Formed</h2>
 							<div className="max-w-2xl mx-auto space-y-4">
