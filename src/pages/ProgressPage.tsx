@@ -122,7 +122,7 @@ export default function ProgressPage() {
 	const [editingField, setEditingField] = useState<string | null>(null)
 	const [editValues, setEditValues] = useState<Record<string, any>>({})
 	const [houseFilter, setHouseFilter] = useState<string>('all')
-	const [stealthFilter, setStealthFilter] = useState<'all' | 'show' | 'hide'>('all')
+	// Removed stealth filter - no longer needed
 	const [sortBy, setSortBy] = useState<'progress' | 'name'>('progress')
 	const [myStartup, setMyStartup] = useState<Startup | null>(null)
 	const [selectedStartup, setSelectedStartup] = useState<Startup | null>(null)
@@ -372,10 +372,7 @@ export default function ProgressPage() {
 	const filteredStartups = startups
 		.filter(s => {
 			const houseMatch = houseFilter === 'all' || s.house === houseFilter
-			const stealthMatch = stealthFilter === 'all' || 
-				(stealthFilter === 'show' && s.stealth === true) ||
-				(stealthFilter === 'hide' && s.stealth !== true)
-			return houseMatch && stealthMatch
+			return houseMatch
 		})
 		.sort((a, b) => {
 			if (sortBy === 'progress') return b.progress - a.progress
@@ -494,15 +491,6 @@ export default function ProgressPage() {
 								))}
 							</select>
 						)}
-						<select
-							value={stealthFilter}
-							onChange={(e) => setStealthFilter(e.target.value as 'all' | 'show' | 'hide')}
-							className="px-3 py-1 border rounded-lg text-sm"
-						>
-							<option value="all">All Startups</option>
-							<option value="hide">Non-Stealth</option>
-							<option value="show">Stealth Only</option>
-						</select>
 						<select
 							value={sortBy}
 							onChange={(e) => setSortBy(e.target.value as 'progress' | 'name')}
