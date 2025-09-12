@@ -159,12 +159,8 @@ export default function ProgressPage() {
 					founder_name: s.username || s.founder_name || s.founder || s.name || 'Unknown Founder'
 				}))
 				.filter((s: any) => {
-					// Filter out startups with house = "unknown"
-					const house = s.house?.toLowerCase();
-					if (house === 'unknown') {
-						console.log(`[ProgressPage] Filtering out startup with unknown house: ${s.name} (npid: ${s.npid})`);
-						return false;
-					}
+					// Don't filter anything here - let the API handle it
+					// The API already ensures current user's startup is always included
 					return true;
 				})
 			console.log(`[ProgressPage] Processed ${processedData.length} startups (after filtering unknown houses)`)
@@ -430,35 +426,57 @@ export default function ProgressPage() {
 						</div>
 					</div>
 					{/* House Goal Information */}
-					<div className="mt-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg p-4 border border-indigo-200">
-						<div className="space-y-3">
-							<div>
-								<p className="text-sm text-indigo-600 font-medium uppercase tracking-wide">Your {myStartup.house} House Goal</p>
-								<p className="text-lg font-bold text-indigo-900 mt-1">
-									{getHouseGoalInfo(myStartup.house).goal}
+					{myStartup.house && myStartup.house.toLowerCase() !== 'unknown' ? (
+						<div className="mt-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg p-4 border border-indigo-200">
+							<div className="space-y-3">
+								<div>
+									<p className="text-sm text-indigo-600 font-medium uppercase tracking-wide">Your {myStartup.house} House Goal</p>
+									<p className="text-lg font-bold text-indigo-900 mt-1">
+										{getHouseGoalInfo(myStartup.house).goal}
+									</p>
+								</div>
+								<p className="text-sm text-indigo-800 leading-relaxed">
+									{getHouseGoalInfo(myStartup.house).description}
 								</p>
-							</div>
-							<p className="text-sm text-indigo-800 leading-relaxed">
-								{getHouseGoalInfo(myStartup.house).description}
-							</p>
-							<div className="pt-2 border-t border-indigo-200">
-								<p className="text-indigo-900 font-semibold italic">
-									💪 {isNaN(myStartup.progress) || myStartup.progress === null || myStartup.progress === undefined
-										? `Ready to start? Talk to No Cap to set your goals and get personalized guidance on your first steps toward your ${myStartup.house} milestone!`
-										: myStartup.progress >= 80 
-										? `Amazing progress at ${myStartup.progress}%! You're close to achieving your ${myStartup.house} goal!`
-										: myStartup.progress >= 60
-										? `Strong momentum at ${myStartup.progress}%! Keep pushing toward your ${myStartup.house} milestone.`
-										: myStartup.progress >= 40
-										? `Good progress at ${myStartup.progress}%! Halfway to your ${myStartup.house} goal.`
-										: myStartup.progress >= 20
-										? `${myStartup.progress}% and climbing! Building toward your ${myStartup.house} goal.`
-										: `${myStartup.progress}% - Let's build momentum toward your ${myStartup.house} goal!`
-									}
-								</p>
+								<div className="pt-2 border-t border-indigo-200">
+									<p className="text-indigo-900 font-semibold italic">
+										💪 {isNaN(myStartup.progress) || myStartup.progress === null || myStartup.progress === undefined
+											? `Ready to start? Talk to No Cap to set your goals and get personalized guidance on your first steps toward your ${myStartup.house} milestone!`
+											: myStartup.progress >= 80 
+											? `Amazing progress at ${myStartup.progress}%! You're close to achieving your ${myStartup.house} goal!`
+											: myStartup.progress >= 60
+											? `Strong momentum at ${myStartup.progress}%! Keep pushing toward your ${myStartup.house} milestone.`
+											: myStartup.progress >= 40
+											? `Good progress at ${myStartup.progress}%! Halfway to your ${myStartup.house} goal.`
+											: myStartup.progress >= 20
+											? `${myStartup.progress}% and climbing! Building toward your ${myStartup.house} goal.`
+											: `${myStartup.progress}% - Let's build momentum toward your ${myStartup.house} goal!`
+										}
+									</p>
+								</div>
 							</div>
 						</div>
-					</div>
+					) : (
+						<div className="mt-4 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg p-4 border border-yellow-200">
+							<div className="space-y-3">
+								<div>
+									<p className="text-sm text-orange-600 font-medium uppercase tracking-wide">Getting Started</p>
+									<p className="text-lg font-bold text-orange-900 mt-1">
+										Your House Assignment is Coming Soon!
+									</p>
+								</div>
+								<p className="text-sm text-orange-800 leading-relaxed">
+									Talk to No Cap to complete your onboarding and get assigned to the perfect house for your startup journey. 
+									Each house has unique goals and support systems tailored to different types of founders.
+								</p>
+								<div className="pt-2 border-t border-orange-200">
+									<p className="text-orange-900 font-semibold italic">
+										🚀 Ready to begin? Chat with No Cap to explore which house aligns with your vision!
+									</p>
+								</div>
+							</div>
+						</div>
+					)}
 				</div>
 			)}
 

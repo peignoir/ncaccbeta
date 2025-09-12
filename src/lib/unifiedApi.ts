@@ -209,8 +209,14 @@ export class UnifiedApi {
         ApiDataTransformer.transformSocapEventToStartup(event, index, currentUserTelegramId)
       );
       
-      // Filter out startups with house = "unknown"
+      // Filter out startups with house = "unknown" BUT always keep current user's startup
       const dataWithoutUnknown = transformedData.filter(s => {
+        // Always include the current user's startup
+        if (s.isCurrentUser) {
+          console.log(`[UnifiedAPI] Keeping current user's startup even if house is unknown: ${s.startup_name}`);
+          return true;
+        }
+        
         const house = s.house?.toLowerCase();
         if (house === 'unknown') {
           console.log(`[UnifiedAPI] Filtering out startup with unknown house: ${s.startup_name} (npid: ${s.npid})`);
@@ -228,10 +234,12 @@ export class UnifiedApi {
         const currentUserStartup = transformedData.find(s => s.isCurrentUser);
         const userHouse = currentUserStartup?.house;
         
-        if (userHouse) {
+        if (userHouse && userHouse.toLowerCase() !== 'unknown') {
           console.log(`[UnifiedAPI] Filtering to user's house: ${userHouse}`);
-          filteredData = transformedData.filter(s => s.house === userHouse);
-          console.log(`[UnifiedAPI] Filtered from ${transformedData.length} to ${filteredData.length} startups`);
+          filteredData = dataWithoutUnknown.filter(s => s.house === userHouse || s.isCurrentUser);
+          console.log(`[UnifiedAPI] Filtered from ${dataWithoutUnknown.length} to ${filteredData.length} startups`);
+        } else {
+          console.log(`[UnifiedAPI] User has no house or unknown house, showing all startups`);
         }
       }
       
