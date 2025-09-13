@@ -399,17 +399,17 @@ export default function ProgressPage() {
 
 			{/* Statistics Section */}
 			<div className="grid grid-cols-3 gap-4">
-				<div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
-					<div className="text-3xl font-bold text-indigo-600">{totalStartups}</div>
-					<div className="text-sm text-gray-600 mt-1">Total Startups</div>
+				<div className="bg-white rounded-lg p-3 shadow-sm border border-gray-200">
+					<div className="text-2xl font-bold text-indigo-600">{totalStartups}</div>
+					<div className="text-xs text-gray-600 mt-0.5">Total Startups</div>
 				</div>
-				<div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
-					<div className="text-3xl font-bold text-green-600">{uniqueCountries}</div>
-					<div className="text-sm text-gray-600 mt-1">Countries</div>
+				<div className="bg-white rounded-lg p-3 shadow-sm border border-gray-200">
+					<div className="text-2xl font-bold text-green-600">{uniqueCountries}</div>
+					<div className="text-xs text-gray-600 mt-0.5">Countries</div>
 				</div>
-				<div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
-					<div className="text-3xl font-bold text-purple-600">{averageProgress}%</div>
-					<div className="text-sm text-gray-600 mt-1">Average Progress</div>
+				<div className="bg-white rounded-lg p-3 shadow-sm border border-gray-200">
+					<div className="text-2xl font-bold text-purple-600">{averageProgress}%</div>
+					<div className="text-xs text-gray-600 mt-0.5">Average Progress</div>
 				</div>
 			</div>
 
