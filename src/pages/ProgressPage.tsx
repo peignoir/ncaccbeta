@@ -198,6 +198,11 @@ export default function ProgressPage() {
 					stealth: userStartup.stealth,
 					contact_me: userStartup.contact_me !== false
 				})
+				// Set house filter to user's house by default
+				const userHouse = normalizeHouse(userStartup.house);
+				if (userHouse && userHouse !== 'unknown') {
+					setHouseFilter(userHouse);
+				}
 			}
 		} catch (error) {
 			console.error('Failed to load startups:', error)
