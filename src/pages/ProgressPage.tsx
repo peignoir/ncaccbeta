@@ -520,6 +520,14 @@ export default function ProgressPage() {
 						All Startups
 					</h2>
 					<div className="flex items-center gap-2">
+						{houseFilter !== 'all' && (
+							<button
+								onClick={() => setHouseFilter('all')}
+								className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-lg hover:bg-indigo-200 transition text-sm font-medium"
+							>
+								Show All Houses
+							</button>
+						)}
 						<select
 							value={houseFilter}
 							onChange={(e) => setHouseFilter(e.target.value)}
