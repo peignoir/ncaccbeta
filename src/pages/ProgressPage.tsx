@@ -329,7 +329,7 @@ export default function ProgressPage() {
 	const dataHouses = Array.from(new Set(
 		startups
 			.map(s => normalizeHouse(s.house))
-			.filter(h => h && h !== 'unknown')
+			.filter((h): h is string => h !== null && h !== 'unknown')
 	));
 	const uniqueHouses = ensureAllHousesPresent(dataHouses);
 

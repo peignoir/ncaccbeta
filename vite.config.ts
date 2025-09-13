@@ -23,9 +23,10 @@ export default defineConfig({
 						// Check if X-API-KEY header exists in the original request
 						const apiKey = req.headers['x-api-key'];
 						if (apiKey) {
-							console.log('[Proxy] Setting X-API-KEY header:', apiKey.substring(0, 10) + '...');
+							const apiKeyStr = Array.isArray(apiKey) ? apiKey[0] : apiKey;
+							console.log('[Proxy] Setting X-API-KEY header:', apiKeyStr.substring(0, 10) + '...');
 							// Explicitly set the header on the proxy request
-							proxyReq.setHeader('X-API-KEY', apiKey);
+							proxyReq.setHeader('X-API-KEY', apiKeyStr);
 						} else {
 							console.log('[Proxy] No X-API-KEY header found in request');
 						}
