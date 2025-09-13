@@ -372,14 +372,14 @@ export default function ProgressPage() {
 	}
 
 	return (
-		<div className="space-y-8">
+		<div className="space-y-3">
 			{/* Header with Refresh Button */}
 			<div className="flex justify-between items-center">
-				<h1 className="text-2xl font-bold text-gray-900">NC/ACC Dashboard</h1>
+				<h1 className="text-xl font-bold text-gray-900">NC/ACC Dashboard</h1>
 				<button
 					onClick={() => loadStartups(true)}
 					disabled={refreshing}
-					className={`px-4 py-2 rounded-lg flex items-center gap-2 transition ${
+					className={`px-3 py-1.5 rounded-lg flex items-center gap-2 transition text-sm ${
 						refreshing
 							? 'bg-gray-300 text-gray-500 cursor-not-allowed'
 							: 'bg-indigo-600 text-white hover:bg-indigo-700'
@@ -398,37 +398,37 @@ export default function ProgressPage() {
 			</div>
 
 			{/* Statistics Section */}
-			<div className="grid grid-cols-3 gap-4">
-				<div className="bg-white rounded-lg p-3 shadow-sm border border-gray-200">
-					<div className="text-2xl font-bold text-indigo-600">{totalStartups}</div>
-					<div className="text-xs text-gray-600 mt-0.5">Total Startups</div>
+			<div className="grid grid-cols-3 gap-2">
+				<div className="bg-white rounded-lg p-2 shadow-sm border border-gray-200">
+					<div className="text-lg font-bold text-indigo-600">{totalStartups}</div>
+					<div className="text-xs text-gray-600">Total Startups</div>
 				</div>
-				<div className="bg-white rounded-lg p-3 shadow-sm border border-gray-200">
-					<div className="text-2xl font-bold text-green-600">{uniqueCountries}</div>
-					<div className="text-xs text-gray-600 mt-0.5">Countries</div>
+				<div className="bg-white rounded-lg p-2 shadow-sm border border-gray-200">
+					<div className="text-lg font-bold text-green-600">{uniqueCountries}</div>
+					<div className="text-xs text-gray-600">Countries</div>
 				</div>
-				<div className="bg-white rounded-lg p-3 shadow-sm border border-gray-200">
-					<div className="text-2xl font-bold text-purple-600">{averageProgress}%</div>
-					<div className="text-xs text-gray-600 mt-0.5">Average Progress</div>
+				<div className="bg-white rounded-lg p-2 shadow-sm border border-gray-200">
+					<div className="text-lg font-bold text-purple-600">{averageProgress}%</div>
+					<div className="text-xs text-gray-600">Average Progress</div>
 				</div>
 			</div>
 
 			{/* My Startup Section */}
 			{myStartup && (
-				<div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-2xl p-8 shadow-lg">
-					<div className="flex items-center justify-between mb-4">
-						<h2 className="text-3xl font-bold text-gray-900">Your Startup</h2>
+				<div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-xl p-4 shadow-lg">
+					<div className="flex items-center justify-between mb-2">
+						<h2 className="text-lg font-bold text-gray-900">Your Startup</h2>
 						<div className="flex items-center gap-3">
 							<button
 								onClick={() => openModal(myStartup)}
-								className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
+								className="px-3 py-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition text-sm"
 							>
 								See what NC/ACC knows about you
 							</button>
 						</div>
 					</div>
 					
-					<div className="bg-white rounded-xl p-6 shadow-sm">
+					<div className="bg-white rounded-lg p-3 shadow-sm">
 						<div className="flex items-center justify-between">
 							<div className="flex-1">
 								<h3 className="text-xl font-semibold text-gray-900">
@@ -509,12 +509,12 @@ export default function ProgressPage() {
 			)}
 
 			{/* All Startups Section */}
-			<div className="bg-white rounded-2xl p-8 shadow-lg">
-				<div className="flex items-center justify-between mb-6">
-					<h2 className="text-2xl font-bold text-gray-900">
+			<div className="bg-white rounded-xl p-4 shadow-lg">
+				<div className="flex items-center justify-between mb-3">
+					<h2 className="text-lg font-bold text-gray-900">
 						All Startups
 					</h2>
-					<div className="flex items-center gap-4">
+					<div className="flex items-center gap-2">
 						<select
 							value={houseFilter}
 							onChange={(e) => setHouseFilter(e.target.value)}
