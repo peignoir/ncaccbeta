@@ -6,8 +6,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Development
 - `npm run dev` - Start development server (typically runs on port 5173-5175)
+- `node proxy-server.js` - Start proxy server for API calls (REQUIRED for local development)
 - `npm run build` - Build for production (TypeScript + Vite)
 - `npm run preview` - Preview production build locally
+
+**Local Development Setup:**
+1. Run `npm run dev` in one terminal (React app)
+2. Run `node proxy-server.js` in another terminal (API proxy to app.socap.ai)
+3. Access the app at http://localhost:5174/ (or whatever port Vite assigns)
 
 ### Testing & Linting
 **NOT CONFIGURED** - No test runner or linter currently set up. Do not attempt to run `npm test` or `npm run lint`.

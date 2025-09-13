@@ -1,4 +1,5 @@
 import { SocapEvent, SocapProfile, SocapDetails } from './socapApi';
+import { normalizeHouse } from './houseNormalizer';
 
 export interface AppStartup {
   npid: number;
@@ -29,14 +30,15 @@ export interface AppStartup {
 
 export class ApiDataTransformer {
   static transformSocapEventToStartup(event: SocapEvent, index: number, currentUserTelegramId?: number | string): AppStartup {
-    console.log('[Transformer] Transforming Socap event to startup:', event);
+    // Removed verbose logging for performance
     
     // Use index-based npid for consistency
     const eventTelegramId = event.contact?.telegram_id;
     const npid = 1000 + index;
     
-    // Use raw group value directly from API
-    const house = event.data.group || 'unknown';
+    // Normalize the house value from API
+    const rawHouse = event.data.group;
+    const house = normalizeHouse(rawHouse) || 'unknown';
     const progress = event.data.percent !== undefined && event.data.percent !== null 
       ? Math.round(event.data.percent) 
       : 0;
@@ -109,7 +111,11 @@ export class ApiDataTransformer {
       check_in_10: progress >= 100,
     };
 
-    console.log('[Transformer] Transformed startup:', startup);
+    // Only log house normalization for debugging
+    if (rawHouse && rawHouse !== house && house !== 'venture') {
+      console.log(`[Transformer] Normalized house: "${rawHouse}" -> "${house}"`);
+    }
+
     return startup;
   }
 

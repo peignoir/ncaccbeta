@@ -3,6 +3,8 @@ import { useAuth } from '../auth/AuthContext'
 import { api } from '../lib/api'
 import unifiedApi from '../lib/unifiedApi'
 import ApiConfigManager from '../lib/apiConfig'
+import { normalizeHouse, getHouseDisplayName, getHouseColorClasses, getHouseGoalDescription } from '../lib/houseNormalizer'
+import { ensureAllHousesPresent } from '../lib/sampleHouses'
 
 type Startup = {
 	id: string
@@ -59,66 +61,20 @@ type Startup = {
 
 // Function to get house badge color based on raw house value
 function getHouseBadgeClass(house: string | undefined): string {
-	if (!house) return 'bg-gray-100 text-gray-700';
-	
-	const houseLower = house.toLowerCase();
-	
-	// Map raw house values to colors
-	if (houseLower.includes('build')) return 'bg-indigo-100 text-indigo-700';
-	if (houseLower.includes('venture')) return 'bg-purple-100 text-purple-700';
-	if (houseLower.includes('lifestyle')) return 'bg-green-100 text-green-700';
-	if (houseLower.includes('side')) return 'bg-blue-100 text-blue-700';
-	if (houseLower.includes('karma')) return 'bg-orange-100 text-orange-700';
-	
-	// Default color for unknown houses
-	return 'bg-gray-100 text-gray-700';
+	return getHouseColorClasses(house || '');
 }
 
 // Function to get house goal information
 function getHouseGoalInfo(house: string | undefined): { goal: string; description: string } {
-	if (!house) return { goal: 'Define Your Path', description: 'Set your startup goals and track progress' };
-	
-	const houseLower = house.toLowerCase();
-	
-	if (houseLower.includes('build')) {
-		return {
-			goal: 'Sustainable monthly profitability supporting lifestyle',
-			description: 'NC/ACC will help you build a profitable business that supports your desired quality of life. Focus on product-market fit, positive unit economics, and efficient operations that generate consistent monthly revenue while maintaining work-life balance.'
-		};
-	}
-	
-	if (houseLower.includes('venture')) {
-		return {
-			goal: 'First investor check (angel, pre-seed, or seed)',
-			description: 'NC/ACC will guide you to secure your first investment. Build an investor-ready pitch deck, engage with investors, structure deals, and close funding to accelerate your business growth.'
-		};
-	}
-	
-	if (houseLower.includes('side')) {
-		return {
-			goal: 'First $1,000 revenue while maintaining day job',
-			description: 'NC/ACC will help you generate your first revenue while keeping your day job. Launch your MVP, acquire paying customers, optimize your sales funnel, and build sustainable income streams.'
-		};
-	}
-	
-	if (houseLower.includes('karma')) {
-		return {
-			goal: 'First grant or major donation',
-			description: 'NC/ACC will support your mission-driven venture. Articulate your social impact, identify aligned funders, submit compelling applications, and secure funding to amplify your positive impact.'
-		};
-	}
-	
-	// Default for unknown houses
-	return {
-		goal: house + ' Goal',
-		description: 'NC/ACC will help you achieve your unique goals and build a successful venture aligned with your values and vision.'
-	};
+	const { title, description } = getHouseGoalDescription(house || '');
+	return { goal: title, description };
 }
 
 export default function ProgressPage() {
 	const { user } = useAuth()
 	const [startups, setStartups] = useState<Startup[]>([])
 	const [loading, setLoading] = useState(true)
+	const [refreshing, setRefreshing] = useState(false)
 	const [editingField, setEditingField] = useState<string | null>(null)
 	const [editValues, setEditValues] = useState<Record<string, any>>({})
 	const [houseFilter, setHouseFilter] = useState<string>('all')
@@ -133,8 +89,13 @@ export default function ProgressPage() {
 		loadStartups()
 	}, [showAllHouses])
 
-	const loadStartups = async () => {
+	const loadStartups = async (isRefresh = false) => {
 		try {
+			if (isRefresh) {
+				setRefreshing(true);
+			} else {
+				setLoading(true);
+			}
 			console.log('[ProgressPage] Loading startups with API mode:', ApiConfigManager.isMockApiMode() ? "mock" : "real", 'showAll:', showAllHouses)
 			
 			const response = await unifiedApi.getStartups({ showAll: showAllHouses })
@@ -240,6 +201,7 @@ export default function ProgressPage() {
 			console.error('Failed to load startups:', error)
 		} finally {
 			setLoading(false)
+			setRefreshing(false)
 		}
 	}
 
@@ -363,11 +325,35 @@ export default function ProgressPage() {
 	}
 
 	// Get unique houses from the data
-	const uniqueHouses = Array.from(new Set(startups.map(s => s.house).filter(Boolean))).sort();
-	
+	// Get unique normalized houses for filtering - always show all 4 houses
+	const dataHouses = Array.from(new Set(
+		startups
+			.map(s => normalizeHouse(s.house))
+			.filter(h => h && h !== 'unknown')
+	));
+	const uniqueHouses = ensureAllHousesPresent(dataHouses);
+
+	// Calculate statistics
+	const totalStartups = startups.length;
+	const uniqueCountries = new Set(
+		startups
+			.map(s => s.founder_country || s.country || '')
+			.filter(Boolean)
+	).size;
+	const averageProgress = startups.length > 0
+		? Math.round(startups.reduce((sum, s) => sum + (s.progress || 0), 0) / startups.length)
+		: 0;
+	const houseDistribution = uniqueHouses.map(house => ({
+		house,
+		count: startups.filter(s => normalizeHouse(s.house) === house).length
+	}));
+
 	const filteredStartups = startups
 		.filter(s => {
-			const houseMatch = houseFilter === 'all' || s.house === houseFilter
+			const normalizedHouse = normalizeHouse(s.house);
+			// Filter out unknown houses unless explicitly showing all
+			if (normalizedHouse === 'unknown' && houseFilter !== 'all') return false;
+			const houseMatch = houseFilter === 'all' || normalizedHouse === houseFilter
 			return houseMatch
 		})
 		.sort((a, b) => {
@@ -385,6 +371,46 @@ export default function ProgressPage() {
 
 	return (
 		<div className="space-y-8">
+			{/* Header with Refresh Button */}
+			<div className="flex justify-between items-center">
+				<h1 className="text-2xl font-bold text-gray-900">NC/ACC Dashboard</h1>
+				<button
+					onClick={() => loadStartups(true)}
+					disabled={refreshing}
+					className={`px-4 py-2 rounded-lg flex items-center gap-2 transition ${
+						refreshing
+							? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+							: 'bg-indigo-600 text-white hover:bg-indigo-700'
+					}`}
+				>
+					<svg
+						className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`}
+						fill="none"
+						stroke="currentColor"
+						viewBox="0 0 24 24"
+					>
+						<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+					</svg>
+					{refreshing ? 'Refreshing...' : 'Refresh Data'}
+				</button>
+			</div>
+
+			{/* Statistics Section */}
+			<div className="grid grid-cols-3 gap-4">
+				<div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+					<div className="text-3xl font-bold text-indigo-600">{totalStartups}</div>
+					<div className="text-sm text-gray-600 mt-1">Total Startups</div>
+				</div>
+				<div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+					<div className="text-3xl font-bold text-green-600">{uniqueCountries}</div>
+					<div className="text-sm text-gray-600 mt-1">Countries</div>
+				</div>
+				<div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+					<div className="text-3xl font-bold text-purple-600">{averageProgress}%</div>
+					<div className="text-sm text-gray-600 mt-1">Average Progress</div>
+				</div>
+			</div>
+
 			{/* My Startup Section */}
 			{myStartup && (
 				<div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-2xl p-8 shadow-lg">
@@ -419,7 +445,7 @@ export default function ProgressPage() {
 								</div>
 								{myStartup.house && (
 									<span className={`px-3 py-1 rounded-full text-sm font-medium ${getHouseBadgeClass(myStartup.house)}`}>
-										{myStartup.house}
+										{getHouseDisplayName(myStartup.house)}
 									</span>
 								)}
 							</div>
@@ -505,7 +531,7 @@ export default function ProgressPage() {
 							>
 								<option value="all">All Houses</option>
 								{uniqueHouses.map(house => (
-									<option key={house} value={house}>{house}</option>
+									<option key={house} value={house}>{getHouseDisplayName(house)}</option>
 								))}
 							</select>
 						)}
@@ -581,7 +607,7 @@ export default function ProgressPage() {
 										<td className="py-4 px-4">
 											{startup.house ? (
 												<span className={`px-2 py-1 rounded-full text-xs font-medium ${getHouseBadgeClass(startup.house)}`}>
-													{startup.house}
+													{getHouseDisplayName(startup.house)}
 												</span>
 											) : (
 												<span className="text-gray-400">-</span>
@@ -1019,7 +1045,7 @@ export default function ProgressPage() {
 										<p>
 											{selectedStartup.house ? (
 												<span className={`px-2 py-1 rounded-full text-xs font-medium ${getHouseBadgeClass(selectedStartup.house)}`}>
-													{selectedStartup.house}
+													{getHouseDisplayName(selectedStartup.house)}
 												</span>
 											) : '-'}
 										</p>
@@ -1156,128 +1182,24 @@ export default function ProgressPage() {
 								</div>
 							</div>
 
-							{/* Due Diligence */}
-							<div className="border-t pt-6">
-								<h3 className="text-lg font-semibold text-gray-900 mb-4">Due Diligence & Resources</h3>
-								<div className="space-y-4">
-									{(selectedStartup.traction || editingField === 'modal') && (
-										<div>
-											<span className="text-sm text-gray-500">Traction</span>
-											{editingField === 'modal' && selectedStartup.id === myStartup?.id ? (
-												<input
-													type="text"
-													value={editValues.traction || ''}
-													onChange={(e) => setEditValues({ ...editValues, traction: e.target.value })}
-													className="mt-1 w-full px-2 py-1 border rounded text-gray-900"
-												/>
-											) : (
-												<p className="text-gray-900 mt-1">{selectedStartup.traction}</p>
-											)}
-										</div>
-									)}
-									{(selectedStartup.proof_of_concept || editingField === 'modal') && (
-										<div>
-											<span className="text-sm text-gray-500">Source Code URL</span>
-											{editingField === 'modal' && selectedStartup.id === myStartup?.id ? (
-												<input
-													type="text"
-													value={editValues.proof_of_concept || ''}
-													onChange={(e) => setEditValues({ ...editValues, proof_of_concept: e.target.value })}
-													className="mt-1 w-full px-2 py-1 border rounded text-gray-900"
-													placeholder="https://github.com/username/repo"
-												/>
-											) : (
-												<p>
-													<a
-														href={selectedStartup.proof_of_concept}
-														target="_blank"
-														rel="noopener noreferrer"
-														className="text-indigo-600 hover:text-indigo-800 font-mono"
-													>
-														View Source Code
-													</a>
-												</p>
-											)}
-										</div>
-									)}
-									{(selectedStartup.dataroom_url || editingField === 'modal') && (
-										<div>
-											<span className="text-sm text-gray-500">Data Room URL</span>
-											{editingField === 'modal' && selectedStartup.id === myStartup?.id ? (
-												<input
-													type="text"
-													value={editValues.dataroom_url || ''}
-													onChange={(e) => setEditValues({ ...editValues, dataroom_url: e.target.value })}
-													className="mt-1 w-full px-2 py-1 border rounded text-gray-900"
-													placeholder="https://dataroom.example.com"
-												/>
-											) : (
-												<p>
-													<a
-														href={selectedStartup.dataroom_url}
-														target="_blank"
-														rel="noopener noreferrer"
-														className="text-indigo-600 hover:text-indigo-800"
-													>
-														Access Data Room
-													</a>
-												</p>
-											)}
-										</div>
-									)}
-									{selectedStartup.website && (
-										<div>
-											<span className="text-sm text-gray-500">Website</span>
-											<p>
-												<a
-													href={`https://${selectedStartup.website}`}
-													target="_blank"
-													rel="noopener noreferrer"
-													className="text-indigo-600 hover:text-indigo-800"
-												>
-													{selectedStartup.website}
-												</a>
-											</p>
-										</div>
-									)}
-									{selectedStartup.one_pager_url && (
-										<div>
-											<span className="text-sm text-gray-500">One Pager</span>
-											<p>
-												<a
-													href={selectedStartup.one_pager_url}
-													target="_blank"
-													rel="noopener noreferrer"
-													className="text-indigo-600 hover:text-indigo-800"
-												>
-													View One Pager
-												</a>
-											</p>
-										</div>
-									)}
-									{selectedStartup.github_repos && (
-										<div>
-											<span className="text-sm text-gray-500">GitHub Repository</span>
-											<p>
-												<a
-													href={selectedStartup.github_repos}
-													target="_blank"
-													rel="noopener noreferrer"
-													className="text-gray-900 hover:text-gray-700 font-mono"
-												>
-													View Repository
-												</a>
-											</p>
-										</div>
-									)}
-									{selectedStartup.competitors_urls && (
-										<div>
-											<span className="text-sm text-gray-500">Competitors</span>
-											<p className="text-gray-900 mt-1">{selectedStartup.competitors_urls}</p>
-										</div>
-									)}
+							{/* Website */}
+							{selectedStartup.website && (
+								<div className="border-t pt-6">
+									<div>
+										<span className="text-sm text-gray-500">Website</span>
+										<p>
+											<a
+												href={`https://${selectedStartup.website}`}
+												target="_blank"
+												rel="noopener noreferrer"
+												className="text-indigo-600 hover:text-indigo-800"
+											>
+												{selectedStartup.website}
+											</a>
+										</p>
+									</div>
 								</div>
-							</div>
+							)}
 
 							{/* Wave Information */}
 							{selectedStartup.wave && (

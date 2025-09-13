@@ -171,10 +171,14 @@ function mapRowToStartup(r: any, idx: number): Startup {
 function normalizeHouse(raw: any): string {
 	if (!raw) return ''
 	const s = String(raw).toLowerCase().replace(/[\[\]]/g, '').replace(/\s*house\s*/g, '').trim()
-	// Map to canonical keys: venture | lifestyle | side | karma
-	if (s.includes('adventure') || s === 'build' || s.includes('venture')) return 'venture'
-	if (s.includes('lifestyle') || s.includes('smb')) return 'lifestyle'
+	// Map to canonical keys: venture | builder | side | karma
+	// BUILD variants -> builder
+	if (s.includes('build') || s.includes('lifestyle') || s.includes('smb')) return 'builder'
+	// VENTURE variants -> venture
+	if (s.includes('adventure') || s.includes('venture') || s.includes('vc')) return 'venture'
+	// SIDE variants -> side
 	if (s.startsWith('side')) return 'side'
+	// KARMA variants -> karma
 	if (s.includes('karma')) return 'karma'
 	return s
 }

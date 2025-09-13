@@ -84,7 +84,7 @@ export class SocapApiClient {
     // Use proxy to bypass CORS
     const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     let url: string;
-    
+
     if (isDev) {
       // Use local proxy server in development
       url = `http://localhost:3001${endpoint}`;

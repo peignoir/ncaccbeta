@@ -6,6 +6,7 @@ export default function DashboardLayout() {
 	const { user, logout } = useAuth()
 	const navigate = useNavigate()
 	const isRealApiMode = ApiConfigManager.getApiKey() !== 'pofpof'
+	const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
 
 	const handleLogout = () => {
 		logout()
@@ -41,8 +42,8 @@ export default function DashboardLayout() {
 						{!isRealApiMode && (
 							<Tab to="/api-usage" label="📊 API Usage" />
 						)}
-						{/* Debug tab - uncomment to enable */}
-						{/* {isRealApiMode && <Tab to="/debug" label="Debug" />} */}
+						{/* Debug tab - uncomment to enable on localhost */}
+						{/* {isLocalhost && <Tab to="/debug" label="🔧 Debug" />} */}
 					</div>
 				</nav>
 			</header>
