@@ -73,6 +73,7 @@ function getHouseGoalInfo(house: string | undefined): { goal: string; descriptio
 export default function ProgressPage() {
 	const { user } = useAuth()
 	const [startups, setStartups] = useState<Startup[]>([])
+	const [allStartups, setAllStartups] = useState<Startup[]>([]) // Store all startups for stats
 	const [loading, setLoading] = useState(true)
 	const [refreshing, setRefreshing] = useState(false)
 	const [editingField, setEditingField] = useState<string | null>(null)
@@ -127,6 +128,7 @@ export default function ProgressPage() {
 			console.log(`[ProgressPage] Processed ${processedData.length} startups (after filtering unknown houses)`)
 			console.log('[ProgressPage] All telegram_ids:', processedData.map((s: any) => ({ npid: s.npid, telegram_id: s.telegram_id, name: s.username })))
 			setStartups(processedData)
+			setAllStartups(processedData) // Store all startups for statistics
 			
 			// Find user's startup
 			// In Real API mode, match by telegram_id from the auth token
@@ -333,15 +335,15 @@ export default function ProgressPage() {
 	));
 	const uniqueHouses = ensureAllHousesPresent(dataHouses);
 
-	// Calculate statistics
-	const totalStartups = startups.length;
+	// Calculate statistics from ALL startups (not filtered)
+	const totalStartups = allStartups.length;
 	const uniqueCountries = new Set(
-		startups
+		allStartups
 			.map(s => s.founder_country || s.country || '')
 			.filter(Boolean)
 	).size;
-	const averageProgress = startups.length > 0
-		? Math.round(startups.reduce((sum, s) => sum + (s.progress || 0), 0) / startups.length)
+	const averageProgress = allStartups.length > 0
+		? Math.round(allStartups.reduce((sum, s) => sum + (s.progress || 0), 0) / allStartups.length)
 		: 0;
 	const houseDistribution = uniqueHouses.map(house => ({
 		house,
