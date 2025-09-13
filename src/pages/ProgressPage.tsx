@@ -84,11 +84,10 @@ export default function ProgressPage() {
 	const [myStartup, setMyStartup] = useState<Startup | null>(null)
 	const [selectedStartup, setSelectedStartup] = useState<Startup | null>(null)
 	const [showModal, setShowModal] = useState(false)
-	const [showAllHouses, setShowAllHouses] = useState(false)
 
 	useEffect(() => {
 		loadStartups()
-	}, [showAllHouses])
+	}, [])
 
 	const loadStartups = async (isRefresh = false) => {
 		try {
@@ -97,9 +96,10 @@ export default function ProgressPage() {
 			} else {
 				setLoading(true);
 			}
-			console.log('[ProgressPage] Loading startups with API mode:', ApiConfigManager.isMockApiMode() ? "mock" : "real", 'showAll:', showAllHouses)
-			
-			const response = await unifiedApi.getStartups({ showAll: showAllHouses })
+			console.log('[ProgressPage] Loading startups with API mode:', ApiConfigManager.isMockApiMode() ? "mock" : "real")
+
+			// Always fetch ALL startups for statistics
+			const response = await unifiedApi.getStartups({ showAll: true })
 			console.log('[ProgressPage] Unified API response:', response)
 			
 			if (!response.success || !response.data) {
@@ -512,31 +512,19 @@ export default function ProgressPage() {
 			<div className="bg-white rounded-2xl p-8 shadow-lg">
 				<div className="flex items-center justify-between mb-6">
 					<h2 className="text-2xl font-bold text-gray-900">
-						{showAllHouses ? 'All Startups' : `${myStartup?.house || 'Your'} Members`}
+						All Startups
 					</h2>
 					<div className="flex items-center gap-4">
-						<button
-							onClick={() => setShowAllHouses(!showAllHouses)}
-							className={`px-4 py-1.5 rounded-lg text-sm font-medium transition ${
-								showAllHouses 
-									? 'bg-gray-200 text-gray-700 hover:bg-gray-300' 
-									: 'bg-primary text-white hover:opacity-90'
-							}`}
+						<select
+							value={houseFilter}
+							onChange={(e) => setHouseFilter(e.target.value)}
+							className="px-3 py-1 border rounded-lg text-sm"
 						>
-							{showAllHouses ? 'Show My House Only' : 'Show All Houses'}
-						</button>
-						{showAllHouses && (
-							<select
-								value={houseFilter}
-								onChange={(e) => setHouseFilter(e.target.value)}
-								className="px-3 py-1 border rounded-lg text-sm"
-							>
-								<option value="all">All Houses</option>
+							<option value="all">All Houses</option>
 								{uniqueHouses.map(house => (
 									<option key={house} value={house}>{getHouseDisplayName(house)}</option>
 								))}
 							</select>
-						)}
 						<select
 							value={sortBy}
 							onChange={(e) => setSortBy(e.target.value as 'progress' | 'name')}
