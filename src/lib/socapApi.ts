@@ -40,6 +40,9 @@ export interface SocapDetails {
   product_job_to_be_done?: string;
   business_model_explained?: string;
   founder_time_commitment_pct?: number | string;
+  email?: string;
+  founder_email?: string;
+  [key: string]: any; // Allow any additional fields from the API
 }
 
 export interface SocapEventData {
