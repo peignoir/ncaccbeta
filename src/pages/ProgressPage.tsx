@@ -685,8 +685,13 @@ export default function ProgressPage() {
 										<td className="py-4 px-4">
 											<div className="flex items-center gap-2">
 												<div>
-													<div className="font-medium text-gray-900">
+													<div className="font-medium text-gray-900 flex items-center gap-2">
 														{isStealthed ? 'Stealth Startup' : startup.name}
+														{!isStealthed && (startup.pitch_video_url || startup.demo_video_url) && (
+															<span className="inline-flex items-center px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded text-xs font-medium" title="Video available">
+																📹
+															</span>
+														)}
 													</div>
 													{!isStealthed && startup.website && (
 														<a
@@ -923,34 +928,59 @@ export default function ProgressPage() {
 							{/* Pitch Video at Top */}
 							{(() => {
 								const isEditing = editingField === 'modal' && selectedStartup.id === myStartup?.id
-								const videoUrl = isEditing 
-									? editValues.pitch_video_url 
+								const videoUrl = isEditing
+									? editValues.pitch_video_url
 									: (selectedStartup.pitch_video_url || selectedStartup.demo_video_url)
-								
-								// Extract video ID from YouTube URL
+
+								// Support multiple video platforms
 								let videoId = ''
+								let videoType = 'youtube' // youtube, vimeo, loom, or direct
+
 								if (videoUrl && typeof videoUrl === 'string') {
 									const url = videoUrl.trim()
+
+									// YouTube detection
 									if (url.includes('youtube.com/watch?v=')) {
 										videoId = url.split('v=')[1]?.split('&')[0] || ''
+										videoType = 'youtube'
 									} else if (url.includes('youtu.be/')) {
 										videoId = url.split('youtu.be/')[1]?.split('?')[0] || ''
+										videoType = 'youtube'
 									} else if (url.includes('youtube.com/embed/')) {
 										videoId = url.split('youtube.com/embed/')[1]?.split('?')[0] || ''
+										videoType = 'youtube'
 									} else if (url.match(/^[a-zA-Z0-9_-]{11}$/)) {
 										// Looks like a YouTube video ID (11 characters)
 										videoId = url
+										videoType = 'youtube'
+									}
+									// Vimeo detection
+									else if (url.includes('vimeo.com/')) {
+										videoId = url.split('vimeo.com/')[1]?.split('?')[0]?.split('/')[0] || ''
+										videoType = 'vimeo'
+									}
+									// Loom detection
+									else if (url.includes('loom.com/share/') || url.includes('loom.com/embed/')) {
+										videoId = url.split('/share/')[1]?.split('?')[0] || url.split('/embed/')[1]?.split('?')[0] || ''
+										videoType = 'loom'
+									}
+									// Direct video URL (mp4, webm, etc)
+									else if (url.match(/\.(mp4|webm|ogg)$/i)) {
+										videoId = url
+										videoType = 'direct'
 									}
 								}
-								
+
 								if (!videoUrl && !isEditing) return null
-								
+
 								return (
 									<div className="bg-gray-50 rounded-xl p-4">
-										<h3 className="text-center text-lg font-semibold text-gray-900 mb-3">My 90s presentation (who i am, what i build, why now...)</h3>
+										<h3 className="text-center text-lg font-semibold text-gray-900 mb-3">
+											{selectedStartup.demo_video_url && !selectedStartup.pitch_video_url ? 'Product Demo Video' : 'My 90s presentation (who i am, what i build, why now...)'}
+										</h3>
 										{isEditing && (
 											<div className="mb-4 max-w-2xl mx-auto">
-												<label className="text-sm text-gray-500">YouTube Video URL</label>
+												<label className="text-sm text-gray-500">Video URL (YouTube, Vimeo, Loom, or direct link)</label>
 												<input
 													type="text"
 													value={editValues.pitch_video_url || ''}
@@ -959,22 +989,66 @@ export default function ProgressPage() {
 													placeholder="https://www.youtube.com/watch?v=xvFZjo5PgG0"
 												/>
 												{!videoId && (
-													<p className="text-sm text-gray-500 mt-2">Enter a YouTube URL to preview the video</p>
+													<p className="text-sm text-gray-500 mt-2">Enter a video URL to preview (supports YouTube, Vimeo, Loom, or direct video files)</p>
 												)}
 											</div>
 										)}
 										{videoId && (
 											<div className="max-w-2xl mx-auto">
-												<div className="relative w-full" style={{ paddingBottom: '42%' }}>
-													<iframe
-														className="absolute top-0 left-0 w-full h-full rounded-lg shadow-lg"
-														src={`https://www.youtube.com/embed/${videoId}?rel=0`}
-														title="My 90s presentation"
-														allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-														allowFullScreen
-														loading="lazy"
-													/>
-												</div>
+												{videoType === 'youtube' && (
+													<div className="relative w-full" style={{ paddingBottom: '42%' }}>
+														<iframe
+															className="absolute top-0 left-0 w-full h-full rounded-lg shadow-lg"
+															src={`https://www.youtube.com/embed/${videoId}?rel=0`}
+															title="Video presentation"
+															allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+															allowFullScreen
+															loading="lazy"
+														/>
+													</div>
+												)}
+												{videoType === 'vimeo' && (
+													<div className="relative w-full" style={{ paddingBottom: '42%' }}>
+														<iframe
+															className="absolute top-0 left-0 w-full h-full rounded-lg shadow-lg"
+															src={`https://player.vimeo.com/video/${videoId}`}
+															title="Video presentation"
+															allow="autoplay; fullscreen; picture-in-picture"
+															allowFullScreen
+															loading="lazy"
+														/>
+													</div>
+												)}
+												{videoType === 'loom' && (
+													<div className="relative w-full" style={{ paddingBottom: '42%' }}>
+														<iframe
+															className="absolute top-0 left-0 w-full h-full rounded-lg shadow-lg"
+															src={`https://www.loom.com/embed/${videoId}`}
+															title="Video presentation"
+															allowFullScreen
+															loading="lazy"
+														/>
+													</div>
+												)}
+												{videoType === 'direct' && (
+													<video
+														className="w-full rounded-lg shadow-lg"
+														controls
+														src={videoId}
+													>
+														Your browser does not support the video tag.
+													</video>
+												)}
+											</div>
+										)}
+										{!videoId && videoUrl && (
+											<div className="max-w-2xl mx-auto p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+												<p className="text-sm text-yellow-800">
+													Video URL detected but cannot be embedded.
+													<a href={videoUrl} target="_blank" rel="noopener noreferrer" className="ml-2 text-blue-600 hover:text-blue-800 underline">
+														Open in new tab →
+													</a>
+												</p>
 											</div>
 										)}
 									</div>
