@@ -5,6 +5,7 @@ import unifiedApi from '../lib/unifiedApi'
 import ApiConfigManager from '../lib/apiConfig'
 import { normalizeHouse, getHouseDisplayName, getHouseColorClasses, getHouseGoalDescription } from '../lib/houseNormalizer'
 import { ensureAllHousesPresent } from '../lib/sampleHouses'
+import logger from '../lib/logger'
 
 type Startup = {
 	id: string
@@ -84,6 +85,8 @@ export default function ProgressPage() {
 	const [myStartup, setMyStartup] = useState<Startup | null>(null)
 	const [selectedStartup, setSelectedStartup] = useState<Startup | null>(null)
 	const [showModal, setShowModal] = useState(false)
+	const [showDebugPanel, setShowDebugPanel] = useState(false)
+	const [copiedSection, setCopiedSection] = useState<string | null>(null)
 
 	useEffect(() => {
 		loadStartups()
@@ -96,11 +99,11 @@ export default function ProgressPage() {
 			} else {
 				setLoading(true);
 			}
-			console.log('[ProgressPage] Loading startups with API mode:', ApiConfigManager.isMockApiMode() ? "mock" : "real")
+			logger.log('[ProgressPage] Loading startups with API mode:', ApiConfigManager.isMockApiMode() ? "mock" : "real")
 
 			// Always fetch ALL startups for statistics
 			const response = await unifiedApi.getStartups({ showAll: true })
-			console.log('[ProgressPage] Unified API response:', response)
+			logger.log('[ProgressPage] Unified API response:', response)
 			
 			if (!response.success || !response.data) {
 				throw new Error(response.error || 'Failed to load startups')
@@ -125,8 +128,8 @@ export default function ProgressPage() {
 					// The API already ensures current user's startup is always included
 					return true;
 				})
-			console.log(`[ProgressPage] Processed ${processedData.length} startups (after filtering unknown houses)`)
-			console.log('[ProgressPage] All telegram_ids:', processedData.map((s: any) => ({ npid: s.npid, telegram_id: s.telegram_id, name: s.username })))
+			logger.log(`[ProgressPage] Processed ${processedData.length} startups (after filtering unknown houses)`)
+			logger.log('[ProgressPage] All telegram_ids:', processedData.map((s: any) => ({ npid: s.npid, telegram_id: s.telegram_id, name: s.username })))
 			setStartups(processedData)
 			setAllStartups(processedData) // Store all startups for statistics
 			
@@ -140,20 +143,20 @@ export default function ProgressPage() {
 					try {
 						const decoded = JSON.parse(atob(token));
 						const userTelegramId = decoded.telegram_id;
-						console.log('[ProgressPage] Decoded token:', decoded);
-						console.log('[ProgressPage] Looking for user with telegram_id:', userTelegramId);
+						logger.log('[ProgressPage] Decoded token:', decoded);
+						logger.log('[ProgressPage] Looking for user with telegram_id:', userTelegramId);
 						
 						userStartup = processedData.find((s: Startup) => {
 							const matches = String(s.telegram_id) === String(userTelegramId);
 							if (matches) {
-								console.log(`[ProgressPage] Found match! npid=${s.npid}, telegram_id=${s.telegram_id}`);
+								logger.log(`[ProgressPage] Found match! npid=${s.npid}, telegram_id=${s.telegram_id}`);
 							}
 							return matches;
 						});
 						
 						if (!userStartup) {
-							console.warn(`[ProgressPage] No startup found for telegram_id ${userTelegramId}`);
-							console.log('[ProgressPage] Available startups:', processedData.map((s: any) => ({
+							logger.warn(`[ProgressPage] No startup found for telegram_id ${userTelegramId}`);
+							logger.log('[ProgressPage] Available startups:', processedData.map((s: any) => ({
 								npid: s.npid,
 								telegram_id: s.telegram_id,
 								name: s.username
@@ -161,19 +164,19 @@ export default function ProgressPage() {
 							// Fallback to first startup that matches isCurrentUser flag
 							userStartup = processedData.find((s: any) => s.isCurrentUser === true);
 							if (!userStartup && processedData.length > 0) {
-								console.error('[ProgressPage] WARNING: Using first startup as fallback - this is likely wrong!');
+								logger.error('[ProgressPage] WARNING: Using first startup as fallback - this is likely wrong!');
 								userStartup = processedData[0];
 							}
 						}
 					} catch (e) {
-						console.error('[ProgressPage] Failed to decode token:', e);
+						logger.error('[ProgressPage] Failed to decode token:', e);
 					}
 				}
 			} else {
 				// Mock mode - use existing logic
-				console.log('[ProgressPage] Mock mode - looking for user startup');
-				console.log('[ProgressPage] User data:', user);
-				console.log('[ProgressPage] Looking for npid:', user?.startup?.npid || user?.id);
+				logger.log('[ProgressPage] Mock mode - looking for user startup');
+				logger.log('[ProgressPage] User data:', user);
+				logger.log('[ProgressPage] Looking for npid:', user?.startup?.npid || user?.id);
 				
 				userStartup = processedData.find((s: Startup) => {
 					const matches = s.id === String(user?.startup?.npid) || 
@@ -182,13 +185,13 @@ export default function ProgressPage() {
 						s.npid === user?.id ||
 						s.founder_email === user?.email;
 					if (matches) {
-						console.log(`[ProgressPage] Found user startup: npid=${s.npid}, id=${s.id}, name=${s.name}`);
+						logger.log(`[ProgressPage] Found user startup: npid=${s.npid}, id=${s.id}, name=${s.name}`);
 					}
 					return matches;
 				});
 				
 				if (!userStartup) {
-					console.warn('[ProgressPage] No startup found for user in mock mode');
+					logger.warn('[ProgressPage] No startup found for user in mock mode');
 				}
 			}
 			if (userStartup) {
@@ -205,7 +208,7 @@ export default function ProgressPage() {
 				}
 			}
 		} catch (error) {
-			console.error('Failed to load startups:', error)
+			logger.error('Failed to load startups:', error)
 		} finally {
 			setLoading(false)
 			setRefreshing(false)
@@ -217,7 +220,7 @@ export default function ProgressPage() {
 		
 		// Don't allow editing in Real API mode
 		if (ApiConfigManager.isMockApiMode() ? "mock" : "real" === 'real') {
-			console.log('[ProgressPage] Editing disabled in Real API mode')
+			logger.log('[ProgressPage] Editing disabled in Real API mode')
 			return
 		}
 		
@@ -280,12 +283,12 @@ export default function ProgressPage() {
 			}
 			
 			// Save to backend
-			console.log('[ProgressPage] Saving updates with API mode:', ApiConfigManager.isMockApiMode() ? "mock" : "real")
-			console.log('[ProgressPage] Updates:', updates)
+			logger.log('[ProgressPage] Saving updates with API mode:', ApiConfigManager.isMockApiMode() ? "mock" : "real")
+			logger.log('[ProgressPage] Updates:', updates)
 			
 			const npid = parseInt(myStartup.npid || myStartup.id)
 			const response = await unifiedApi.updateStartup(npid, updates)
-			console.log('[ProgressPage] Update response:', response)
+			logger.log('[ProgressPage] Update response:', response)
 			
 			if (!response.success) {
 				throw new Error(response.error || 'Failed to save')
@@ -294,7 +297,7 @@ export default function ProgressPage() {
 			// Reload data to get the latest from persistence
 			await loadStartups()
 		} catch (error) {
-			console.error('Failed to save:', error)
+			logger.error('Failed to save:', error)
 			// Revert on error
 			await loadStartups()
 		}
@@ -329,6 +332,16 @@ export default function ProgressPage() {
 		setEditingField(null)
 		// Clear edit values when closing
 		setEditValues({})
+	}
+
+	const copyToClipboard = async (data: any, sectionName: string) => {
+		try {
+			await navigator.clipboard.writeText(JSON.stringify(data, null, 2))
+			setCopiedSection(sectionName)
+			setTimeout(() => setCopiedSection(null), 2000)
+		} catch (err) {
+			logger.error('Failed to copy:', err)
+		}
 	}
 
 	// Get unique houses from the data
@@ -381,26 +394,118 @@ export default function ProgressPage() {
 			{/* Header with Refresh Button */}
 			<div className="flex justify-between items-center">
 				<h1 className="text-xl font-bold text-gray-900">NC/ACC Dashboard</h1>
-				<button
-					onClick={() => loadStartups(true)}
-					disabled={refreshing}
-					className={`px-3 py-1.5 rounded-lg flex items-center gap-2 transition text-sm ${
-						refreshing
-							? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-							: 'bg-indigo-600 text-white hover:bg-indigo-700'
-					}`}
-				>
-					<svg
-						className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`}
-						fill="none"
-						stroke="currentColor"
-						viewBox="0 0 24 24"
+				<div className="flex items-center gap-2">
+					{/* Debug Button - Only in development */}
+					{(window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (
+						<button
+							onClick={() => setShowDebugPanel(!showDebugPanel)}
+							className="px-3 py-1.5 rounded-lg flex items-center gap-2 transition text-sm bg-yellow-500 text-white hover:bg-yellow-600"
+						>
+							🐛 {showDebugPanel ? 'Hide' : 'Show'} Debug
+						</button>
+					)}
+					<button
+						onClick={() => loadStartups(true)}
+						disabled={refreshing}
+						className={`px-3 py-1.5 rounded-lg flex items-center gap-2 transition text-sm ${
+							refreshing
+								? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+								: 'bg-indigo-600 text-white hover:bg-indigo-700'
+						}`}
 					>
-						<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-					</svg>
-					{refreshing ? 'Refreshing...' : 'Refresh Data'}
-				</button>
+						<svg
+							className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`}
+							fill="none"
+							stroke="currentColor"
+							viewBox="0 0 24 24"
+						>
+							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+						</svg>
+						{refreshing ? 'Refreshing...' : 'Refresh Data'}
+					</button>
+				</div>
 			</div>
+
+			{/* Debug Panel - Only in development */}
+			{showDebugPanel && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (
+				<div className="bg-yellow-50 border-2 border-yellow-400 rounded-xl p-4 shadow-lg">
+					<h2 className="text-lg font-bold text-yellow-900 mb-3">🐛 Debug Data Panel</h2>
+					<div className="space-y-4">
+						<details className="bg-white rounded-lg p-3 border border-yellow-200">
+							<summary className="cursor-pointer font-semibold text-yellow-800 hover:text-yellow-900">
+								All Startups Data ({startups.length} items)
+							</summary>
+							<div className="mt-3">
+								<div className="flex justify-end mb-2">
+									<button
+										onClick={() => copyToClipboard(startups, 'all-startups')}
+										className={`px-3 py-1 text-xs rounded-lg transition ${
+											copiedSection === 'all-startups'
+												? 'bg-green-500 text-white'
+												: 'bg-yellow-200 text-yellow-800 hover:bg-yellow-300'
+										}`}
+									>
+										{copiedSection === 'all-startups' ? '✓ Copied!' : '📋 Copy JSON'}
+									</button>
+								</div>
+								<div className="max-h-96 overflow-auto bg-gray-50 p-2 rounded">
+									<pre className="text-xs font-mono text-gray-700 whitespace-pre-wrap">
+										{JSON.stringify(startups, null, 2)}
+									</pre>
+								</div>
+							</div>
+						</details>
+						<details className="bg-white rounded-lg p-3 border border-yellow-200">
+							<summary className="cursor-pointer font-semibold text-yellow-800 hover:text-yellow-900">
+								My Startup Data
+							</summary>
+							<div className="mt-3">
+								<div className="flex justify-end mb-2">
+									<button
+										onClick={() => copyToClipboard(myStartup, 'my-startup')}
+										className={`px-3 py-1 text-xs rounded-lg transition ${
+											copiedSection === 'my-startup'
+												? 'bg-green-500 text-white'
+												: 'bg-yellow-200 text-yellow-800 hover:bg-yellow-300'
+										}`}
+									>
+										{copiedSection === 'my-startup' ? '✓ Copied!' : '📋 Copy JSON'}
+									</button>
+								</div>
+								<div className="max-h-96 overflow-auto bg-gray-50 p-2 rounded">
+									<pre className="text-xs font-mono text-gray-700 whitespace-pre-wrap">
+										{JSON.stringify(myStartup, null, 2)}
+									</pre>
+								</div>
+							</div>
+						</details>
+						<details className="bg-white rounded-lg p-3 border border-yellow-200">
+							<summary className="cursor-pointer font-semibold text-yellow-800 hover:text-yellow-900">
+								Filtered Startups ({filteredStartups.length} items)
+							</summary>
+							<div className="mt-3">
+								<div className="flex justify-end mb-2">
+									<button
+										onClick={() => copyToClipboard(filteredStartups, 'filtered-startups')}
+										className={`px-3 py-1 text-xs rounded-lg transition ${
+											copiedSection === 'filtered-startups'
+												? 'bg-green-500 text-white'
+												: 'bg-yellow-200 text-yellow-800 hover:bg-yellow-300'
+										}`}
+									>
+										{copiedSection === 'filtered-startups' ? '✓ Copied!' : '📋 Copy JSON'}
+									</button>
+								</div>
+								<div className="max-h-96 overflow-auto bg-gray-50 p-2 rounded">
+									<pre className="text-xs font-mono text-gray-700 whitespace-pre-wrap">
+										{JSON.stringify(filteredStartups, null, 2)}
+									</pre>
+								</div>
+							</div>
+						</details>
+					</div>
+				</div>
+			)}
 
 			{/* Statistics Section */}
 			<div className="grid grid-cols-3 gap-2">
@@ -984,6 +1089,42 @@ export default function ProgressPage() {
 												)}
 											</div>
 										)}
+
+										{/* Additional overview fields only for user's own startup */}
+										{selectedStartup.id === myStartup?.id && (
+											<>
+												{selectedStartup.startup_idea && (
+													<div>
+														<span className="text-sm text-gray-500">Startup Idea</span>
+														<p className="text-gray-900 mt-1">{selectedStartup.startup_idea}</p>
+													</div>
+												)}
+												{selectedStartup.background && (
+													<div>
+														<span className="text-sm text-gray-500">Background</span>
+														<p className="text-gray-900 mt-1">{selectedStartup.background}</p>
+													</div>
+												)}
+												{selectedStartup.commitment && (
+													<div>
+														<span className="text-sm text-gray-500">Commitment</span>
+														<p className="text-gray-900 mt-1">{selectedStartup.commitment}</p>
+													</div>
+												)}
+												{selectedStartup.problem && (
+													<div>
+														<span className="text-sm text-gray-500">Problem</span>
+														<p className="text-gray-900 mt-1">{selectedStartup.problem}</p>
+													</div>
+												)}
+												{selectedStartup.concern && (
+													<div>
+														<span className="text-sm text-gray-500">Concerns</span>
+														<p className="text-gray-900 mt-1">{selectedStartup.concern}</p>
+													</div>
+												)}
+											</>
+										)}
 									</div>
 								</div>
 							)}
@@ -1002,7 +1143,7 @@ export default function ProgressPage() {
 												className="mt-1 w-full px-2 py-1 border rounded text-gray-900"
 											/>
 										) : (
-											<p className="font-medium text-gray-900">{selectedStartup.founder_name || '-'}</p>
+											<p className="font-medium text-gray-900">{selectedStartup.founder_name || selectedStartup.name || selectedStartup.username || '-'}</p>
 										)}
 									</div>
 									{selectedStartup.contact_me !== false && (
@@ -1016,7 +1157,7 @@ export default function ProgressPage() {
 													className="mt-1 w-full px-2 py-1 border rounded text-gray-900"
 												/>
 											) : (
-												<p className="font-medium text-gray-900">{selectedStartup.founder_email || '-'}</p>
+												<p className="font-medium text-gray-900">{selectedStartup.founder_email || selectedStartup.email || '-'}</p>
 											)}
 										</div>
 									)}
@@ -1040,7 +1181,12 @@ export default function ProgressPage() {
 												/>
 											</div>
 										) : (
-											<p className="font-medium text-gray-900">{selectedStartup.location || '-'}</p>
+											<p className="font-medium text-gray-900">
+												{selectedStartup.location ||
+												 (selectedStartup.founder_city && selectedStartup.founder_country
+												   ? `${selectedStartup.founder_city}, ${selectedStartup.founder_country}`
+												   : selectedStartup.founder_city || selectedStartup.founder_country || '-')}
+											</p>
 										)}
 									</div>
 									<div>
@@ -1124,7 +1270,7 @@ export default function ProgressPage() {
 								</div>
 							</div>
 
-							{/* Product & Business */}
+							{/* Product & Business - Enhanced for user's own startup */}
 							<div className="border-t pt-6">
 								<h3 className="text-lg font-semibold text-gray-900 mb-4">Product & Business</h3>
 								<div className="space-y-4">
@@ -1134,56 +1280,172 @@ export default function ProgressPage() {
 											<p className="text-gray-900 mt-1">{selectedStartup.product}</p>
 										</div>
 									)}
-									{selectedStartup.problem_statement && (
-										<div>
-											<span className="text-sm text-gray-500">Problem Statement</span>
-											<p className="text-gray-900 mt-1">{selectedStartup.problem_statement}</p>
-										</div>
-									)}
-									{selectedStartup.customer && (
-										<div>
-											<span className="text-sm text-gray-500">Target Customer</span>
-											<p className="text-gray-900 mt-1">{selectedStartup.customer}</p>
-										</div>
-									)}
-									{selectedStartup.product_job_to_be_done && (
-										<div>
-											<span className="text-sm text-gray-500">Job to be Done</span>
-											<p className="text-gray-900 mt-1">{selectedStartup.product_job_to_be_done}</p>
-										</div>
-									)}
-									{selectedStartup.value_proposition && (
-										<div>
-											<span className="text-sm text-gray-500">Value Proposition</span>
-											<p className="text-gray-900 mt-1">{selectedStartup.value_proposition}</p>
-										</div>
-									)}
-									{selectedStartup.current_workaround && (
-										<div>
-											<span className="text-sm text-gray-500">Current Workaround</span>
-											<p className="text-gray-900 mt-1">{selectedStartup.current_workaround}</p>
-										</div>
-									)}
-									{selectedStartup.key_differentiator && (
-										<div>
-											<span className="text-sm text-gray-500">Key Differentiator</span>
-											<p className="text-gray-900 mt-1">{selectedStartup.key_differentiator}</p>
-										</div>
-									)}
-									{selectedStartup.why_now_catalyst && (
-										<div>
-											<span className="text-sm text-gray-500">Why Now?</span>
-											<p className="text-gray-900 mt-1">{selectedStartup.why_now_catalyst}</p>
-										</div>
-									)}
 									{selectedStartup.Business_model_explained && (
 										<div>
 											<span className="text-sm text-gray-500">Business Model</span>
 											<p className="text-gray-900 mt-1">{selectedStartup.Business_model_explained}</p>
 										</div>
 									)}
+
+									{/* Additional details only for user's own startup */}
+									{selectedStartup.id === myStartup?.id && (
+										<>
+											{selectedStartup.problem_statement && (
+												<div>
+													<span className="text-sm text-gray-500">Problem Statement</span>
+													<p className="text-gray-900 mt-1">{selectedStartup.problem_statement}</p>
+												</div>
+											)}
+											{selectedStartup.customer && (
+												<div>
+													<span className="text-sm text-gray-500">Target Customer</span>
+													<p className="text-gray-900 mt-1">{selectedStartup.customer}</p>
+												</div>
+											)}
+											{selectedStartup.value_proposition && (
+												<div>
+													<span className="text-sm text-gray-500">Value Proposition</span>
+													<p className="text-gray-900 mt-1">{selectedStartup.value_proposition}</p>
+												</div>
+											)}
+											{selectedStartup.key_differentiator && (
+												<div>
+													<span className="text-sm text-gray-500">Key Differentiator</span>
+													<p className="text-gray-900 mt-1">{selectedStartup.key_differentiator}</p>
+												</div>
+											)}
+											{selectedStartup.why_now_catalyst && (
+												<div>
+													<span className="text-sm text-gray-500">Why Now?</span>
+													<p className="text-gray-900 mt-1">{selectedStartup.why_now_catalyst}</p>
+												</div>
+											)}
+											{selectedStartup.current_workaround && (
+												<div>
+													<span className="text-sm text-gray-500">Current Workaround</span>
+													<p className="text-gray-900 mt-1">{selectedStartup.current_workaround}</p>
+												</div>
+											)}
+											{selectedStartup.product_job_to_be_done && (
+												<div>
+													<span className="text-sm text-gray-500">Job to be Done</span>
+													<p className="text-gray-900 mt-1">{selectedStartup.product_job_to_be_done}</p>
+												</div>
+											)}
+										</>
+									)}
 								</div>
 							</div>
+
+							{/* Current Status & Progress - Only for user's own startup */}
+							{selectedStartup.id === myStartup?.id && (
+								<div className="border-t pt-6">
+									<h3 className="text-lg font-semibold text-gray-900 mb-4">Current Status & Activity</h3>
+									<div className="space-y-4">
+										{selectedStartup.status && (
+											<div>
+												<span className="text-sm text-gray-500">Status</span>
+												<p className="text-gray-900 mt-1">{selectedStartup.status}</p>
+											</div>
+										)}
+										{selectedStartup.current_state && (
+											<div>
+												<span className="text-sm text-gray-500">Current State</span>
+												<p className="text-gray-900 mt-1">{selectedStartup.current_state}</p>
+											</div>
+										)}
+										{selectedStartup.current_concern && (
+											<div>
+												<span className="text-sm text-gray-500">Current Concerns</span>
+												<p className="text-gray-900 mt-1">{selectedStartup.current_concern}</p>
+											</div>
+										)}
+										{selectedStartup.first_experiment && (
+											<div>
+												<span className="text-sm text-gray-500">First Experiment</span>
+												<p className="text-gray-900 mt-1">{selectedStartup.first_experiment}</p>
+											</div>
+										)}
+										{selectedStartup.immediate_build_priority && (
+											<div>
+												<span className="text-sm text-gray-500">Immediate Build Priority</span>
+												<p className="text-gray-900 mt-1">{selectedStartup.immediate_build_priority}</p>
+											</div>
+										)}
+										{selectedStartup.tracking_metric && (
+											<div>
+												<span className="text-sm text-gray-500">Tracking Metric</span>
+												<p className="text-gray-900 mt-1">{selectedStartup.tracking_metric}</p>
+											</div>
+										)}
+										{selectedStartup.stage && (
+											<div>
+												<span className="text-sm text-gray-500">Stage</span>
+												<p className="text-gray-900 mt-1">{selectedStartup.stage}</p>
+											</div>
+										)}
+									</div>
+								</div>
+							)}
+
+							{/* Additional Insights - Only for user's own startup */}
+							{selectedStartup.id === myStartup?.id && (
+								selectedStartup.breakthrough_insight ||
+								selectedStartup.user_problem_focus ||
+								selectedStartup.deprioritized_items ||
+								selectedStartup.pain_point_identified ||
+								selectedStartup.target_customers ||
+								selectedStartup.session_materials ||
+								selectedStartup.kickoff_preference
+							) && (
+								<div className="border-t pt-6">
+									<h3 className="text-lg font-semibold text-gray-900 mb-4">Insights & Strategy</h3>
+									<div className="space-y-4">
+										{selectedStartup.breakthrough_insight && (
+											<div>
+												<span className="text-sm text-gray-500">Breakthrough Insight</span>
+												<p className="text-gray-900 mt-1">{selectedStartup.breakthrough_insight}</p>
+											</div>
+										)}
+										{selectedStartup.user_problem_focus && (
+											<div>
+												<span className="text-sm text-gray-500">User Problem Focus</span>
+												<p className="text-gray-900 mt-1">{selectedStartup.user_problem_focus}</p>
+											</div>
+										)}
+										{selectedStartup.deprioritized_items && (
+											<div>
+												<span className="text-sm text-gray-500">Deprioritized Items</span>
+												<p className="text-gray-900 mt-1">{selectedStartup.deprioritized_items}</p>
+											</div>
+										)}
+										{selectedStartup.pain_point_identified && (
+											<div>
+												<span className="text-sm text-gray-500">Pain Point Identified</span>
+												<p className="text-gray-900 mt-1">{selectedStartup.pain_point_identified}</p>
+											</div>
+										)}
+										{selectedStartup.target_customers && (
+											<div>
+												<span className="text-sm text-gray-500">Target Customers</span>
+												<p className="text-gray-900 mt-1">{selectedStartup.target_customers}</p>
+											</div>
+										)}
+										{selectedStartup.session_materials && (
+											<div>
+												<span className="text-sm text-gray-500">Session Materials</span>
+												<p className="text-gray-900 mt-1">{selectedStartup.session_materials}</p>
+											</div>
+										)}
+										{selectedStartup.kickoff_preference && (
+											<div>
+												<span className="text-sm text-gray-500">Kickoff Preference</span>
+												<p className="text-gray-900 mt-1">{selectedStartup.kickoff_preference}</p>
+											</div>
+										)}
+									</div>
+								</div>
+							)}
 
 							{/* Website */}
 							{selectedStartup.website && (
@@ -1229,19 +1491,36 @@ export default function ProgressPage() {
 								</div>
 							)}
 							
-							{/* All Raw Fields - Hidden for production */}
-							{/* <div className="border-t pt-6">
-								<details className="group">
-									<summary className="cursor-pointer text-lg font-semibold text-gray-900 mb-4 hover:text-indigo-600">
-										All Data Fields ▼
-									</summary>
-									<div className="mt-4 bg-gray-50 rounded-lg p-4 max-h-96 overflow-auto">
-										<pre className="text-xs font-mono text-gray-700 whitespace-pre-wrap">
-											{JSON.stringify(selectedStartup, null, 2)}
-										</pre>
-									</div>
-								</details>
-							</div> */}
+							{/* Debug Data - Only shown in development */}
+							{(window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (
+								<div className="border-t pt-6">
+									<details className="group">
+										<summary className="cursor-pointer text-lg font-semibold text-gray-900 mb-4 hover:text-indigo-600 flex items-center gap-2">
+											🐛 Debug: All Data Fields
+											<span className="text-xs text-gray-500 font-normal">(Development Only)</span>
+										</summary>
+										<div className="mt-4">
+											<div className="flex justify-end mb-2">
+												<button
+													onClick={() => copyToClipboard(selectedStartup, 'modal-startup')}
+													className={`px-3 py-1 text-xs rounded-lg transition ${
+														copiedSection === 'modal-startup'
+															? 'bg-green-500 text-white'
+															: 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+													}`}
+												>
+													{copiedSection === 'modal-startup' ? '✓ Copied!' : '📋 Copy JSON'}
+												</button>
+											</div>
+											<div className="bg-gray-50 rounded-lg p-4 max-h-96 overflow-auto">
+												<pre className="text-xs font-mono text-gray-700 whitespace-pre-wrap">
+													{JSON.stringify(selectedStartup, null, 2)}
+												</pre>
+											</div>
+										</div>
+									</details>
+								</div>
+							)}
 						</div>
 					</div>
 				</div>

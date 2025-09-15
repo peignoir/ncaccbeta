@@ -1,5 +1,6 @@
 import ApiConfigManager from './apiConfig';
 import apiUsageTracker from './apiUsageTracker';
+import logger from './logger';
 
 export interface SocapProfile {
   name: string;
@@ -59,7 +60,7 @@ export class SocapApiClient {
   private static instance: SocapApiClient;
   
   private constructor() {
-    console.log('[SocapAPI] Initializing Socap API client');
+    logger.debug('[SocapAPI] Initializing Socap API client');
   }
 
   static getInstance(): SocapApiClient {
@@ -71,7 +72,7 @@ export class SocapApiClient {
 
   private getHeaders(): HeadersInit {
     const config = ApiConfigManager.getConfig();
-    console.log('[SocapAPI] Creating headers with API key:', config.apiKey?.substring(0, 10) + '...');
+    logger.debug('[SocapAPI] Creating headers with API key:', config.apiKey?.substring(0, 10) + '...');
     return {
       'X-API-KEY': config.apiKey,
       'Content-Type': 'application/json',
@@ -88,13 +89,17 @@ export class SocapApiClient {
     if (isDev) {
       // Use local proxy server in development
       url = `http://localhost:3001${endpoint}`;
+      logger.debug('[SocapAPI DEBUG] 🔧 Development mode detected');
+      logger.debug('[SocapAPI DEBUG] 📍 Original endpoint:', endpoint);
+      logger.debug('[SocapAPI DEBUG] 🌐 Proxied URL:', url);
+      logger.debug('[SocapAPI DEBUG] 🔑 API Key prefix:', config.apiKey?.substring(0, 15) + '...');
     } else {
       // Use Vercel serverless function in production
       url = `/api/socap-proxy?path=${encodeURIComponent(endpoint)}`;
     }
-    
-    console.log(`[SocapAPI] Making request to: ${url} (isDev: ${isDev})`);
-    console.log('[SocapAPI] Request options:', {
+
+    logger.log(`[SocapAPI] Making request to: ${url} (isDev: ${isDev})`);
+    logger.log('[SocapAPI] Request options:', {
       ...options,
       headers: { ...options.headers, 'X-API-KEY': '***hidden***' }
     });
@@ -112,8 +117,8 @@ export class SocapApiClient {
       });
 
       responseStatus = response.status;
-      console.log(`[SocapAPI] Response status: ${response.status} ${response.statusText}`);
-      console.log('[SocapAPI] Response headers:', Object.fromEntries(response.headers.entries()));
+      logger.debug(`[SocapAPI] Response status: ${response.status} ${response.statusText}`);
+      logger.debug('[SocapAPI] Response headers:', Object.fromEntries(response.headers.entries()));
 
       // Track API usage
       const responseTime = Date.now() - startTime;
@@ -132,7 +137,15 @@ export class SocapApiClient {
       }
 
       const data = await response.json();
-      console.log('[SocapAPI] Response data:', data);
+
+      if (isDev) {
+        logger.debug('[SocapAPI DEBUG] ✅ Request successful!');
+        logger.debug('[SocapAPI DEBUG] 📊 Response data:', data);
+        logger.debug('[SocapAPI DEBUG] ⏱️ Response time:', responseTime + 'ms');
+      } else {
+        logger.log('[SocapAPI] Response data:', data);
+      }
+
       return data;
     } catch (error) {
       // Track failed requests too
@@ -145,33 +158,43 @@ export class SocapApiClient {
           500 // Network error
         );
       }
-      console.error('[SocapAPI] Request failed:', error);
+
+      if (isDev) {
+        console.error('[SocapAPI DEBUG] ❌ Request failed!');
+        console.error('[SocapAPI DEBUG] 🔥 Error details:', error);
+        console.error('[SocapAPI DEBUG] 📍 Failed endpoint:', endpoint);
+        console.error('[SocapAPI DEBUG] 🌐 Failed URL:', url);
+        console.error('[SocapAPI DEBUG] ⏱️ Failed after:', Date.now() - startTime + 'ms');
+      } else {
+        console.error('[SocapAPI] Request failed:', error);
+      }
+
       throw error;
     }
   }
 
   async getProfile(): Promise<SocapProfile> {
-    console.log('[SocapAPI] Fetching user profile');
+    logger.debug('[SocapAPI] Fetching user profile');
     return this.makeRequest<SocapProfile>('/api/v1/agent/agent_user/profile');
   }
 
   async getEventList(): Promise<SocapEvent[]> {
-    console.log('[SocapAPI] Fetching event list');
+    logger.debug('[SocapAPI] Fetching event list');
     const events = await this.makeRequest<SocapEvent[]>('/api/v1/agent/agent_user/event-list');
-    console.log(`[SocapAPI] Received ${events.length} events`);
+    logger.debug(`[SocapAPI] Received ${events.length} events`);
     return events;
   }
 
   async getEventDetails(): Promise<SocapDetails> {
-    console.log('[SocapAPI] Fetching event details');
+    logger.debug('[SocapAPI] Fetching event details');
     try {
       return await this.makeRequest<SocapDetails>('/api/v1/agent/agent_user/event-details');
     } catch (error) {
-      console.warn('[SocapAPI] Failed to fetch event details, falling back to event list', error);
+      logger.warn('[SocapAPI] Failed to fetch event details, falling back to event list', error);
       
       const events = await this.getEventList();
       if (events.length > 0 && events[0].data.details) {
-        console.log('[SocapAPI] Extracted details from event list');
+        logger.debug('[SocapAPI] Extracted details from event list');
         return events[0].data.details;
       }
       
@@ -180,10 +203,10 @@ export class SocapApiClient {
   }
 
   async testConnection(): Promise<boolean> {
-    console.log('[SocapAPI] Testing API connection');
+    logger.debug('[SocapAPI] Testing API connection');
     try {
       const profile = await this.getProfile();
-      console.log('[SocapAPI] Connection test successful, profile:', profile);
+      logger.debug('[SocapAPI] Connection test successful, profile:', profile);
       return true;
     } catch (error) {
       console.error('[SocapAPI] Connection test failed:', error);

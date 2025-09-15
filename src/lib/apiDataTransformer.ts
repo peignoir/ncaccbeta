@@ -50,6 +50,9 @@ export class ApiDataTransformer {
     const isCurrentUser = currentUserTelegramId && 
       String(eventTelegramId) === String(currentUserTelegramId);
     
+    // Use email from details if contact.email is null
+    const founderEmail = event.contact.email || details.email || details.founder_email || '';
+
     const startup: AppStartup = {
       npid,
       login_code: btoa(`login:${npid}`),
@@ -61,43 +64,24 @@ export class ApiDataTransformer {
       stealth: details.stealth || false,
       telegram_id: String(eventTelegramId || event.contact.telegram_username || ''),
       telegram_username: event.contact.telegram_username || '',
-      email: event.contact.email || `user${npid}@example.com`,
+      email: founderEmail,
+      founder_email: founderEmail, // Ensure founder_email is also set
       isCurrentUser,
       linkedin_url: details.founder_linkedin_url || '',
       contact_me: true,
       progress_percent: progress,
-      
-      // Include ALL raw data from the API
-      raw_event: event, // Include the entire raw event
+
+      // Only keep minimal raw data for debugging
       raw_group: event.data.group,
       raw_percent: event.data.percent,
-      raw_details: details,
-      
-      // Add all fields from details (even empty ones)
-      website: details.website,
-      bio: details.bio,
-      product: details.product,
-      customer: details.customer,
-      traction: details.traction,
-      long_pitch: details.long_pitch,
-      motivation: details.motivation,
-      github_repos: details.github_repos,
-      founder_country: details.founder_country,
-      competitors_urls: details.competitors_urls,
-      current_progress: details.current_progress !== undefined && details.current_progress !== null 
-        ? details.current_progress 
-        : (progress / 100),
-      why_now_catalyst: details.why_now_catalyst,
-      problem_statement: details.problem_statement,
-      value_proposition: details.value_proposition,
-      current_workaround: details.current_workaround,
-      key_differentiator: details.key_differentiator,
-      business_model_explained: details.business_model_explained,
-      product_job_to_be_done: details.product_job_to_be_done,
-      founder_time_commitment_pct: details.founder_time_commitment_pct,
-      
-      // Include ALL fields from details object dynamically
+
+      // Spread ALL fields from details object (no need to duplicate them manually)
       ...details,
+
+      // Override with calculated values
+      current_progress: details.current_progress !== undefined && details.current_progress !== null
+        ? details.current_progress
+        : (progress / 100),
       
       check_in_1: progress >= 10,
       check_in_2: progress >= 20,

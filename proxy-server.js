@@ -15,9 +15,16 @@ app.use('/api', async (req, res) => {
     const apiPath = req.originalUrl;
     // const apiUrl = `https://dev.socap.ai${apiPath}`;
     const apiUrl = `https://app.socap.ai${apiPath}`; // Production server
-    
-    console.log(`[Proxy] ${req.method} ${apiPath} -> ${apiUrl}`);
-    
+
+    console.log('\n🔄 [Proxy] New request received:');
+    console.log(`  📍 Method: ${req.method}`);
+    console.log(`  🌐 Path: ${apiPath}`);
+    console.log(`  🎯 Target: ${apiUrl}`);
+    console.log(`  🔑 API Key: ${req.headers['x-api-key'] ? req.headers['x-api-key'].substring(0, 15) + '...' : 'Not provided'}`);
+    console.log(`  📦 Headers:`, Object.keys(req.headers).join(', '));
+
+    const startTime = Date.now();
+
     const response = await axios({
       method: req.method,
       url: apiUrl,
@@ -28,14 +35,27 @@ app.use('/api', async (req, res) => {
       },
       data: req.body,
     });
-    
+
+    const responseTime = Date.now() - startTime;
+    console.log(`✅ [Proxy] Success!`);
+    console.log(`  📊 Status: ${response.status}`);
+    console.log(`  ⏱️  Time: ${responseTime}ms`);
+    console.log(`  📤 Response data keys:`, response.data ? Object.keys(response.data).join(', ') : 'No data');
+
     res.status(response.status).json(response.data);
   } catch (error) {
-    console.error('[Proxy] Error:', error.message);
+    const responseTime = Date.now() - startTime;
+    console.error('\n❌ [Proxy] Request failed!');
+    console.error(`  🔥 Error: ${error.message}`);
+    console.error(`  ⏱️  Failed after: ${responseTime}ms`);
+
     if (error.response) {
+      console.error(`  📊 Response status: ${error.response.status}`);
+      console.error(`  📤 Error data:`, error.response.data);
       res.status(error.response.status).json(error.response.data);
     } else {
-      res.status(500).json({ error: 'Proxy error' });
+      console.error(`  💥 Network error or no response`);
+      res.status(500).json({ error: 'Proxy error', message: error.message });
     }
   }
 });

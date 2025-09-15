@@ -3,6 +3,7 @@ import socapApi from './socapApi';
 import ApiDataTransformer, { AppStartup } from './apiDataTransformer';
 import MockDataProvider from './mockDataProvider';
 import apiUsageTracker from './apiUsageTracker';
+import logger from './logger';
 
 export interface UnifiedApiResponse<T> {
   success: boolean;
@@ -15,7 +16,7 @@ export class UnifiedApi {
   private static instance: UnifiedApi;
   
   private constructor() {
-    console.log('[UnifiedAPI] Initializing unified API service');
+    logger.log('[UnifiedAPI] Initializing unified API service');
   }
 
   static getInstance(): UnifiedApi {
@@ -27,11 +28,11 @@ export class UnifiedApi {
 
   async login(code: string): Promise<UnifiedApiResponse<{ token: string; npid: number; username: string }>> {
     const apiKey = ApiConfigManager.getApiKey();
-    console.log(`[UnifiedAPI] Login attempt with API key: ${apiKey?.substring(0, 6)}...`);
+    logger.log(`[UnifiedAPI] Login attempt with API key: ${apiKey?.substring(0, 6)}...`);
 
     // Special handling for pofpof
     if (apiKey === 'pofpof') {
-      console.log('[UnifiedAPI] Using mock data for pofpof key');
+      logger.log('[UnifiedAPI] Using mock data for pofpof key');
       return MockDataProvider.getMockLogin();
     } else {
       return this.realLogin(code);
@@ -39,7 +40,7 @@ export class UnifiedApi {
   }
 
   private async mockLogin(code: string): Promise<UnifiedApiResponse<{ token: string; npid: number; username: string }>> {
-    console.log('[UnifiedAPI] Performing mock login');
+    logger.log('[UnifiedAPI] Performing mock login');
     
     try {
       const response = await fetch('/api/login', {
@@ -49,7 +50,7 @@ export class UnifiedApi {
       });
 
       const data = await response.json();
-      console.log('[UnifiedAPI] Mock login response:', data);
+      logger.log('[UnifiedAPI] Mock login response:', data);
 
       if (!response.ok) {
         throw new Error(data.message || 'Login failed');
@@ -65,7 +66,7 @@ export class UnifiedApi {
         source: 'mock'
       };
     } catch (error) {
-      console.error('[UnifiedAPI] Mock login error:', error);
+      logger.error('[UnifiedAPI] Mock login error:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Login failed',
@@ -75,15 +76,15 @@ export class UnifiedApi {
   }
 
   private async realLogin(code: string): Promise<UnifiedApiResponse<{ token: string; npid: number; username: string; telegram_id?: number | string }>> {
-    console.log('[UnifiedAPI] Performing real API login with token:', code);
+    logger.log('[UnifiedAPI] Performing real API login with token:', code);
     const startTime = Date.now();
     
     try {
       // Get the user profile to identify the logged-in user
-      console.log('[UnifiedAPI] Testing Socap API connection for authentication');
+      logger.log('[UnifiedAPI] Testing Socap API connection for authentication');
       
       const profile = await socapApi.getProfile();
-      console.log('[UnifiedAPI] Successfully authenticated with Socap API, profile:', profile);
+      logger.log('[UnifiedAPI] Successfully authenticated with Socap API, profile:', profile);
       
       // Track successful login
       apiUsageTracker.track(
@@ -108,7 +109,7 @@ export class UnifiedApi {
         profile
       }));
 
-      console.log(`[UnifiedAPI] Created session for user: ${username} (Telegram ID: ${telegram_id})`);
+      logger.log(`[UnifiedAPI] Created session for user: ${username} (Telegram ID: ${telegram_id})`);
 
       return {
         success: true,
@@ -121,7 +122,7 @@ export class UnifiedApi {
         source: 'real'
       };
     } catch (error) {
-      console.error('[UnifiedAPI] Real API authentication failed:', error);
+      logger.error('[UnifiedAPI] Real API authentication failed:', error);
       
       // If the API call fails, it means authentication failed
       const errorMessage = error instanceof Error ? 
@@ -138,10 +139,10 @@ export class UnifiedApi {
 
   async getStartups(options?: { showAll?: boolean }): Promise<UnifiedApiResponse<AppStartup[]>> {
     const apiKey = ApiConfigManager.getApiKey();
-    console.log(`[UnifiedAPI] Getting startups`, options);
+    logger.log(`[UnifiedAPI] Getting startups`, options);
 
     if (apiKey === 'pofpof') {
-      console.log('[UnifiedAPI] Using mock data for pofpof key');
+      logger.log('[UnifiedAPI] Using mock data for pofpof key');
       return MockDataProvider.getMockStartups(options);
     } else {
       return this.getRealStartups(options);
@@ -149,7 +150,7 @@ export class UnifiedApi {
   }
 
   private async getMockStartups(options?: { showAll?: boolean }): Promise<UnifiedApiResponse<AppStartup[]>> {
-    console.log('[UnifiedAPI] Getting mock startups', options);
+    logger.log('[UnifiedAPI] Getting mock startups', options);
     
     try {
       // Include authorization header if we have a token
@@ -164,7 +165,7 @@ export class UnifiedApi {
       
       const response = await fetch(url, { headers });
       const data = await response.json();
-      console.log(`[UnifiedAPI] Mock startups count: ${data.length}`);
+      logger.log(`[UnifiedAPI] Mock startups count: ${data.length}`);
       
       return {
         success: true,
@@ -172,7 +173,7 @@ export class UnifiedApi {
         source: 'mock'
       };
     } catch (error) {
-      console.error('[UnifiedAPI] Mock startups error:', error);
+      logger.error('[UnifiedAPI] Mock startups error:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Failed to fetch startups',
@@ -182,7 +183,7 @@ export class UnifiedApi {
   }
 
   private async getRealStartups(options?: { showAll?: boolean }): Promise<UnifiedApiResponse<AppStartup[]>> {
-    console.log('[UnifiedAPI] Getting real API startups', options);
+    logger.log('[UnifiedAPI] Getting real API startups', options);
     
     try {
       // First get the current user's profile to identify them
@@ -192,15 +193,15 @@ export class UnifiedApi {
         const profile = await socapApi.getProfile();
         currentUserTelegramId = profile.telegram_id;
         currentUserProfile = profile;
-        console.log('[UnifiedAPI] Current user telegram_id:', currentUserTelegramId);
-        console.log('[UnifiedAPI] Current user profile:', profile);
+        logger.log('[UnifiedAPI] Current user telegram_id:', currentUserTelegramId);
+        logger.log('[UnifiedAPI] Current user profile:', profile);
       } catch (error) {
-        console.warn('[UnifiedAPI] Could not get profile for user identification:', error);
+        logger.warn('[UnifiedAPI] Could not get profile for user identification:', error);
       }
       
       const eventsStartTime = Date.now();
       const events = await socapApi.getEventList();
-      console.log(`[UnifiedAPI] Got ${events.length} events from real API`);
+      logger.log(`[UnifiedAPI] Got ${events.length} events from real API`);
       
       // Manually track this important call
       apiUsageTracker.track(
@@ -216,13 +217,13 @@ export class UnifiedApi {
         const userFoundInEvents = events.some(event => 
           String(event.contact?.telegram_id) === String(currentUserTelegramId)
         );
-        console.log(`[UnifiedAPI] User ${currentUserTelegramId} found in events: ${userFoundInEvents}`);
+        logger.log(`[UnifiedAPI] User ${currentUserTelegramId} found in events: ${userFoundInEvents}`);
         
         if (userFoundInEvents) {
           const userEventIndex = events.findIndex(event => 
             String(event.contact?.telegram_id) === String(currentUserTelegramId)
           );
-          console.log(`[UnifiedAPI] User found at index ${userEventIndex}, will have npid ${1000 + userEventIndex}`);
+          logger.log(`[UnifiedAPI] User found at index ${userEventIndex}, will have npid ${1000 + userEventIndex}`);
         }
       }
       
@@ -234,18 +235,18 @@ export class UnifiedApi {
       const dataWithoutUnknown = transformedData.filter(s => {
         // Always include the current user's startup
         if (s.isCurrentUser) {
-          console.log(`[UnifiedAPI] Keeping current user's startup even if house is unknown: ${s.startup_name}`);
+          logger.log(`[UnifiedAPI] Keeping current user's startup even if house is unknown: ${s.startup_name}`);
           return true;
         }
         
         const house = s.house?.toLowerCase();
         if (house === 'unknown') {
-          console.log(`[UnifiedAPI] Filtering out startup with unknown house: ${s.startup_name} (npid: ${s.npid})`);
+          logger.log(`[UnifiedAPI] Filtering out startup with unknown house: ${s.startup_name} (npid: ${s.npid})`);
           return false;
         }
         return true;
       });
-      console.log(`[UnifiedAPI] Filtered ${transformedData.length - dataWithoutUnknown.length} startups with unknown house`);
+      logger.log(`[UnifiedAPI] Filtered ${transformedData.length - dataWithoutUnknown.length} startups with unknown house`);
       
       // Apply house filtering if needed
       let filteredData = dataWithoutUnknown;
@@ -256,11 +257,11 @@ export class UnifiedApi {
         const userHouse = currentUserStartup?.house;
         
         if (userHouse && userHouse.toLowerCase() !== 'unknown') {
-          console.log(`[UnifiedAPI] Filtering to user's house: ${userHouse}`);
+          logger.log(`[UnifiedAPI] Filtering to user's house: ${userHouse}`);
           filteredData = dataWithoutUnknown.filter(s => s.house === userHouse || s.isCurrentUser);
-          console.log(`[UnifiedAPI] Filtered from ${dataWithoutUnknown.length} to ${filteredData.length} startups`);
+          logger.log(`[UnifiedAPI] Filtered from ${dataWithoutUnknown.length} to ${filteredData.length} startups`);
         } else {
-          console.log(`[UnifiedAPI] User has no house or unknown house, showing all startups`);
+          logger.log(`[UnifiedAPI] User has no house or unknown house, showing all startups`);
         }
       }
       
@@ -270,8 +271,8 @@ export class UnifiedApi {
         source: 'real'
       };
     } catch (error) {
-      console.error('[UnifiedAPI] Real API startups error:', error);
-      console.log('[UnifiedAPI] Falling back to mock data');
+      logger.error('[UnifiedAPI] Real API startups error:', error);
+      logger.log('[UnifiedAPI] Falling back to mock data');
       
       return this.getMockStartups();
     }
@@ -279,7 +280,7 @@ export class UnifiedApi {
 
   async updateStartup(npid: number, updates: Partial<AppStartup>): Promise<UnifiedApiResponse<AppStartup>> {
     const apiKey = ApiConfigManager.getApiKey();
-    console.log(`[UnifiedAPI] Updating startup ${npid}`, updates);
+    logger.log(`[UnifiedAPI] Updating startup ${npid}`, updates);
 
     if (apiKey === 'pofpof') {
       // Mock updates aren't persisted
@@ -294,7 +295,7 @@ export class UnifiedApi {
   }
 
   private async updateMockStartup(npid: number, updates: Partial<AppStartup>): Promise<UnifiedApiResponse<AppStartup>> {
-    console.log(`[UnifiedAPI] Updating mock startup ${npid}`);
+    logger.log(`[UnifiedAPI] Updating mock startup ${npid}`);
     
     try {
       const response = await fetch(`/api/startups/${npid}`, {
@@ -304,7 +305,7 @@ export class UnifiedApi {
       });
 
       const data = await response.json();
-      console.log('[UnifiedAPI] Mock update response:', data);
+      logger.log('[UnifiedAPI] Mock update response:', data);
 
       if (!response.ok) {
         throw new Error(data.message || 'Update failed');
@@ -316,7 +317,7 @@ export class UnifiedApi {
         source: 'mock'
       };
     } catch (error) {
-      console.error('[UnifiedAPI] Mock update error:', error);
+      logger.error('[UnifiedAPI] Mock update error:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Update failed',
@@ -326,7 +327,7 @@ export class UnifiedApi {
   }
 
   private async updateWithPersistence(npid: number, updates: Partial<AppStartup>): Promise<UnifiedApiResponse<AppStartup>> {
-    console.log(`[UnifiedAPI] Updating startup ${npid} with persistence (real API mode)`);
+    logger.log(`[UnifiedAPI] Updating startup ${npid} with persistence (real API mode)`);
     
     try {
       const currentStartups = await this.getStartups();
@@ -346,16 +347,16 @@ export class UnifiedApi {
       };
 
       // No persistence for real API updates
-      console.log('[UnifiedAPI] Update complete:', updatedStartup);
+      logger.log('[UnifiedAPI] Update complete:', updatedStartup);
 
-      console.log('[UnifiedAPI] Update successful for real API mode (persisted locally)');
+      logger.log('[UnifiedAPI] Update successful for real API mode (persisted locally)');
       return {
         success: true,
         data: updatedStartup,
         source: 'real'
       };
     } catch (error) {
-      console.error('[UnifiedAPI] Real API update error:', error);
+      logger.error('[UnifiedAPI] Real API update error:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Update failed',
@@ -366,12 +367,12 @@ export class UnifiedApi {
 
   async getCircles(): Promise<UnifiedApiResponse<any[]>> {
     const apiKey = ApiConfigManager.getApiKey();
-    console.log(`[UnifiedAPI] Getting circles`);
+    logger.log(`[UnifiedAPI] Getting circles`);
 
     try {
       // In mock mode or when using production API, use the /api/circles endpoint directly
       if (apiKey === 'pofpof' || !ApiConfigManager.getConfig().apiKey) {
-        console.log('[UnifiedAPI] Using /api/circles endpoint');
+        logger.log('[UnifiedAPI] Using /api/circles endpoint');
         const response = await fetch('/api/circles');
         
         if (!response.ok) {
@@ -379,7 +380,7 @@ export class UnifiedApi {
         }
         
         const circles = await response.json();
-        console.log(`[UnifiedAPI] Fetched ${circles.length} circles from API`);
+        logger.log(`[UnifiedAPI] Fetched ${circles.length} circles from API`);
         
         return {
           success: true,
@@ -396,7 +397,7 @@ export class UnifiedApi {
       }
 
       const circles = this.generateCirclesFromStartups(startupsResponse.data);
-      console.log(`[UnifiedAPI] Generated ${circles.length} circles from startups`);
+      logger.log(`[UnifiedAPI] Generated ${circles.length} circles from startups`);
 
       return {
         success: true,
@@ -404,7 +405,7 @@ export class UnifiedApi {
         source: 'real'
       };
     } catch (error) {
-      console.error('[UnifiedAPI] Get circles error:', error);
+      logger.error('[UnifiedAPI] Get circles error:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Failed to get circles',
@@ -414,7 +415,7 @@ export class UnifiedApi {
   }
 
   private generateCirclesFromStartups(startups: AppStartup[]): any[] {
-    console.log('[UnifiedAPI] Generating circles from startups');
+    logger.log('[UnifiedAPI] Generating circles from startups');
     
     const circleMap = new Map<string, { members: AppStartup[], name?: string, description?: string }>();
     
@@ -459,7 +460,7 @@ export class UnifiedApi {
       ]
     }));
 
-    console.log(`[UnifiedAPI] Generated ${circles.length} circles with member counts:`, 
+    logger.log(`[UnifiedAPI] Generated ${circles.length} circles with member counts:`, 
       circles.map(c => `${c.id}: ${c.members.length} members`));
 
     return circles;
@@ -467,19 +468,19 @@ export class UnifiedApi {
 
   async testConnection(): Promise<boolean> {
     const apiKey = ApiConfigManager.getApiKey();
-    console.log(`[UnifiedAPI] Testing connection`);
+    logger.log(`[UnifiedAPI] Testing connection`);
 
     if (apiKey === 'pofpof') {
-      console.log('[UnifiedAPI] Pofpof key always returns true');
+      logger.log('[UnifiedAPI] Pofpof key always returns true');
       return true;
     }
 
     try {
       const isConnected = await socapApi.testConnection();
-      console.log(`[UnifiedAPI] Real API connection test result: ${isConnected}`);
+      logger.log(`[UnifiedAPI] Real API connection test result: ${isConnected}`);
       return isConnected;
     } catch (error) {
-      console.error('[UnifiedAPI] Connection test error:', error);
+      logger.error('[UnifiedAPI] Connection test error:', error);
       return false;
     }
   }
