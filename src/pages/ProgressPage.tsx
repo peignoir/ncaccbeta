@@ -662,8 +662,6 @@ export default function ProgressPage() {
 								<th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Founder</th>
 								<th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">House</th>
 								<th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Progress</th>
-								<th className="text-center py-3 px-4 text-sm font-semibold text-gray-600">Reachable</th>
-								<th className="text-center py-3 px-4 text-sm font-semibold text-gray-600">Actions</th>
 							</tr>
 						</thead>
 						<tbody className="divide-y divide-gray-100">
@@ -745,30 +743,6 @@ export default function ProgressPage() {
 													{isNaN(startup.progress) || startup.progress === null || startup.progress === undefined ? 'N/A' : `${startup.progress}%`}
 												</span>
 											</div>
-										</td>
-										<td className="py-4 px-4 text-center">
-											{!isStealthed && startup.contact_me !== false && (startup.founder_email || startup.founder_telegram) ? (
-												<span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
-													✓ Yes
-												</span>
-											) : (
-												<span className="text-gray-400 text-xs">-</span>
-											)}
-										</td>
-										<td className="py-4 px-4 text-center">
-											{canViewDetails ? (
-												<button
-													onClick={(e) => {
-														e.stopPropagation()
-														openModal(startup)
-													}}
-													className="text-indigo-600 hover:text-indigo-800 font-medium text-sm"
-												>
-													View Details
-												</button>
-											) : (
-												<span className="text-gray-400 text-sm">Hidden</span>
-											)}
 										</td>
 									</tr>
 								)
