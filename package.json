@@ -1,6 +1,9 @@
 {
   "name": "ncacc-dashboard",
   "version": "0.1.0",
+  "description": "NC/ACC Dashboard - The AI driven solo founder program",
+  "author": "Franck Nouyrigat",
+  "license": "MIT",
   "private": true,
   "type": "module",
   "scripts": {

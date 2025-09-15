@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import ApiConfigManager from '../lib/apiConfig'
 import { initializeDemoData } from '../lib/generateDemoUsage'
+import logger from '../lib/logger'
 
 type ApiUsageRecord = {
   timestamp: string
@@ -42,12 +43,12 @@ export default function ApiUsagePage() {
   const loadUsageData = () => {
     // Load from localStorage (in production, this would come from a backend)
     const storedUsage = localStorage.getItem('ncacc_api_usage')
-    console.log('[ApiUsagePage] Loading usage data from localStorage')
+    logger.log('[ApiUsagePage] Loading usage data from localStorage')
     
     if (storedUsage) {
       try {
         const records: ApiUsageRecord[] = JSON.parse(storedUsage)
-        console.log(`[ApiUsagePage] Parsed ${records.length} records`)
+        logger.log(`[ApiUsagePage] Parsed ${records.length} records`)
         
         // Filter by time range
         const now = new Date()
@@ -73,12 +74,12 @@ export default function ApiUsagePage() {
         
         setUsageRecords(filteredRecords)
         calculateUserStats(filteredRecords)
-        console.log(`[ApiUsagePage] Showing ${filteredRecords.length} records after filtering`)
+        logger.log(`[ApiUsagePage] Showing ${filteredRecords.length} records after filtering`)
       } catch (e) {
         console.error('Failed to parse usage data:', e)
       }
     } else {
-      console.log('[ApiUsagePage] No usage data found in localStorage')
+      logger.log('[ApiUsagePage] No usage data found in localStorage')
       setUsageRecords([])
       setUserStats([])
     }
@@ -86,7 +87,7 @@ export default function ApiUsagePage() {
   }
   
   const regenerateDemoData = () => {
-    console.log('[ApiUsagePage] Regenerating demo data')
+    logger.log('[ApiUsagePage] Regenerating demo data')
     initializeDemoData(true)
     loadUsageData()
   }

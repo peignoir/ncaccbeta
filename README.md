@@ -1,6 +1,14 @@
-# NCACC Dashboard
+# NC/ACC Dashboard
 
 A modern dashboard for NC/ACC accelerator participants to track progress, connect with peers, and manage tasks.
+
+## Author
+
+Franck Nouyrigat
+
+## License
+
+MIT License - see LICENSE file for details
 
 ## Quick Start
 
