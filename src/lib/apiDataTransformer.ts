@@ -10,6 +10,7 @@ export interface AppStartup {
   circle_id?: string;
   startup_name: string;
   stealth: boolean | string;
+  uuid?: string; // UUID from Socap API
   telegram_id: string;
   email: string;
   linkedin_url?: string;
@@ -29,26 +30,27 @@ export interface AppStartup {
 }
 
 export class ApiDataTransformer {
-  static transformSocapEventToStartup(event: SocapEvent, index: number, currentUserTelegramId?: number | string): AppStartup {
+  static transformSocapEventToStartup(event: SocapEvent, index: number, currentUserUUID?: string, currentUserTelegramId?: number | string): AppStartup {
     // Removed verbose logging for performance
-    
+
     // Use index-based npid for consistency
+    const eventUUID = event.contact?.uuid;
     const eventTelegramId = event.contact?.telegram_id;
     const npid = 1000 + index;
-    
+
     // Normalize the house value from API
     const rawHouse = event.data.group;
     const house = normalizeHouse(rawHouse) || 'unknown';
-    const progress = event.data.percent !== undefined && event.data.percent !== null 
-      ? Math.round(event.data.percent) 
+    const progress = event.data.percent !== undefined && event.data.percent !== null
+      ? Math.round(event.data.percent)
       : 0;
-    
+
     // Extract all available data from details
     const details = event.data.details || {};
-    
-    // Check if this is the current user's startup
-    const isCurrentUser = currentUserTelegramId && 
-      String(eventTelegramId) === String(currentUserTelegramId);
+
+    // Check if this is the current user's startup - UUID takes priority, fallback to telegram_id
+    const isCurrentUser = (currentUserUUID && eventUUID === currentUserUUID) ||
+      (currentUserTelegramId && String(eventTelegramId) === String(currentUserTelegramId));
     
     // Use email from details if contact.email is null
     const founderEmail = event.contact.email || details.email || details.founder_email || '';
@@ -62,6 +64,7 @@ export class ApiDataTransformer {
       circle_id: this.generateCircleId(index),
       startup_name: details.startup_name || event.data.event_name || 'Unnamed Startup',
       stealth: details.stealth || false,
+      uuid: eventUUID, // Add UUID field
       telegram_id: String(eventTelegramId || event.contact.telegram_username || ''),
       telegram_username: event.contact.telegram_username || '',
       email: founderEmail,

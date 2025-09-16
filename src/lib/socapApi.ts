@@ -5,6 +5,8 @@ import logger from './logger';
 export interface SocapProfile {
   name: string;
   telegram_id: number;
+  uuid: string;
+  email?: string | null;
 }
 
 export interface SocapContact {
@@ -12,6 +14,7 @@ export interface SocapContact {
   email?: string | null;
   telegram_username: string;
   telegram_id: number | string;
+  uuid: string;
 }
 
 export interface SocapDetails {

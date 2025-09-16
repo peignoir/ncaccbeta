@@ -75,17 +75,17 @@ export class UnifiedApi {
     }
   }
 
-  private async realLogin(code: string): Promise<UnifiedApiResponse<{ token: string; npid: number; username: string; telegram_id?: number | string }>> {
+  private async realLogin(code: string): Promise<UnifiedApiResponse<{ token: string; npid: number; username: string; telegram_id?: number | string; uuid?: string }>> {
     logger.log('[UnifiedAPI] Performing real API login with token:', code);
     const startTime = Date.now();
-    
+
     try {
       // Get the user profile to identify the logged-in user
       logger.log('[UnifiedAPI] Testing Socap API connection for authentication');
-      
+
       const profile = await socapApi.getProfile();
       logger.log('[UnifiedAPI] Successfully authenticated with Socap API, profile:', profile);
-      
+
       // Track successful login
       apiUsageTracker.track(
         '/api/v1/agent/agent_user/profile',
@@ -94,14 +94,16 @@ export class UnifiedApi {
         Date.now() - startTime,
         200
       );
-      
-      // Store profile data for later matching
+
+      // Store profile data for later matching - UUID is now the primary identifier
+      const uuid = profile.uuid;
       const telegram_id = profile.telegram_id;
       const username = profile.name || 'Socap User';
-      
-      // We'll use telegram_id for matching with events list
+
+      // We'll use UUID for matching with events list
       // The actual npid will be determined when loading startups
-      const token = btoa(JSON.stringify({ 
+      const token = btoa(JSON.stringify({
+        uuid,
         telegram_id,
         username,
         exp: Date.now() + 15 * 60 * 1000,
@@ -109,7 +111,7 @@ export class UnifiedApi {
         profile
       }));
 
-      logger.log(`[UnifiedAPI] Created session for user: ${username} (Telegram ID: ${telegram_id})`);
+      logger.log(`[UnifiedAPI] Created session for user: ${username} (UUID: ${uuid}, Telegram ID: ${telegram_id})`);
 
       return {
         success: true,
@@ -117,7 +119,8 @@ export class UnifiedApi {
           token,
           npid: 1000, // Temporary, will be matched later
           username,
-          telegram_id
+          telegram_id,
+          uuid
         },
         source: 'real'
       };
@@ -184,25 +187,28 @@ export class UnifiedApi {
 
   private async getRealStartups(options?: { showAll?: boolean }): Promise<UnifiedApiResponse<AppStartup[]>> {
     logger.log('[UnifiedAPI] Getting real API startups', options);
-    
+
     try {
       // First get the current user's profile to identify them
+      let currentUserUUID: string | undefined;
       let currentUserTelegramId: number | string | undefined;
       let currentUserProfile: any = null;
       try {
         const profile = await socapApi.getProfile();
+        currentUserUUID = profile.uuid;
         currentUserTelegramId = profile.telegram_id;
         currentUserProfile = profile;
+        logger.log('[UnifiedAPI] Current user UUID:', currentUserUUID);
         logger.log('[UnifiedAPI] Current user telegram_id:', currentUserTelegramId);
         logger.log('[UnifiedAPI] Current user profile:', profile);
       } catch (error) {
         logger.warn('[UnifiedAPI] Could not get profile for user identification:', error);
       }
-      
+
       const eventsStartTime = Date.now();
       const events = await socapApi.getEventList();
       logger.log(`[UnifiedAPI] Got ${events.length} events from real API`);
-      
+
       // Manually track this important call
       apiUsageTracker.track(
         '/api/v1/agent/agent_user/event-list',
@@ -211,24 +217,24 @@ export class UnifiedApi {
         Date.now() - eventsStartTime,
         200
       );
-      
-      // Log to help debug user matching
-      if (currentUserTelegramId) {
-        const userFoundInEvents = events.some(event => 
-          String(event.contact?.telegram_id) === String(currentUserTelegramId)
+
+      // Log to help debug user matching - Now using UUID as primary identifier
+      if (currentUserUUID) {
+        const userFoundInEvents = events.some(event =>
+          event.contact?.uuid === currentUserUUID
         );
-        logger.log(`[UnifiedAPI] User ${currentUserTelegramId} found in events: ${userFoundInEvents}`);
-        
+        logger.log(`[UnifiedAPI] User ${currentUserUUID} found in events: ${userFoundInEvents}`);
+
         if (userFoundInEvents) {
-          const userEventIndex = events.findIndex(event => 
-            String(event.contact?.telegram_id) === String(currentUserTelegramId)
+          const userEventIndex = events.findIndex(event =>
+            event.contact?.uuid === currentUserUUID
           );
           logger.log(`[UnifiedAPI] User found at index ${userEventIndex}, will have npid ${1000 + userEventIndex}`);
         }
       }
-      
-      const transformedData = events.map((event, index) => 
-        ApiDataTransformer.transformSocapEventToStartup(event, index, currentUserTelegramId)
+
+      const transformedData = events.map((event, index) =>
+        ApiDataTransformer.transformSocapEventToStartup(event, index, currentUserUUID, currentUserTelegramId)
       );
       
       // Filter out startups with house = "unknown" BUT always keep current user's startup
