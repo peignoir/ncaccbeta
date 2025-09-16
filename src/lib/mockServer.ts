@@ -490,7 +490,7 @@ export function installMockApi() {
 							byCircle[circleId] = []
 							circleInfo[circleId] = {
 								name: s.circle_name || `Circle ${circleId}`,
-								description: s.circle_description || 'A supportive peer group for collaborative learning and accountability.'
+								description: s.circle_description || ''
 							}
 						}
 						

@@ -116,9 +116,6 @@ export default function CirclesPage() {
 			{/* Header */}
 			<div className="text-center">
 				<h1 className="text-4xl font-bold text-gray-900 mb-4">Peer Mentoring Circles</h1>
-				<p className="text-gray-600 max-w-3xl mx-auto">
-					Small groups of 4-7 founders in similar timezones. Meet weekly, share openly, help each other win.
-				</p>
 				<p className="text-lg mt-4 font-semibold text-indigo-700 max-w-3xl mx-auto">
 					One job: lift one another. Start with a kickoff call, agree on your rhythm and goals, and may the strongest circles rise!
 				</p>
@@ -201,16 +198,27 @@ export default function CirclesPage() {
 									</div>
 								</div>
 							</div>
-							
-							<p className="text-gray-600 mb-6">{myCircle.description}</p>
-							
+
+							{myCircle.description && myCircle.description.trim() !== '' && (
+								<p className="text-gray-600 mb-6">{myCircle.description}</p>
+							)}
+
 							{/* Meeting Schedule */}
-							<div className="bg-indigo-50 rounded-lg p-4 mb-6">
-								<h3 className="font-semibold text-indigo-900 mb-2">Suggested Schedule</h3>
-								<div className="space-y-2 text-sm text-indigo-800">
-									<div>📅 <strong>Weekly Standup:</strong> Mondays 10am (your timezone)</div>
-									<div>🎯 <strong>Format:</strong> 5min each - Last week wins, this week goals, blockers</div>
-									<div>🆘 <strong>Emergency Room:</strong> Always open for urgent help</div>
+							<div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl p-6 mb-6 text-white shadow-lg">
+								<h3 className="text-2xl font-bold mb-4 flex items-center">
+									🚀 Time to Connect with Your Amazing Circle!
+								</h3>
+								<div className="space-y-3 text-lg">
+									<p className="font-semibold text-xl">Don't be shy - your group is AMAZING! 🌟</p>
+									<p>
+										<strong>Right now:</strong> Reach out using the contacts below, create a group and agree on when and what rhythm to meet to help each other!
+									</p>
+									<p>
+										<strong>Start talking!</strong> Introduce yourselves, share your goals, and agree on how to best help each other for the next 3 weeks.
+									</p>
+									<p className="pt-2 text-yellow-200 font-medium">
+										👉 The magic happens when you reach out!
+									</p>
 								</div>
 							</div>
 							

@@ -393,7 +393,7 @@ export default function ProgressPage() {
 		<div className="space-y-3">
 			{/* Header with Refresh Button */}
 			<div className="flex justify-between items-center">
-				<h1 className="text-xl font-bold text-gray-900">NC/ACC Dashboard</h1>
+				
 				<div className="flex items-center gap-2">
 					{/* Debug Button - Only in development */}
 					{(window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (
@@ -509,43 +509,24 @@ export default function ProgressPage() {
 				</div>
 			)}
 
-			{/* Statistics Section */}
-			<div className="grid grid-cols-3 gap-2">
-				<div className="bg-white rounded-lg p-2 shadow-sm border border-gray-200">
-					<div className="text-lg font-bold text-indigo-600">{totalStartups}</div>
-					<div className="text-xs text-gray-600">Total Startups</div>
-				</div>
-				<div className="bg-white rounded-lg p-2 shadow-sm border border-gray-200">
-					<div className="text-lg font-bold text-green-600">{uniqueCountries}</div>
-					<div className="text-xs text-gray-600">Countries</div>
-				</div>
-				<div className="bg-white rounded-lg p-2 shadow-sm border border-gray-200">
-					<div className="text-lg font-bold text-purple-600">{averageProgress}%</div>
-					<div className="text-xs text-gray-600">Average Progress</div>
-				</div>
-			</div>
 
 			{/* My Startup Section */}
 			{myStartup && (
 				<div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-xl p-4 shadow-lg">
-					<div className="flex items-center justify-between mb-2">
-						<h2 className="text-lg font-bold text-gray-900">Your Startup</h2>
-						<div className="flex items-center gap-3">
-							<button
-								onClick={() => openModal(myStartup)}
-								className="px-3 py-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition text-sm"
-							>
-								See what NC/ACC knows about you
-							</button>
-						</div>
-					</div>
-					
 					<div className="bg-white rounded-lg p-3 shadow-sm">
 						<div className="flex items-center justify-between">
 							<div className="flex-1">
-								<h3 className="text-xl font-semibold text-gray-900">
-									{myStartup.stealth ? 'Stealth Mode' : myStartup.name}
-								</h3>
+								<div className="flex items-center gap-2 mb-1">
+									<h3 className="text-xl font-semibold text-gray-900">
+										{myStartup.stealth ? 'Stealth Mode' : myStartup.name}
+									</h3>
+									<button
+										onClick={() => openModal(myStartup)}
+										className="px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded-md hover:bg-indigo-200 transition text-xs font-medium"
+									>
+										Open your full profile →
+									</button>
+								</div>
 								<p className="text-gray-600">
 									{myStartup.stealth ? 'Information hidden' : `Solo-Founded by ${myStartup.founder_name}`}
 								</p>
@@ -567,19 +548,68 @@ export default function ProgressPage() {
 					</div>
 					{/* House Goal Information */}
 					{myStartup.house && myStartup.house.toLowerCase() !== 'unknown' ? (
-						<div className="mt-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg p-4 border border-indigo-200">
+						<div className={`mt-4 rounded-xl p-4 border ${
+							normalizeHouse(myStartup.house) === 'side'
+								? 'bg-gradient-to-r from-orange-50 to-amber-50 border-orange-200'
+								: normalizeHouse(myStartup.house) === 'venture'
+								? 'bg-gradient-to-r from-purple-50 to-violet-50 border-purple-200'
+								: normalizeHouse(myStartup.house) === 'karma'
+								? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200'
+								: normalizeHouse(myStartup.house) === 'builder'
+								? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200'
+								: 'bg-gradient-to-r from-indigo-50 to-purple-50 border-indigo-200'
+						}`}>
 							<div className="space-y-3">
 								<div>
-									<p className="text-sm text-indigo-600 font-medium uppercase tracking-wide">Your {myStartup.house} House Goal</p>
-									<p className="text-lg font-bold text-indigo-900 mt-1">
-										{getHouseGoalInfo(myStartup.house).goal}
+									<p className={`text-xs font-medium uppercase tracking-wider ${
+										normalizeHouse(myStartup.house) === 'side'
+											? 'text-orange-600'
+											: normalizeHouse(myStartup.house) === 'venture'
+											? 'text-purple-600'
+											: normalizeHouse(myStartup.house) === 'karma'
+											? 'text-green-600'
+											: normalizeHouse(myStartup.house) === 'builder'
+											? 'text-blue-600'
+											: 'text-indigo-600'
+									}`}>
+										YOUR {myStartup.house.toUpperCase()} HOUSE GOAL: {getHouseGoalInfo(myStartup.house).goal.toUpperCase()}
 									</p>
 								</div>
-								<p className="text-sm text-indigo-800 leading-relaxed">
+								<p className={`text-sm leading-relaxed ${
+									normalizeHouse(myStartup.house) === 'side'
+										? 'text-orange-800'
+										: normalizeHouse(myStartup.house) === 'venture'
+										? 'text-purple-800'
+										: normalizeHouse(myStartup.house) === 'karma'
+										? 'text-green-800'
+										: normalizeHouse(myStartup.house) === 'builder'
+										? 'text-blue-800'
+										: 'text-indigo-800'
+								}`}>
 									{getHouseGoalInfo(myStartup.house).description}
 								</p>
-								<div className="pt-2 border-t border-indigo-200">
-									<p className="text-indigo-900 font-semibold italic">
+								<div className={`pt-2 border-t ${
+									normalizeHouse(myStartup.house) === 'side'
+										? 'border-orange-200'
+										: normalizeHouse(myStartup.house) === 'venture'
+										? 'border-purple-200'
+										: normalizeHouse(myStartup.house) === 'karma'
+										? 'border-green-200'
+										: normalizeHouse(myStartup.house) === 'builder'
+										? 'border-blue-200'
+										: 'border-indigo-200'
+								}`}>
+									<p className={`font-semibold italic ${
+										normalizeHouse(myStartup.house) === 'side'
+											? 'text-orange-900'
+											: normalizeHouse(myStartup.house) === 'venture'
+											? 'text-purple-900'
+											: normalizeHouse(myStartup.house) === 'karma'
+											? 'text-green-900'
+											: normalizeHouse(myStartup.house) === 'builder'
+											? 'text-blue-900'
+											: 'text-indigo-900'
+									}`}>
 										💪 {isNaN(myStartup.progress) || myStartup.progress === null || myStartup.progress === undefined
 											? `Ready to start? Talk to No Cap to set your goals and get personalized guidance on your first steps toward your ${myStartup.house} milestone!`
 											: myStartup.progress >= 80 
@@ -660,10 +690,10 @@ export default function ProgressPage() {
 					<table className="w-full">
 						<thead className="border-b border-gray-200">
 							<tr>
-								<th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Startup</th>
-								<th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Founder</th>
-								<th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">House</th>
-								<th className="text-left py-3 px-4 text-sm font-semibold text-gray-600">Progress</th>
+								<th className="text-left py-3 px-4 text-sm font-semibold text-gray-600" style={{ width: '30%' }}>Startup</th>
+								<th className="text-left py-3 px-4 text-sm font-semibold text-gray-600" style={{ width: '20%' }}>Founder</th>
+								<th className="text-left py-3 px-4 text-sm font-semibold text-gray-600" style={{ width: '15%' }}>House</th>
+								<th className="text-left py-3 px-4 text-sm font-semibold text-gray-600" style={{ width: '35%' }}>Progress</th>
 							</tr>
 						</thead>
 						<tbody className="divide-y divide-gray-100">
@@ -682,7 +712,7 @@ export default function ProgressPage() {
 										}`}
 										onClick={() => canViewDetails && openModal(startup)}
 									>
-										<td className="py-4 px-4">
+										<td className="py-4 px-4" style={{ width: '30%' }}>
 											<div className="flex items-center gap-2">
 												<div>
 													<div className="font-medium text-gray-900 flex items-center gap-2">
@@ -712,12 +742,12 @@ export default function ProgressPage() {
 												)}
 											</div>
 										</td>
-										<td className="py-4 px-4 text-gray-600">
-											{isStealthed ? '-' : 
+										<td className="py-4 px-4 text-gray-600" style={{ width: '20%' }}>
+											{isStealthed ? '-' :
 												(startup.contact_me === false && !isMyStartup ? 'Contact Hidden' : startup.founder_name)
 											}
 										</td>
-										<td className="py-4 px-4">
+										<td className="py-4 px-4" style={{ width: '15%' }}>
 											{startup.house ? (
 												<span className={`px-2 py-1 rounded-full text-xs font-medium ${getHouseBadgeClass(startup.house)}`}>
 													{getHouseDisplayName(startup.house)}
@@ -726,22 +756,24 @@ export default function ProgressPage() {
 												<span className="text-gray-400">-</span>
 											)}
 										</td>
-										<td className="py-4 px-4">
+										<td className="py-4 px-4" style={{ width: '35%' }}>
 											<div className="flex items-center gap-3">
-												<div className="flex-1">
-													<div className="w-full bg-gray-200 rounded-full h-2">
+												<div className="flex-1" style={{ maxWidth: '200px' }}>
+													<div className="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden">
 														<div
-															className={`h-2 rounded-full transition-all ${
-																startup.progress >= 80 ? 'bg-green-500' :
-																startup.progress >= 60 ? 'bg-blue-500' :
-																startup.progress >= 40 ? 'bg-yellow-500' :
-																'bg-red-500'
+															className={`h-2.5 rounded-full transition-all duration-500 ${
+																startup.progress >= 90 ? 'bg-green-500' :
+																startup.progress >= 70 ? 'bg-emerald-400' :
+																startup.progress >= 50 ? 'bg-blue-400' :
+																startup.progress >= 30 ? 'bg-sky-400' :
+																startup.progress >= 10 ? 'bg-amber-400' :
+																'bg-orange-400'
 															}`}
 															style={{ width: `${isNaN(startup.progress) || startup.progress === null || startup.progress === undefined ? 0 : startup.progress}%` }}
 														/>
 													</div>
 												</div>
-												<span className="text-sm font-semibold text-gray-700 w-12">
+												<span className="text-sm font-semibold text-gray-700 min-w-[45px] text-right">
 													{isNaN(startup.progress) || startup.progress === null || startup.progress === undefined ? 'N/A' : `${startup.progress}%`}
 												</span>
 											</div>
@@ -891,11 +923,12 @@ export default function ProgressPage() {
 						</div>
 
 						<div className="px-8 py-6 space-y-8">
-							{/* NC/ACC Edit Notice */}
+							{/* nc/acc Edit Notice */}
 							{selectedStartup.id === myStartup?.id && (
-								<div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-200">
-									<p className="text-sm text-blue-800">
-										<span className="font-semibold">💬 Want to update this information?</span> Talk to No Cap! 
+								<div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg p-4 border border-gray-300 shadow-sm">
+									<p className="text-sm text-gray-700 leading-relaxed">
+										<span className="font-semibold text-gray-900">💬 Want to update this information?</span>{' '}
+										<span className="text-gray-800">Talk to No Cap!</span>{' '}
 										She'll help you refine your startup details, track your progress, and provide personalized guidance based on your {myStartup.house} house goals.
 									</p>
 								</div>

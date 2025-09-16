@@ -85,7 +85,7 @@ export default function LoginPage() {
 		<div className="min-h-screen flex items-center justify-center bg-white">
 			<div className="w-full max-w-md p-8 bg-gray-50 rounded-md shadow-sm">
 				<div className="text-center mb-6">
-					<div className="text-3xl font-bold">NC/ACC</div>
+					<div className="text-3xl font-bold">nc/acc</div>
 					<div className="text-gray-500">The AI driven solo founder program</div>
 					{(searchParams.get('apikey') || searchParams.get('api_key')) && (
 						<div className="mt-3 p-2 bg-blue-50 rounded text-xs text-blue-700">

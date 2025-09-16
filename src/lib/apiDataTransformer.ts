@@ -2,20 +2,30 @@ import { SocapEvent, SocapProfile, SocapDetails } from './socapApi';
 import { normalizeHouse } from './houseNormalizer';
 
 export interface AppStartup {
+  // System fields (required for app functionality)
   npid: number;
   login_code: string;
+  isCurrentUser?: boolean;
+
+  // Fields from API contact object
   username: string;
-  wave_id: number;
-  house: string; // Raw house value from API
-  circle_id?: string;
-  startup_name: string;
-  stealth: boolean | string;
   uuid?: string; // UUID from Socap API
   telegram_id: string;
+  telegram_username?: string;
   email: string;
+
+  // Fields from API event data
+  house: string; // Normalized house value
+  progress_percent: number;
+
+  // Fields from API details object
+  startup_name: string;
+  stealth: boolean | string;
   linkedin_url?: string;
   contact_me: boolean | string;
-  progress_percent: number;
+  founder_email?: string;
+
+  // Computed UI fields
   check_in_1?: boolean | string;
   check_in_2?: boolean | string;
   check_in_3?: boolean | string;
@@ -26,6 +36,8 @@ export interface AppStartup {
   check_in_8?: boolean | string;
   check_in_9?: boolean | string;
   check_in_10?: boolean | string;
+
+  // Allow any additional fields from API details
   [key: string]: any;
 }
 
@@ -56,36 +68,33 @@ export class ApiDataTransformer {
     const founderEmail = event.contact.email || details.email || details.founder_email || '';
 
     const startup: AppStartup = {
+      // System-generated fields (needed for app functionality)
       npid,
       login_code: btoa(`login:${npid}`),
+      isCurrentUser: isCurrentUser || undefined,
+
+      // Fields from event.contact
       username: event.contact.name || `User ${npid}`,
-      wave_id: 1,
-      house,
-      circle_id: this.generateCircleId(index),
-      startup_name: details.startup_name || event.data.event_name || 'Unnamed Startup',
-      stealth: details.stealth || false,
-      uuid: eventUUID, // Add UUID field
+      uuid: eventUUID,
       telegram_id: String(eventTelegramId || event.contact.telegram_username || ''),
       telegram_username: event.contact.telegram_username || '',
       email: founderEmail,
-      founder_email: founderEmail, // Ensure founder_email is also set
-      isCurrentUser,
-      linkedin_url: details.founder_linkedin_url || '',
-      contact_me: true,
+
+      // Fields from event.data
+      house,
       progress_percent: progress,
 
-      // Only keep minimal raw data for debugging
-      raw_group: event.data.group,
-      raw_percent: event.data.percent,
-
-      // Spread ALL fields from details object (no need to duplicate them manually)
+      // Spread ALL fields from details object (actual API data)
       ...details,
 
-      // Override with calculated values
-      current_progress: details.current_progress !== undefined && details.current_progress !== null
-        ? details.current_progress
-        : (progress / 100),
-      
+      // Override specific fields with processed values
+      startup_name: details.startup_name || event.data.event_name || 'Unnamed Startup',
+      founder_email: founderEmail, // Ensure founder_email is set from either contact.email or details
+      linkedin_url: details.founder_linkedin_url || '',
+      stealth: details.stealth || false,
+      contact_me: details.contact_me !== false, // Default to true if not explicitly false
+
+      // Computed progress checkpoints for UI
       check_in_1: progress >= 10,
       check_in_2: progress >= 20,
       check_in_3: progress >= 30,
@@ -149,9 +158,9 @@ export class ApiDataTransformer {
 
   private static determineHouse(group: string): 'venture' | 'karma' | 'lifestyle' | 'side' | 'build' {
     console.log('[Transformer] Determining house from group:', group);
-    
+
     const groupLower = group?.toLowerCase() || '';
-    
+
     if (groupLower.includes('build')) {
       return 'build' as any; // BUILD HOUSE stays as build
     }
@@ -167,14 +176,9 @@ export class ApiDataTransformer {
     if (groupLower.includes('side') || groupLower.includes('project')) {
       return 'side';
     }
-    
+
     const houses: Array<'venture' | 'karma' | 'lifestyle' | 'side'> = ['venture', 'karma', 'lifestyle', 'side'];
     return houses[Math.floor(Math.random() * houses.length)];
-  }
-
-  private static generateCircleId(index: number): string {
-    const circleNumber = Math.floor(index / 5) + 1;
-    return `circle_${circleNumber}`;
   }
 
   static mergeWithExistingData(socapData: AppStartup[], existingData: AppStartup[]): AppStartup[] {

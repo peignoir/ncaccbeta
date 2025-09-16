@@ -422,54 +422,50 @@ export class UnifiedApi {
 
   private generateCirclesFromStartups(startups: AppStartup[]): any[] {
     logger.log('[UnifiedAPI] Generating circles from startups');
-    
-    const circleMap = new Map<string, { members: AppStartup[], name?: string, description?: string }>();
-    
-    startups.forEach(startup => {
-      const circleId = startup.circle_id || startup.circle || '1';
-      if (!circleMap.has(circleId)) {
-        circleMap.set(circleId, {
-          members: [],
-          name: startup.circle_name || `Circle ${circleId.replace('circle_', '')}`,
-          description: startup.circle_description || 'A supportive peer group for collaborative learning and accountability.'
-        });
-      }
-      circleMap.get(circleId)!.members.push(startup);
-    });
 
-    const circles = Array.from(circleMap.entries()).map(([id, data]) => ({
-      id: id.startsWith('circle_') ? id : `circle_${id}`,
-      name: data.name || `Circle ${id.replace('circle_', '')}`,
-      description: data.description || 'A supportive peer group for collaborative learning and accountability.',
-      members: data.members.map(m => ({
-        id: `m_${m.npid || m.id}`,
-        name: m.username || m.founder_name || 'Unknown Founder',
-        startup: m.stealth ? 'Stealth Startup' : (m.startup_name || 'Unknown Startup'),
-        website: m.website,
-        house: m.house || 'venture',
-        // Include contact info based on contact_me flag
-        email: m.contact_me !== false ? m.email : undefined,
-        telegram: m.contact_me !== false ? (m.telegram_id || m.telegram_username) : undefined,
-        linkedin: m.contact_me !== false ? m.linkedin_url : undefined,
-        // Always include non-contact info
-        bio: m.bio,
-        city: m.founder_city,
-        country: m.founder_country,
-        traction: m.traction,
-        motivation: m.motivation,
-        contact_me: m.contact_me !== false,
-        wave: m.wave_id || 'wave1'
-      })),
-      insights: [
-        `${data.members.length} founders`,
-        (data.description || '').substring(0, 100) + '...'
-      ]
-    }));
+    // Group startups into circles (every 5 startups form a circle)
+    const circlesArray = [];
+    const startupsPerCircle = 5;
 
-    logger.log(`[UnifiedAPI] Generated ${circles.length} circles with member counts:`, 
-      circles.map(c => `${c.id}: ${c.members.length} members`));
+    for (let i = 0; i < startups.length; i += startupsPerCircle) {
+      const circleNumber = Math.floor(i / startupsPerCircle) + 1;
+      const circleId = `circle_${circleNumber}`;
+      const circleMembers = startups.slice(i, i + startupsPerCircle);
 
-    return circles;
+      const circle = {
+        id: circleId,
+        name: `Circle ${circleNumber}`,
+        description: '',
+        members: circleMembers.map(m => ({
+          id: `m_${m.npid}`,
+          name: m.username || m.founder_name || 'Unknown Founder',
+          startup: m.stealth ? 'Stealth Startup' : (m.startup_name || 'Unknown Startup'),
+          website: m.website,
+          house: m.house || 'venture',
+          // Include contact info based on contact_me flag
+          email: m.contact_me !== false ? m.email : undefined,
+          telegram: m.contact_me !== false ? (m.telegram_id || m.telegram_username) : undefined,
+          linkedin: m.contact_me !== false ? m.linkedin_url : undefined,
+          // Always include non-contact info from API
+          bio: m.bio,
+          city: m.founder_city,
+          country: m.founder_country,
+          traction: m.traction,
+          motivation: m.motivation,
+          contact_me: m.contact_me !== false
+        })),
+        insights: [
+          `${circleMembers.length} founders`
+        ]
+      };
+
+      circlesArray.push(circle);
+    }
+
+    logger.log(`[UnifiedAPI] Generated ${circlesArray.length} circles with member counts:`,
+      circlesArray.map(c => `${c.id}: ${c.members.length} members`));
+
+    return circlesArray;
   }
 
   async testConnection(): Promise<boolean> {

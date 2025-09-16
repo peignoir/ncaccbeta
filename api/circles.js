@@ -45,7 +45,7 @@ export default function handler(req, res) {
         byCircle[circleId] = []
         circleInfo[circleId] = {
           name: startup.circle_name || `Circle ${circleId}`,
-          description: startup.circle_description || 'A supportive peer group for collaborative learning and accountability.'
+          description: startup.circle_description || ''
         }
       }
       
