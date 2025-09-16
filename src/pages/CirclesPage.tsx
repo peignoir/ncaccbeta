@@ -233,28 +233,41 @@ export default function CirclesPage() {
 							{/* Members Grid */}
 							<h3 className="font-semibold text-gray-900 mb-4">Members ({myCircle.members.length})</h3>
 							<div className="grid md:grid-cols-2 gap-4">
-								{myCircle.members.map((member) => (
-									<div 
-										key={member.id} 
-										className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition cursor-pointer"
-										onClick={() => openMemberProfile(member)}
-									>
-										<div className="flex justify-between items-start">
-											<div>
-												<p className="font-semibold text-gray-900">{member.name}</p>
-												<p className="text-sm text-gray-600">{member.startup}</p>
-												{member.house && (
-													<span className="inline-block mt-1 px-2 py-1 bg-white text-xs text-gray-600 rounded">
-														{member.house}
-													</span>
-												)}
+								{myCircle.members.map((member, index) => {
+									// Create a subtle color palette based on index
+									const colorSchemes = [
+										{ bg: 'from-blue-50 to-indigo-50', border: 'border-blue-200', hover: 'hover:from-blue-100 hover:to-indigo-100', accent: 'text-blue-600 hover:text-blue-800' },
+										{ bg: 'from-purple-50 to-pink-50', border: 'border-purple-200', hover: 'hover:from-purple-100 hover:to-pink-100', accent: 'text-purple-600 hover:text-purple-800' },
+										{ bg: 'from-green-50 to-emerald-50', border: 'border-green-200', hover: 'hover:from-green-100 hover:to-emerald-100', accent: 'text-green-600 hover:text-green-800' },
+										{ bg: 'from-amber-50 to-orange-50', border: 'border-amber-200', hover: 'hover:from-amber-100 hover:to-orange-100', accent: 'text-amber-600 hover:text-amber-800' },
+										{ bg: 'from-cyan-50 to-teal-50', border: 'border-cyan-200', hover: 'hover:from-cyan-100 hover:to-teal-100', accent: 'text-cyan-600 hover:text-cyan-800' },
+										{ bg: 'from-rose-50 to-pink-50', border: 'border-rose-200', hover: 'hover:from-rose-100 hover:to-pink-100', accent: 'text-rose-600 hover:text-rose-800' },
+									];
+									const colorScheme = colorSchemes[index % colorSchemes.length];
+
+									return (
+										<div
+											key={member.id}
+											className={`bg-gradient-to-br ${colorScheme.bg} rounded-lg p-4 ${colorScheme.hover} transition-all duration-200 cursor-pointer border ${colorScheme.border} shadow-sm hover:shadow-md`}
+											onClick={() => openMemberProfile(member)}
+										>
+											<div className="flex justify-between items-start">
+												<div>
+													<p className="font-semibold text-gray-900">{member.name}</p>
+													<p className="text-sm text-gray-600">{member.startup}</p>
+													{member.house && (
+														<span className="inline-block mt-1 px-2 py-1 bg-white/70 text-xs text-gray-700 rounded font-medium">
+															{member.house}
+														</span>
+													)}
+												</div>
+												<button className={`${colorScheme.accent} text-sm font-medium`}>
+													View Profile →
+												</button>
 											</div>
-											<button className="text-indigo-600 hover:text-indigo-800 text-sm">
-												View Profile →
-											</button>
 										</div>
-									</div>
-								))}
+									);
+								})}
 							</div>
 						</>
 					)}
