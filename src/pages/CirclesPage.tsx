@@ -186,8 +186,28 @@ export default function CirclesPage() {
 								</div>
 							</div>
 
+							{/* Connection Call-to-Action */}
+							<div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-lg p-4 mb-3 border border-orange-200">
+								<div className="text-sm space-y-2">
+									<p className="font-semibold text-gray-900 flex items-center gap-2">
+										<span className="text-lg">🚀</span>
+										Time to Connect with Your Amazing Circle!
+									</p>
+									<p className="text-gray-700">
+										<span className="font-medium">Don't be shy - your group is AMAZING!</span> 🌟
+									</p>
+									<p className="text-gray-700">
+										<span className="font-medium">Right now:</span> Reach out using the contacts below, create a group and agree on when and what rhythm to meet to help each other!
+									</p>
+									<p className="text-orange-700 font-medium flex items-center gap-1 pt-1">
+										<span>👉</span>
+										<span>The magic happens when you reach out!</span>
+									</p>
+								</div>
+							</div>
+
 							{/* Motivational message */}
-							<div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg p-4 mb-4 border border-indigo-200">
+							<div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg p-3 mb-4 border border-indigo-200">
 								<p className="text-sm text-indigo-900 font-medium text-center">
 									One job: lift one another. Start with a kickoff call, agree on your rhythm and goals, and may the strongest circles rise!
 								</p>
