@@ -204,21 +204,29 @@ export default function CirclesPage() {
 							)}
 
 							{/* Meeting Schedule */}
-							<div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl p-6 mb-6 text-white shadow-lg">
-								<h3 className="text-2xl font-bold mb-4 flex items-center">
-									🚀 Time to Connect with Your Amazing Circle!
-								</h3>
-								<div className="space-y-3 text-lg">
-									<p className="font-semibold text-xl">Don't be shy - your group is AMAZING! 🌟</p>
-									<p>
-										<strong>Right now:</strong> Reach out using the contacts below, create a group and agree on when and what rhythm to meet to help each other!
-									</p>
-									<p>
-										<strong>Start talking!</strong> Introduce yourselves, share your goals, and agree on how to best help each other for the next 3 weeks.
-									</p>
-									<p className="pt-2 text-yellow-200 font-medium">
-										👉 The magic happens when you reach out!
-									</p>
+							<div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-lg p-5 mb-6 border-2 border-orange-300 shadow-sm">
+								<div className="flex items-start gap-3">
+									<div className="text-2xl mt-0.5">🚀</div>
+									<div className="flex-1">
+										<h3 className="text-lg font-semibold text-gray-900 mb-2">
+											Time to Connect with Your Amazing Circle!
+										</h3>
+										<div className="space-y-2 text-sm text-gray-700">
+											<p className="font-medium text-gray-900">
+												Don't be shy - your group is AMAZING! 🌟
+											</p>
+											<p>
+												<span className="font-medium text-gray-900">Right now:</span> Reach out using the contacts below, create a group and agree on when and what rhythm to meet to help each other!
+											</p>
+											<p>
+												<span className="font-medium text-gray-900">Start talking!</span> Introduce yourselves, share your goals, and agree on how to best help each other for the next 3 weeks.
+											</p>
+											<p className="pt-1 text-orange-700 font-medium flex items-center gap-1">
+												<span>👉</span>
+												<span>The magic happens when you reach out!</span>
+											</p>
+										</div>
+									</div>
 								</div>
 							</div>
 							
